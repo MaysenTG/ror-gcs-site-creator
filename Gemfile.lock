@@ -77,7 +77,7 @@ GEM
     bootsnap (1.13.0)
       msgpack (~> 1.2)
     builder (3.2.4)
-    capybara (3.37.1)
+    capybara (3.38.0)
       addressable
       matrix
       mini_mime (>= 0.1.3)
@@ -148,8 +148,8 @@ GEM
       uuidtools (>= 2.1.0)
     google-apis-bigquery_v2 (0.42.0)
       google-apis-core (>= 0.9.0, < 2.a)
-    google-apis-cloudresourcemanager_v1 (0.30.0)
-      google-apis-core (>= 0.9.0, < 2.a)
+    google-apis-cloudresourcemanager_v1 (0.31.0)
+      google-apis-core (>= 0.9.1, < 2.a)
     google-apis-compute_v1 (0.53.0)
       google-apis-core (>= 0.9.0, < 2.a)
     google-apis-core (0.9.1)
@@ -163,8 +163,8 @@ GEM
       webrick
     google-apis-dns_v1 (0.28.0)
       google-apis-core (>= 0.9.0, < 2.a)
-    google-apis-iamcredentials_v1 (0.15.0)
-      google-apis-core (>= 0.9.0, < 2.a)
+    google-apis-iamcredentials_v1 (0.16.0)
+      google-apis-core (>= 0.9.1, < 2.a)
     google-apis-storage_v1 (0.19.0)
       google-apis-core (>= 0.9.0, < 2.a)
     google-cloud (0.64.0)
@@ -340,7 +340,7 @@ GEM
       google-gax (~> 1.8)
       googleapis-common-protos (>= 1.3.9, < 2.0)
       googleapis-common-protos-types (>= 1.0.4, < 2.0)
-    google-cloud-storage (1.43.0)
+    google-cloud-storage (1.44.0)
       addressable (~> 2.8)
       digest-crc (~> 0.4)
       google-apis-iamcredentials_v1 (~> 0.1)
@@ -460,7 +460,7 @@ GEM
       net-protocol
     net-protocol (0.1.3)
       timeout
-    net-smtp (0.3.2)
+    net-smtp (0.3.3)
       net-protocol
     nio4r (2.5.8)
     nokogiri (1.13.9)
@@ -521,7 +521,7 @@ GEM
     rly (0.2.3)
     ruby2_keywords (0.0.5)
     rubyzip (2.3.2)
-    selenium-webdriver (4.5.0)
+    selenium-webdriver (4.6.1)
       childprocess (>= 0.5, < 5.0)
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
@@ -541,7 +541,7 @@ GEM
       sprockets (>= 3.0.0)
     stackdriver-core (1.5.0)
       google-cloud-core (~> 1.2)
-    stimulus-rails (1.1.0)
+    stimulus-rails (1.1.1)
       railties (>= 6.0.0)
     thor (1.2.1)
     timeout (0.3.0)
@@ -577,7 +577,7 @@ GEM
     websocket-extensions (0.1.5)
     xpath (3.2.0)
       nokogiri (~> 1.8)
-    zeitwerk (2.6.1)
+    zeitwerk (2.6.5)
     zonefile (1.06)
 
 PLATFORMS
@@ -608,7 +608,7 @@ DEPENDENCIES
   webpacker
 
 RUBY VERSION
-   ruby 3.0.0p0
+   ruby 3.1.2p20
 
 BUNDLED WITH
    2.3.21

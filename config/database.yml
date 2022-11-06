@@ -5,3 +5,11 @@ development:
   pool: 5
   username: postgres
   password: qd!/][Km92
+
+production:
+  adapter: postgresql
+  encoding: unicode
+  database: w3schools_spaces_poc_prod
+  pool: 5
+  username: postgres
+  password: qd!/][Km92
