@@ -1,0 +1,90 @@
+<nav class="navbar navbar-expand-lg bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">
+    Custom site
+    </a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+      >
+    <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <% if current_account %>
+          <li class="nav-item">
+            <a class="nav-link" href="/admin/sites">
+            View my sites
+            </a>
+          </li>
+        <% end %>
+        <li class="nav-item">
+          <form class="d-flex" role="search">
+            <input
+              class="form-control me-2"
+              type="search"
+              placeholder="Search"
+              aria-label="Search"
+              />
+            <button class="btn btn-outline-success" type="button">
+            Search
+            </button>
+          </form>
+        </li>
+      </ul>
+      <ul class="navbar-nav mb-2 mb-lg-0">
+        <% if current_account %>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            >
+          My account
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item" href="/accounts/edit">
+              Edit account
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider" />
+            </li>
+            <li>
+                <% action_url = "/accounts/sign_out/" + current_account.id.to_s %>
+                <form class="button_to" method="post" action="/accounts/sign_out">
+                  <input type="hidden" name="_method" value="delete" autocomplete="off">
+                  <input type="hidden" name="account_id" value="<%= current_account.id %>">
+                  <input type="hidden" name="account[id]" value="<%= current_account.id %>">
+                  <button type="submit" class="dropdown-item btn">
+                  <span>Sign out</span>
+                  </button>
+                  <input type="hidden" name="authenticity_token" value="S6oYWaQcvFvqV90VJMgK21C8raIpn_4Hc4-8jnRFbERv105hjGuncmIXFIUpFk5gcJ5boa-3im0fTtDzfvb-dg" autocomplete="off">
+                </form>
+            </li>
+          </ul>
+        </li>
+        <% else %>
+        <li class="nav-item">
+          <a class="nav-link" href="<%= new_account_session_path %>">
+          Sign in
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<%= new_account_registration_path %>">
+          Sign up
+          </a>
+        </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+</nav>

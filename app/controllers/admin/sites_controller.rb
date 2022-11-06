@@ -1,4 +1,4 @@
-class SitesController < ApplicationController
+class Admin::SitesController < ApplicationController
   before_action :set_view_path
   
   def index

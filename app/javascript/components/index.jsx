@@ -1,5 +1,9 @@
 import React, { Component } from "react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Redirect,
+} from "react-router-dom";
 import Header from "./layout/header";
 import Footer from "./layout/footer";
 import AllPosts from "./posts/all";
@@ -13,14 +17,18 @@ import EditSite from "./sites/edit";
 
 import EditFile from "./sites/files/edit";
 
-import NewEmail from "./emails/new";
-
 const Layout = ({ childprop }) => {
+  // If the is_logged_in_show_id is true, then redirect to the admin dashboard
+  let is_logged_in_show_id = document.getElementById("is_logged_in_show_id");
+
+  if (is_logged_in_show_id && !window.location.pathname.includes("admin")) {
+    window.location.href = "/admin/sites";
+    //return <Redirect to="/admin/sites" />;
+  }
+
   return (
     <>
-      <Header />
       <div className="container">{childprop}</div>
-      <Footer />
     </>
   );
 };
@@ -31,36 +39,20 @@ const router = createBrowserRouter([
     element: <Layout childprop={<Home />} />,
   },
   {
-    path: "/sites",
+    path: "/admin/sites",
     element: <Layout childprop={<AllSites />} />,
   },
   {
-    path: "/sites/new",
+    path: "/admin/sites/new",
     element: <Layout childprop={<NewSite />} />,
   },
   {
-    path: "/sites/:id",
+    path: "/admin/sites/:id",
     element: <Layout childprop={<EditSite />} />,
   },
   {
-    path: "/sites/:id/files/:file",
+    path: "/admin/sites/:id/files/edit",
     element: <Layout childprop={<EditFile />} />,
-  },
-  {
-    path: "/posts",
-    element: <Layout childprop={<AllPosts />} />,
-  },
-  {
-    path: "/posts/new",
-    element: <Layout childprop={<NewPost />} />,
-  },
-  {
-    path: "/emails/new",
-    element: <Layout childprop={<NewEmail />} />,
-  },
-  {
-    path: "/emails",
-    element: <Layout childprop={<h1>All emails page</h1>} />,
   },
 ]);
 
