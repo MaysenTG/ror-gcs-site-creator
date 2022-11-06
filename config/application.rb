@@ -18,5 +18,6 @@ module WebsiteBuilder
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+    config.hosts << "ror-gcs-site-creator-mwtivkdwyq-ts.a.run.app"
   end
 end
