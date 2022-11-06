@@ -1,4 +1,11 @@
 {
+  "scripts": {
+    "postinstall": "cd client && npm install"
+  },
+  "cacheDirectories": [
+    "node_modules",
+    "client/node_modules"
+  ],
   "dependencies": {
     "@babel/preset-react": "^7.18.6",
     "@emotion/react": "^11.10.4",
