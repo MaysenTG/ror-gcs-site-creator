@@ -1,7 +1,4 @@
 {
-  "scripts": {
-    "postinstall": "npm install"
-  },
   "cacheDirectories": [
     "node_modules",
     "client/node_modules"
