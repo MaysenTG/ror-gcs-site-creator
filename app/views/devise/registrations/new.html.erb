@@ -1,27 +1,21 @@
 <div className="container">
-  <div className="container mt-3">
+  <div className="container mt-3" style="margin-left: 15%; margin-right: 15%;">
     <h1>Create a new account</h1>
-    <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
-      <%= render "devise/shared/error_messages", resource: resource %>
-      <div className="mb-3">
-        <%= f.label :email %><br />
-        <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control" %>
+    <%= form_for(resource, as: resource_name, url: registration_path(resource_name), data: { turbo: "false" }) do |f| %>
+      <div class="mb-1 form-floating">
+        <input type="email" class="form-control" id="floatingInput" name="account[email]" placeholder="name@example.com">
+        <label for="floatingInput">Email address</label>
       </div>
-      <div className="mb-3">
-        <%= f.label :password %>
-        <% if @minimum_password_length %>
-          <em>(<%= @minimum_password_length %> characters minimum)</em>
-        <% end %><br />
-        <%= f.password_field :password, autocomplete: "new-password", class: "form-control" %>
+      <div class="mb-1 form-floating">
+        <input type="password" class="form-control" id="floatingPassword" name="account[password]" placeholder="Password">
+        <label for="floatingPassword">Password</label>
       </div>
-      <div className="mb-3">
-        <%= f.label :password_confirmation %><br />
-        <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control" %>
+      <div class="mb-1 form-floating">
+        <input type="password" class="form-control" id="floatingPassword" name="account[password_confirmation]" placeholder="Password">
+        <label for="floatingPassword">Confirm password</label>
       </div>
-      <div className="mb-3">
-        <button className="btn btn-primary" type="submit">Sign up</button>
-      </div>
+      <button class="w-100 btn btn-lg btn-primary" type="submit">Sign up</button>
+      <p class="mt-5 mb-3 text-muted">If you already have an account, <%= render "devise/shared/links" %></p>
     <% end %>
-    <%= render "devise/shared/links" %>
   </div>
 </div>

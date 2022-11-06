@@ -10,7 +10,7 @@ gem "rails", "~> 7.0.4"
 gem "sprockets-rails"
 
 # Use sqlite3 as the database for Active Record
-gem "sqlite3", "~> 1.4"
+gem 'pg', '~> 1.4', '>= 1.4.4'
 
 gem 'webpacker'
 
@@ -60,12 +60,6 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
-
-  # Add speed badges [https://github.com/MiniProfiler/rack-mini-profiler]
-  # gem "rack-mini-profiler"
-
-  # Speed up commands on slow machines / big apps [https://github.com/rails/spring]
-  # gem "spring"
 end
 
 group :test do
@@ -76,3 +70,11 @@ group :test do
 end
 
 gem "google-cloud-storage", "~> 1.43"
+
+gem 'google-cloud', '~> 0.64.0'
+
+gem 'google-api-client', '~> 0.7.1'
+
+gem 'google-apis-compute_v1', '~> 0.53.0'
+
+gem "httparty", "~> 0.20.0"
