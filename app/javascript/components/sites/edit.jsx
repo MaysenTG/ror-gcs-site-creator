@@ -231,12 +231,14 @@ export default class EditSite extends Component {
     const siteId = currentTarget.site_id.value;
     const siteName = currentTarget.site_name.value;
     const fileType = currentTarget.file_type.value;
-    const main_or_404 = "none";
+    let main_or_404 = "none";
 
     if (this.state.viewing_folder_name) {
       fileName = this.state.viewing_folder_name + "/" + fileName;
     } else {
-      main_or_404 = currentTarget.main_or_404.value;
+      if (fileType == "html") {
+        main_or_404 = currentTarget.main_or_404.value;
+      }
     }
 
     const data = {
