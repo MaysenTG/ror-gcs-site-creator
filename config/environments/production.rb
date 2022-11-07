@@ -91,5 +91,5 @@ Rails.application.configure do
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
   
-  config.hosts << "ror-gcs-site-creator-mwtivkdwyq-ts.a.run.app"
+  #config.hosts << "ror-gcs-site-creator-mwtivkdwyq-ts.a.run.app"
 end
