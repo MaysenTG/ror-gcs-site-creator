@@ -1,0 +1,155 @@
+import { Controller } from "@hotwired/stimulus";
+
+export default class extends Controller {
+  connect() {
+    //this.element.textContent = "Hello World!"
+  }
+
+  handleToggleStage(event) {
+    let stage = event.target.dataset.targetStage;
+    let new_stage_id = `stage-${stage}`;
+    let new_stage_selector = document.querySelector(`#${new_stage_id}`);
+
+    let all_stages = document.querySelectorAll(".stage-container");
+
+    all_stages.forEach((stage) => {
+      if (stage.id != new_stage_id) {
+        stage.classList.add("d-none");
+      } else {
+        stage.classList.remove("d-none");
+      }
+    });
+  }
+
+  validateSiteName(event) {
+    this.validateSiteNameInternal(event);
+  }
+
+  validateSiteNameInternal(event) {
+    let site_name = event.target.value;
+    let csrf_token = document.querySelector("#csrf_token").value;
+    let site_name_input = event.target;
+    let next_button = document.querySelector("#next-stage-new-site");
+
+    next_button.disabled = true;
+    next_button.querySelector("span").classList.remove("d-none");
+
+    if (this.validateSiteNameInternalHelper(site_name)) {
+      next_button.disabled = true;
+      next_button.querySelector("span").classList.add("d-none");
+      document
+        .querySelector("#new-site-name-error-wrapper")
+        .classList.remove("d-none");
+      return;
+    }
+
+    // Post to the validate site name endpoint
+    fetch(`/admin/sites/validate_site_name?site_name=${site_name}`, {
+      method: "POST",
+      headers: {
+        "X-CSRF-Token": csrf_token,
+        Accept: "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        if (data.status == "success") {
+          next_button.querySelector("span").classList.add("d-none");
+
+          if (data.name_taken) {
+            next_button.disabled = true;
+            document
+              .querySelector("#new-site-name-error-wrapper")
+              .classList.remove("d-none");
+            // Show some error message
+          } else {
+            next_button.disabled = false;
+            document
+              .querySelector("#new-site-name-error-wrapper")
+              .classList.add("d-none");
+            document.querySelector("#new-site-name").textContent = site_name;
+          }
+        }
+      });
+  }
+
+  validateSiteNameInternalHelper(site_name) {
+    let has_errors = false;
+    if (
+      site_name.length < 3 ||
+      site_name.length > 20 ||
+      !/^[a-z-]+$/.test(site_name)
+    ) {
+      has_errors = true;
+    } else {
+      has_errors = false;
+    }
+    return has_errors;
+  }
+
+  changeActiveTheme(event) {
+    // Defaults to blank
+    let theme = "blank";
+
+    // Check if event target is a button
+    if (event.target.tagName != "BUTTON") {
+      let button = event.target.closest("button");
+      theme = button.dataset.theme;
+    } else {
+      console.log(event.target.dataset.theme);
+      theme = event.target.dataset.theme;
+    }
+
+    let all_list_groups = document.querySelectorAll(".list-group-item");
+    all_list_groups.forEach((list_group) => {
+      list_group.classList.remove("active");
+    });
+
+    if (event.target.tagName != "BUTTON") {
+      let button = event.target.closest("button");
+      button.classList.add("active");
+    } else {
+      event.target.classList.add("active");
+    }
+
+    let theme_bucket_url = `https://storage.googleapis.com/theme_previews/${theme}/index.html`;
+
+    document.querySelector("#storage-bucket-iframe").src = theme_bucket_url;
+    document.querySelector("#theme-type-label").value = theme;
+  }
+
+  createNewSite(event) {
+    let site_name = document.querySelector("#new-site-name").innerText;
+    let csrf_token = document.querySelector("#csrf_token").value;
+    let theme_type = document.querySelector("#theme-type-label").innerText;
+    let next_button = document.querySelector("#next-stage-new-site");
+    let create_button = document.querySelector("#create-site-button");
+
+    next_button.disabled = true;
+    next_button.querySelector("span").classList.remove("d-none");
+    create_button.disabled = true;
+    create_button.querySelector("span").classList.remove("d-none");
+
+    // Post to the validate site name endpoint
+    fetch(
+      `/admin/sites/create_new_site?site_name=${site_name}&theme_type=${theme_type}`,
+      {
+        method: "POST",
+        headers: {
+          "X-CSRF-Token": csrf_token,
+          Accept: "application/json",
+        },
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        if (data.status == "success") {
+          next_button.querySelector("span").classList.add("d-none");
+          create_button.querySelector("span").classList.add("d-none");
+          window.location.href = `/admin/sites/${site_name}`;
+        }
+      });
+  }
+}

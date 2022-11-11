@@ -1,0 +1,63 @@
+<turbo-frame id="file-editor-turbo-frame">
+
+<textarea name="contents" id="file_content"><%= @file_contents %></textarea>
+
+<style>
+  .CodeMirror {
+    height: 100%;
+    border: 1px solid black;
+    min-height: 300px;
+  }
+</style>
+
+<script>
+  document.querySelector("#save-file-btn").disabled = true;
+  
+  // Create a codeeditor instance and add the contents
+  var editor = CodeMirror.fromTextArea(document.getElementById("file_content"), {
+    <% if @file_name.include?(".js") %>
+      mode: "javascript",
+    <% elsif @file_name.include?(".css") %>
+      mode: "css",
+    <% else %>
+      mode: "htmlmixed",
+    <% end %>
+    lineNumbers: true,
+    autoCloseTags: true,
+    autoCloseBrackets: true,
+    matchBrackets: true,
+    foldGutter: true,
+    //gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+    styleActiveLine: true,
+    indentUnit: 2,
+    indentWithTabs: false,
+    tabSize: 2,
+    extraKeys: {
+      "Ctrl-Space": "autocomplete",
+      "Cmd-S": function (instance) {
+        saveFile();
+      },
+    },
+  });
+  // Update the textarea so saving the file saves the latest changes
+  editor.on("change", function(cm, change) {
+      document.getElementById("file_content").value = cm.getValue();
+      // Enable save button
+      document.querySelector("#save-file-btn").disabled = false;
+    });
+    
+    // Used for extra keys in the Codemirror instance
+  function saveFile() {
+    document.querySelector("#save-file-btn").click();
+  }
+  
+  // When the button is clicked (either by clicking or pressing CMD+S), show the spinner
+  document.querySelector("#save-file-btn").addEventListener("click", function() {
+    // Disable save button
+    //document.querySelector("#save-file-btn").disabled = true;
+    this.querySelector("span").classList.remove("d-none");
+  });
+</script>
+
+</turboframe>
+

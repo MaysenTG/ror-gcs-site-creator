@@ -1,8 +1,12 @@
 class ApplicationController < ActionController::Base
+  #before_action :configure_permitted_parameters, if: :devise_controller?
   
   # def after_sign_in_path_for(resource)
-  #   #render json: { status: "success", user: current_account }
   #   redirect_to "/admin/sites"
-  #   return
   # end
+
+  # protected
+  # def configure_permitted_parameters
+  #   devise_parameter_sanitizer.for(:edit) << :username
+  # end 
 end

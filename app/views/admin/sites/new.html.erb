@@ -1,0 +1,94 @@
+<div class="new-site-wrapper" data-controller="newsite">
+  <div class="stage-container" id="stage-name">
+    <div class="container">
+      <div class="container w-75">
+        <h1 class="mb-3 mt-3">Create a new site</h1>
+        <nav aria-label="breadcrumb" class="mb-3">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item active" aria-current="page">Name</li>
+          </ol>
+        </nav>
+        <div id="new-site-name-error-wrapper" class="d-none alert alert-danger alert-dismissible fade show" role="alert">
+          Error: Site name is already taken or invalid.
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <form>
+          <div class="input-group mb-3">
+            <label for="basic-url" class="form-label">Your site URL</label>
+            <div class="input-group mb-3">
+              <input type="text" class="form-control" data-action="input->newsite#validateSiteName" id="basic-url" name="name" aria-describedby="basic-addon3" value="">
+              <span class="input-group-text" id="basic-addon3">.maysengreenwood.com</span>
+            </div>
+          </div>
+          <button class="mb-3 w-25 btn btn-primary" data-target-stage="theme" data-action="newsite#handleToggleStage" data-next-stage="true" type="button" id="next-stage-new-site" disabled="" data-goal-step="theme" style="float: right; padding: 15px; margin-bottom: 5rem;">
+          <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Next
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="stage-container d-none" id="stage-theme">
+    <div class="container">
+      <h1 class="mb-3 mt-3">Create a new site</h1>
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a data-target-stage="theme" data-action="newsite#handleToggleStage" href="#">Name</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">Theme</li>
+        </ol>
+      </nav>
+      <form>
+        <div class="row">
+          <div class="col-4">
+            <div class="input-group mb-3">
+              <label for="basic-url" class="form-label h3">Choose a theme for your site for <br><a href="#"><span id="new-site-name"></span>.maysengreenwood.com</a></label><br>
+              <div class="list-group">
+                <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action active" aria-current="true" data-theme="blank">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">Blank</h5>
+                  </div>
+                  <small>A blank theme with no content or styling. You will be given an index.html, style.css, and script.js file which are prelinked together.</small>
+                </button>
+                <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action" data-theme="portfolio">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">Portfolio website</h5>
+                  </div>
+                  <small>A portfolio website to show off you development skills. This theme includes a header, footer, and sections for your projects.</small>
+                </button>
+                <button data-action="newsite#changeActiveTheme" type="button" class="list-group-item list-group-item-action" data-theme="skeleton_react">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">Skeleton React</h5>
+                  </div>
+                  <small>A starter template for using React.js.</small>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-1"></div>
+          <div class="col-7">
+            <label class="form-label h3">Theme type: <span id="theme-type-label">blank</span></label><br>
+            <div class="card">
+              <div class="card-body" style="background-color: rgb(240, 240, 240);">
+                <h5 class="card-title">Theme Preview</h5>
+                <iframe id="storage-bucket-iframe" src="https://storage.googleapis.com/theme_previews/blank/index.html" title="Theme Preview" width="100%" height="600px" style="border: 1px solid black;"></iframe>
+              </div>
+            </div>
+          </div>
+          <br>
+        </div>
+        <br>
+        <div class="w-100 d-flex justify-content-between mt-3">
+          <button data-target-stage="name" data-action="newsite#handleToggleStage" class="mb-3 w-25 btn btn-secondary" type="button" style="padding: 15px; margin-bottom: 5rem;">
+            Back
+          </button>
+          <button class="mb-3 w-25 btn btn-primary" id="create-site-button" data-action="newsite#createNewSite" type="button" style="padding: 15px; margin-bottom: 5rem;">
+            <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Create my site!
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
