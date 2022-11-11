@@ -1,0 +1,57 @@
+<table id="site-files" class="table table-hover" style="border: 1px solid black;">
+      <thead>
+        <tr>
+          <th scope="col">Filename</th>
+          <th scope="col">Size</th>
+          <th scope="col">Copy URL</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @site_files_and_folders.each do |file| %>
+          <tr data-controller="folder" data-file="<%= file["name"] %>">
+            <th scope="row">
+            
+            <!-- If the file name ends with "/" -->
+            
+            <% if file["type"] == "file" %>
+              <a href="/admin/sites/<%= @site.name %>/files/edit?file_name=<%= file["name"] %>"><%= file["name"] %></a>
+            <% else %>
+              <i class="bi bi-folder-fill"></i>
+              <a href="#" data-action="folder#viewFolderFiles" data-folder-name="<%= file["name"] %>"><%= file["name"] %></a>
+            <% end %>
+            
+            <% if file["is_main"] %>
+              <i class="bi bi-star-fill"></i>
+            <% end %>
+            </th>
+            <td>
+            <% if file["type"] == "file" %>
+              <% if file["size"] > 1000 %>
+                <%= file["size"].to_i / 1000 %> kb
+              <% else %>
+                <%= file["size"] %> b
+              <% end %>
+            <% end %>
+            </td>
+            <td><button class="btn" type="button"><i data-file-name="<%= file["name"] %>" class="bi bi-clipboard"></i></button></td>
+            <td>
+              <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                
+                <ul class="dropdown-menu" data-controller="file">
+                  <% if file["type"] == "file" %>
+                    <li>
+                      <a class="dropdown-item" href="#" data-action="file#openRenameFileModal" data-bs-target="#renameFileModal" data-bs-toggle="modal" data-file-name="<%= file["name"] %>">Rename file</a>
+                    </li>
+                  <% end %>
+                  <li>
+                    <button data-file-name="<%= file["name"] %>" data-action="file#openDeleteFileModal" data-bs-target="#deleteFileModal" data-bs-toggle="modal" class="btn btn-danger dropdown-item" type="button">Delete</button>
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>

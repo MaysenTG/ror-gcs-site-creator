@@ -1,4 +1,14 @@
 Rails.application.routes.draw do
+  get 'files/create'
+  get 'files/edit'
+  get 'files/show'
+  get 'files/delete'
+  get 'files/rename'
+  get 'sites/index'
+  get 'sites/show'
+  get 'sites/new'
+  get 'sites/delete'
+  get 'sites/create'
   get 'file/create'
   get 'file/edit'
   get 'file/show'
@@ -15,8 +25,28 @@ Rails.application.routes.draw do
   resources :posts
   
   namespace :admin do
-    resources :sites
-    get 'sites/:site_id/files/:file_name' => 'sites#show_file'
+    get '/test_path/show' => 'sites#test_show'
+    #resources :sites
+    get 'sites/new' => 'sites#new'
+    get 'sites' => 'sites#index'
+    get 'sites/:site_name' => 'sites#show'
+    post 'sites/validate_site_name' => 'sites#validate_site_name'
+    post 'sites/create_new_site' => 'sites#create'
+    delete 'sites/:site_name/delete' => 'sites#delete'
+    
+    get 'sites/:site_name/files/edit' => 'files#show'
+    post 'sites/:site_name/files/update' => 'files#update'
+    post 'sites/:site_name/files/new' => 'files#create'
+    post 'sites/:site_name/files/upload' => 'files#upload'
+    delete '/sites/:site_name/delete' => 'files#delete'
+    delete '/sites/:site_name/files/delete' => 'files#delete'
+    patch 'sites/:site_name/files/rename' => 'files#rename'
+    
+    post 'sites/:site_name/folders/new' => 'files#create_folder'
+    # resources :sites do 
+    #   resources :files
+    # end
+    #get 'sites/:site_id/files/:file_name' => 'sites#show_file'
   end
   
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

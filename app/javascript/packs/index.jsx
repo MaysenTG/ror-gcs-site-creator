@@ -9,6 +9,6 @@ import App from "../components/index.jsx";
 const root = createRoot(document.getElementById("app"));
 
 // If the URL contains /accounts, render the Accounts component
-if (!window.location.pathname.includes("/accounts")) {
-  root.render(<App />);
-}
+// if (!window.location.pathname.includes("/accounts")) {
+//   root.render(<App />);
+// }

@@ -1,3 +1,6 @@
+require "HTTParty"
+require 'net/http'
+
 # require "google/apis/compute_v1"
 # require "google/cloud/storage"
 
@@ -354,5 +357,13 @@ class HomeController < ApplicationController
     
 #     # Using Ruby ERB, render the html
     
+
+    # Get data from the https://cdn.maysengreenwood.com/index.html URL
+    # Parse the data into a Ruby object
+    # Render the data into the view
+    
+    
+    # content = Net::HTTP.get_response(URI.parse("https://cdn.maysengreenwood.com/all.html")).body
+    # render html: content.html_safe
   end
 end

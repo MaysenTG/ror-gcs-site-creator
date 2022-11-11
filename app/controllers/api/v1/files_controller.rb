@@ -193,12 +193,7 @@ class Api::V1::FilesController < ApplicationController
 
   # POST - Renames the file
   def rename
-    puts "------------------"
-    puts "------------------"
-    puts "------------------"
-    puts "------------------"
     storage = Google::Cloud::Storage.new
-    puts "------------------"
     
     site_name = params[:site_name]
     

@@ -1,0 +1,45 @@
+
+  <div class="container mt-3">
+    <div id="code-editor-bar" class="mb-3 d-flex justify-content-start">
+      <a href="/admin/sites/<%= @site["name"] %>" class="btn btn-primary">Back to files</a>&nbsp;
+      <div class="w-100 d-flex justify-content-between">
+        <h1>Editing "<%= @file_name %>"</h1>
+        <button type="submit" class="btn btn-success" id="save-file-btn" form="file-editor-form" disabled="">
+          <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Save changes
+        </button>
+      </div>
+    </div>
+    <form action="/admin/sites/<%= @site["name"] %>/files/update" id="file-editor-form" method="post" data-turbo="true">
+      <input type="hidden" id="site_id" name="site_id" value="<%= @site["id"] %>">
+      <input type="hidden" id="site_name" name="site_name" value="<%= @site["name"] %>">
+      <input type="hidden" id="file_name" name="file_name" value="<%= @file_name %>">
+        <%= render :partial => 'admin/files/editor', :locals => { :file_contents => @file_contents, :file_name => @file_name } %>
+    </form>
+  </div>
+    <div class="toast-container position-fixed bottom-0 p-3">
+      <div id="fileSavedToast" class="toast text-bg-primary">
+        <div class="toast-header text-bg-primary">
+          <strong class="me-auto">File saved</strong>
+        </div>
+        <div class="toast-body">
+          File was successfully saved!
+        </div>
+      </div>
+    </div>
+    
+<script>
+// When the turbo-frame updates the editor, show the toast to show the user that the file was saved
+document.addEventListener("turbo:before-fetch-response", function (e) {
+    const toastLiveExample = document.getElementById('fileSavedToast')
+    const toast = new bootstrap.Toast(toastLiveExample)
+    toast.show();
+    document.querySelector("#save-file-btn").querySelector("span").classList.add("d-none");
+  })
+</script>
+
+<style>
+ #code-editor-bar {
+  position: static;
+ }
+</style>
