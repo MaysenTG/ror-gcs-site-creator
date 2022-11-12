@@ -116,7 +116,7 @@ export default class extends Controller {
     let theme_bucket_url = `https://storage.googleapis.com/theme_previews/${theme}/index.html`;
 
     document.querySelector("#storage-bucket-iframe").src = theme_bucket_url;
-    document.querySelector("#theme-type-label").value = theme;
+    document.querySelector("#theme-type-label").innerText = theme;
   }
 
   createNewSite(event) {
