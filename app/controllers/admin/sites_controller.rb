@@ -125,12 +125,13 @@ class Admin::SitesController < ApplicationController
   end
   
   def validate_site_name
+    reserved_names = ["cdn", "cv", "portfolio"]
     all_sites = Site.all
     
     name_taken = false
     
     all_sites.each do |site|
-      if site.name == params[:site_name]
+      if site.name == params[:site_name] or reserved_names.include? params[:site_name]
         name_taken = true
         break
       end

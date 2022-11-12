@@ -92,7 +92,7 @@ export default class extends Controller {
         document.querySelector("input[name='file_name']").value;
     }
     let formData = new FormData(form);
-    
+
     document.querySelector("input[name='file_name']").value = new_file_name;
 
     let site_name = document.querySelector("#site_name").value;
@@ -123,9 +123,19 @@ export default class extends Controller {
 
           modal.hide();
           // Append the new file to the table
-          let table = document.querySelector("#site-files");
+          let table = "";
+          if (folder_name) {
+            table = document.querySelector(`#site-files-for-${folder_name}`);
+          } else {
+            table = document.querySelector("#site-files");
+          }
+
           let row = table.insertRow(-1);
-          row.setAttribute("data-file-name", data.file_name);
+          row.setAttribute("data-file", data.file_name);
+          if (folder_name) {
+            row.setAttribute("data-controller", "folder");
+          }
+
           row.innerHTML = `
           <th scope="row"><a href="/admin/sites/maysen/files/edit?file_name=${data.file_name}">${data.file_name}</a></th>
           <td>0 b</td>
@@ -176,13 +186,17 @@ export default class extends Controller {
           delete_file_button.disabled = false;
           delete_file_button.querySelector("span").classList.add("d-none");
 
-          modal.hide();
           // Remove the file from the table
-          let table = document.querySelector("#site-files");
-          table
-            .querySelector(`[data-file-name="${data.file_name}"]`)
-            .closest("tr")
-            .remove();
+          // If the filename ends with "/" then it is a folder
+          if (data.file_name.endsWith("/")) {
+            document
+              .querySelector(`[data-file="${data.file_name.split("/")[0]}"]`)
+              .remove();
+          } else {
+            document.querySelector(`[data-file="${data.file_name}"]`).remove();
+          }
+
+          modal.hide();
         } else {
           console.log("Error");
         }

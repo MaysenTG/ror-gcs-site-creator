@@ -16,9 +16,9 @@
   // Create a codeeditor instance and add the contents
   var editor = CodeMirror.fromTextArea(document.getElementById("file_content"), {
     <% if @file_name.include?(".js") %>
-      mode: "javascript",
+      mode: "text/javascript",
     <% elsif @file_name.include?(".css") %>
-      mode: "css",
+      mode: "text/css",
     <% else %>
       mode: "htmlmixed",
     <% end %>
@@ -39,6 +39,7 @@
       },
     },
   });
+  
   // Update the textarea so saving the file saves the latest changes
   editor.on("change", function(cm, change) {
       document.getElementById("file_content").value = cm.getValue();

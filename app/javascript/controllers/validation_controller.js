@@ -26,6 +26,7 @@ export default class extends Controller {
       input_value.includes(".") ||
       input_value.includes("/") ||
       input_value == "" ||
+      input_value != input_value.toLowerCase() ||
       !/^[a-zA-Z0-9-]*$/.test(input_value)
     ) {
       return true;
@@ -55,7 +56,8 @@ export default class extends Controller {
       input_value.includes(">") ||
       input_value.includes("|") ||
       input_value.includes("\\") ||
-      input_value.includes("/")
+      input_value.includes("/") ||
+      input_value != input_value.toLowerCase()
     ) {
       rename_file_button.disabled = true;
     } else {

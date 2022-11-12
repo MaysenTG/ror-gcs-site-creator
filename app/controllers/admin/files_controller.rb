@@ -39,6 +39,10 @@ class Admin::FilesController < ApplicationController
       end
     end
     
+    if file_name_plus_type.include? "/" and file_name_plus_type.split("/").length > 1
+      file_name_plus_type = file_name_plus_type.split("/").last
+    end
+    
     render json: { status: "success", file_name: file_name_plus_type }
   end
 
@@ -165,6 +169,10 @@ class Admin::FilesController < ApplicationController
       file = bucket.file file_name_plus_type
       
       file.delete
+    end
+    
+    if file_name_plus_type.include? "/" and file_name_plus_type.split("/").length > 1
+      file_name_plus_type = file_name_plus_type.split("/").last
     end
     
     render json: { status: "success", messages: "File successfully deleted", file_name: file_name_plus_type }
