@@ -1,10 +1,30 @@
 
   <div class="container mt-3">
     <div id="code-editor-bar" class="mb-3 d-flex justify-content-start">
-      <a href="/admin/sites/<%= @site["name"] %>" class="btn btn-primary">Back to files</a>&nbsp;
+      <a href="/admin/sites/<%= @site["name"] %>" class="focus:outline-none text-white text-sm py-2.5 px-3 rounded-md bg-gray-500 hover:bg-gray-600 hover:shadow-lg flex items-center">Back</a>&nbsp;
       <div class="w-100 d-flex justify-content-between">
-        <h1>Editing "<%= @file_name %>"</h1>
-        <button type="submit" class="btn btn-success" id="save-file-btn" form="file-editor-form" disabled="">
+        <div class="d-flex justify-content-start align-items-center">
+          <h3 class="font-medium leading-tight text-3xl mt-0 mb-2 text-blue-600">Editing "<%= @file_name %>"</h3>
+          &nbsp;
+          <% if @file_name.include?("/") %>
+            <% folder_name,file_name = @file_name.split("/") %>
+          <% else %>
+            <% file_name = @file_name %>
+          <% end %>
+          
+          <% if folder_name.nil? %>
+            <% a_href = "https://"+@site["name"]+".maysengreenwood.com/" + file_name %>
+          <% else %>
+            <% a_href = "https://"+@site["name"]+".maysengreenwood.com/"+folder_name + "/" + file_name %>
+          <% end %>
+          <a target="_blank" href="<%= a_href %>" class="w-6 mr-2 transform hover:text-purple-500 hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+          </a>
+        </div>
+        <button type="submit" class="focus:outline-none text-gray-400 text-sm py-2.5 px-5 disabled:bg-green-200 rounded-md bg-green-500 hover:bg-green-600" id="save-file-btn" form="file-editor-form" disabled="">
           <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Save changes
         </button>

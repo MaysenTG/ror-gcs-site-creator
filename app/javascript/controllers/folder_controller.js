@@ -88,7 +88,7 @@ export default class extends Controller {
     // Re render the files table with the folder's files
     let site_name = document.querySelector("#site_name").value;
     let all_files_and_folders = window.all_files_and_folders;
-    let folder_name = event.target.getAttribute("data-folder-name");
+    let folder_name = event.target.closest(`a.div-folder-target`).getAttribute("data-folder-name");
 
     // Get the item in the all_files_and_folders array that matches the folder name
     let folder = all_files_and_folders.find((item) => item.name == folder_name);

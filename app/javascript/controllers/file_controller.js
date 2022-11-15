@@ -48,27 +48,8 @@ export default class extends Controller {
           }
 
           // if the table already contains a row of the filename, update the size
-          let existing_row = document.querySelector(
-            `[data-file-name="${data.file_name}"]`
-          );
-          if (existing_row) {
-            existing_row.querySelector("td:nth-child(2)").innerHTML =
-              file_size_string;
-          } else {
-            row.innerHTML = `
-            <th scope="row"><a href="/admin/sites/maysen/files/edit?file_name=${data.file_name}">${data.file_name}</a></th>
-            <td>${file_size_string}</td>
-            <td><button class="btn" type="button"><i data-file-name="${data.file_name}" class="bi bi-clipboard"></i></button></td>
-            <td>
-                <div class="dropdown">
-                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#" data-file-name="${data.file_name}">Rename file</a></li>
-                    <li><button data-file-name="${data.file_name}" data-modal-id="deleteFileModal" class="btn btn-danger dropdown-item" type="button">Delete</button></li>
-                  </ul>
-                </div>
-              </td>`;
-          }
+
+          window.location.reload();
         } else {
           console.log("Error");
         }
@@ -136,19 +117,16 @@ export default class extends Controller {
             row.setAttribute("data-controller", "folder");
           }
 
-          row.innerHTML = `
-          <th scope="row"><a href="/admin/sites/maysen/files/edit?file_name=${data.file_name}">${data.file_name}</a></th>
-          <td>0 b</td>
-          <td><button class="btn" type="button"><i data-file-name="${data.file_name}" class="bi bi-clipboard"></i></button></td>
-          <td>
-              <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#" data-file-name="${data.file_name}">Rename file</a></li>
-                  <li><button data-file-name="${data.file_name}" data-modal-id="deleteFileModal" class="btn btn-danger dropdown-item" type="button">Delete</button></li>
-                </ul>
-              </div>
-            </td>`;
+          // Copy a row of the table and replace the file name with the new file name
+          let copy = table.querySelector("tr").cloneNode(true);
+          copy.setAttribute("data-file", data.file_name);
+          if (folder_name) {
+            copy.setAttribute("data-controller", "folder");
+          }
+          copy.querySelector(
+            "th"
+          ).innerHTML = `<a href="/admin/sites/${site_name}/files/edit?file_name=${data.file_name}">${data.file_name}</a>`;
+          copy.querySelector("td:nth-child(2)").innerHTML = "0 b";
         } else {
           console.log("Error");
         }
@@ -190,10 +168,14 @@ export default class extends Controller {
           // If the filename ends with "/" then it is a folder
           if (data.file_name.endsWith("/")) {
             document
-              .querySelector(`[data-file="${data.file_name.split("/")[0]}"]`)
+              .querySelector(
+                `[data-file-name="${data.file_name.split("/")[0]}"]`
+              )
               .remove();
           } else {
-            document.querySelector(`[data-file="${data.file_name}"]`).remove();
+            document
+              .querySelector(`[data-file-name="${data.file_name}"]`)
+              .remove();
           }
 
           modal.hide();
@@ -244,20 +226,35 @@ export default class extends Controller {
   }
 
   openDeleteFileModal(event) {
-    document.querySelector("#file_name").value = event.target.dataset.fileName;
-    document.querySelector("#folder_name").value =
-      event.target.dataset.folderName;
+    // The clicked element is the SVG
+    let target_tr = event.target.closest("tr");
+    console.log("asdjaskdhasj");
+    console.log(target_tr);
+    console.log("asdjaskdhasj");
+
+    document.querySelector("#file_name").value = target_tr.dataset.fileName;
+    document.querySelector("#folder_name").value = target_tr.dataset.folderName;
   }
 
   // Populate the open file modal with the file name
   openRenameFileModal(event) {
-    document.querySelector("#current_file_name").value =
-      event.target.dataset.fileName;
+    let target_tr = event.target.closest("tr");
 
-    document.querySelector("#new_file_name").value =
-      event.target.dataset.fileName;
-
-    document.querySelector("#folder_name").value =
-      event.target.dataset.folderName;
+    // If the file name contains a "/" then it is a folder
+    if (target_tr.dataset.fileName.includes("/")) {
+      let folder_and_file = target_tr.dataset.fileName.split("/");
+      let file_name = folder_and_file[1];
+      let folder_name = folder_and_file[0];
+      document.querySelector("#current_file_name").value = file_name;
+      document.querySelector("#new_file_name").value = file_name;
+      document.querySelectorAll("#folder_name").forEach((element) => {
+        element.value = folder_name;
+      });
+    } else {
+      let file_name = target_tr.dataset.fileName;
+      let folder_name = target_tr.dataset.folderName;
+      document.querySelector("#current_file_name").value = file_name;
+      document.querySelector("#new_file_name").value = file_name;
+    }
   }
 }

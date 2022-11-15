@@ -16,6 +16,17 @@ class Admin::FilesController < ApplicationController
     
     file_name_plus_type = params[:file_name] + "." + params[:file_type]
     
+    folder_name = params[:folder_name]
+    
+    if !folder_name.nil? || folder_name != ""
+      if folder_name.ends_with?("/")
+        folder_name.gsub(/\/$/, '')
+      end
+      
+      file_name_plus_type = folder_name + "/" + file_name_plus_type
+      file_name_plus_type.gsub!(/\/\//, '/')
+    end
+
     bucket_name = site.name + ".maysengreenwood.com"
     
     bucket = storage.bucket bucket_name, skip_lookup: true
@@ -42,8 +53,71 @@ class Admin::FilesController < ApplicationController
     if file_name_plus_type.include? "/" and file_name_plus_type.split("/").length > 1
       file_name_plus_type = file_name_plus_type.split("/").last
     end
-    
-    render json: { status: "success", file_name: file_name_plus_type }
+      
+      all_files = []
+      
+      only_main_folders = []
+
+      unless bucket.files.nil?
+        bucket.files.each do |file|
+          if bucket.website_main == file.name
+            all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: true, is_404: false})
+          elsif bucket.website_404 == file.name
+            all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: false, is_404: true})
+          else
+            all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: false, is_404: false})
+          end
+        end
+      end
+      
+      # Loop through all the files, and find the main folders
+      main_folders = []
+      all_files.each do |file|
+        if file[:name].include? "/"
+          main_folders.push(file[:name].split("/")[0])
+        end
+      end
+      
+      
+      @site = site
+      site_files = all_files.as_json
+      
+      all_folders = []
+      
+      files = []
+      
+      all_files.each do |file|
+        if file[:name].include? "/"
+          # This is a folder
+          folder_name = file[:name].split("/")[0]
+          all_folders.push({type: "folder", name: folder_name, files: [], size: 0})
+        else
+          # This is a file
+          files.push(file)
+        end
+      end
+      
+      # Remove duplicates
+      all_folders.uniq!
+      
+      all_folders.each do |folder|
+        site_files.each do |file|
+          if file["name"].include? folder[:name] and !file["name"].ends_with?("/")
+            file_without_folder = file["name"].split("/")[1]
+            folder[:files].push({type: "file", name: file_without_folder, size: file["size"], last_updated: file["last_updated"], is_main: false, is_404: false})
+            #folder[:files].push(file_without_folder)  
+          elsif !file["name"].include?("/")
+          end
+        end
+      end
+      
+      @site_files_and_folders = files + all_folders
+      @site_files_and_folders = @site_files_and_folders.as_json
+      @folders_with_files = all_folders
+      
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.update("all-site-files", partial: "admin/sites/allfiles", :locals => { :site => @site, :site_files_and_folders => @site_files_and_folders, :folders_with_files => @folders_with_files }) }
+      end
   end
 
   def edit
@@ -82,8 +156,7 @@ class Admin::FilesController < ApplicationController
       
       @site = site.as_json
       @file_contents = contents
-      @file_name = file_name
-      
+      @file_name = file_name    
     
       #render json: { status: "success", site: site.as_json, file_contents: contents, file_name: file_name, is_404: is_404, is_main: is_main }
     # rescue
@@ -171,9 +244,11 @@ class Admin::FilesController < ApplicationController
       file.delete
     end
     
-    if file_name_plus_type.include? "/" and file_name_plus_type.split("/").length > 1
-      file_name_plus_type = file_name_plus_type.split("/").last
-    end
+    
+    
+    # if file_name_plus_type.include? "/" and file_name_plus_type.split("/").length > 1
+    #   file_name_plus_type = file_name_plus_type.split("/").last
+    # end
     
     render json: { status: "success", messages: "File successfully deleted", file_name: file_name_plus_type }
   end
@@ -196,7 +271,7 @@ class Admin::FilesController < ApplicationController
     #   new_file_name = params[:folder_name] + "/" + params[:new_file_name]
     # else
     
-    if params[:folder_name] != ""
+    if params[:folder_name].length > 0 and params[:folder_name] != "undefined"
       file_name_plus_type = params[:folder_name] + "/" + file_name_plus_type
       new_file_name = params[:folder_name] + "/" + new_file_name
     end
@@ -230,6 +305,71 @@ class Admin::FilesController < ApplicationController
     
     folder = bucket.create_file StringIO.new(""), folder_name
     
-    render json: { status: "success", folder_name: folder_name }
+    #render json: { status: "success", folder_name: folder_name }
+    
+    all_files = []
+      
+      only_main_folders = []
+
+      unless bucket.files.nil?
+        bucket.files.each do |file|
+          if bucket.website_main == file.name
+            all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: true, is_404: false})
+          elsif bucket.website_404 == file.name
+            all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: false, is_404: true})
+          else
+            all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: false, is_404: false})
+          end
+        end
+      end
+      
+      # Loop through all the files, and find the main folders
+      main_folders = []
+      all_files.each do |file|
+        if file[:name].include? "/"
+          main_folders.push(file[:name].split("/")[0])
+        end
+      end
+      
+      
+      @site = site
+      site_files = all_files.as_json
+      
+      all_folders = []
+      
+      files = []
+      
+      all_files.each do |file|
+        if file[:name].include? "/"
+          # This is a folder
+          folder_name = file[:name].split("/")[0]
+          all_folders.push({type: "folder", name: folder_name, files: [], size: 0})
+        else
+          # This is a file
+          files.push(file)
+        end
+      end
+      
+      # Remove duplicates
+      all_folders.uniq!
+      
+      all_folders.each do |folder|
+        site_files.each do |file|
+          if file["name"].include? folder[:name] and !file["name"].ends_with?("/")
+            file_without_folder = file["name"].split("/")[1]
+            folder[:files].push({type: "file", name: file_without_folder, size: file["size"], last_updated: file["last_updated"], is_main: false, is_404: false})
+            #folder[:files].push(file_without_folder)  
+          elsif !file["name"].include?("/")
+          end
+        end
+      end
+      
+      @site_files_and_folders = files + all_folders
+      @site_files_and_folders = @site_files_and_folders.as_json
+      @folders_with_files = all_folders
+      
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.update("all-site-files", partial: "admin/sites/allfiles", :locals => { :site => @site, :site_files_and_folders => @site_files_and_folders, :folders_with_files => @folders_with_files }) }
+      end
   end
 end

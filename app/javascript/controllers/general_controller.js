@@ -9,4 +9,14 @@ export default class extends Controller {
       document.querySelector(`a[data-folder-name="${folder_name}"]`).click();
     }
   }
+
+  openCreateFileModal(event) {
+    let queryStrings = window.location.search;
+    let urlParams = new URLSearchParams(queryStrings);
+    let folder_name = urlParams.get("folder");
+    if (folder_name) {
+      document.querySelector("input[name='folder_name']").value =
+        folder_name + "/";
+    }
+  }
 }
