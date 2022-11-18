@@ -122,7 +122,9 @@ class Admin::SitesController < ApplicationController
   end
   
   def validate_site_name
-    reserved_names = ["cdn", "cv", "portfolio"]
+    #
+    reserved_names = ["cdn", "cv", "portfolio", "new", "files", "file"]
+    
     all_sites = Site.all
     
     name_taken = false

@@ -4,7 +4,6 @@ export default class extends Controller {
   connect() {}
 
   uploadFile(event) {
-    console.log("uploadFile");
     let form = document.querySelector("#upload-file-form");
     let formData = new FormData(form);
 
@@ -29,7 +28,6 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         if (data.status == "success") {
           upload_file_button.disabled = false;
           upload_file_button.querySelector("span").classList.add("d-none");
@@ -57,7 +55,6 @@ export default class extends Controller {
   }
 
   createFile(event) {
-    console.log("createFile");
 
     let queryStrings = window.location.search;
     let urlParams = new URLSearchParams(queryStrings);
@@ -97,7 +94,6 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         if (data.status == "success") {
           create_file_button.disabled = false;
           create_file_button.querySelector("span").classList.add("d-none");
@@ -134,7 +130,6 @@ export default class extends Controller {
   }
 
   deleteFile(event) {
-    console.log("deleteFile");
     let form = document.querySelector("#delete-file-form");
     let formData = new FormData(form);
 
@@ -159,7 +154,6 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         if (data.status == "success") {
           delete_file_button.disabled = false;
           delete_file_button.querySelector("span").classList.add("d-none");
@@ -186,7 +180,6 @@ export default class extends Controller {
   }
 
   renameFile(event) {
-    console.log("renameFile");
     let form = document.querySelector("#rename-file-form");
     let formData = new FormData(form);
 
@@ -211,7 +204,6 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         if (data.status == "success") {
           rename_file_button.disabled = false;
           rename_file_button.querySelector("span").classList.add("d-none");
@@ -228,9 +220,6 @@ export default class extends Controller {
   openDeleteFileModal(event) {
     // The clicked element is the SVG
     let target_tr = event.target.closest("tr");
-    console.log("asdjaskdhasj");
-    console.log(target_tr);
-    console.log("asdjaskdhasj");
 
     document.querySelector("#file_name").value = target_tr.dataset.fileName;
     document.querySelector("#folder_name").value = target_tr.dataset.folderName;

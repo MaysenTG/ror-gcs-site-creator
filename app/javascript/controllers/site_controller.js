@@ -3,8 +3,6 @@ import { Controller } from "@hotwired/stimulus";
 export default class extends Controller {
   initialize() {
     //this.element.textContent = "Hello World!"
-    console.log("Hello World!");
-    console.log(this.element);
   }
 
   openDeleteSiteModal(event) {
@@ -36,7 +34,6 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         if (data.status == "success") {
           delete_site_button.disabled = false;
           delete_site_button.querySelector("span").classList.add("d-none");

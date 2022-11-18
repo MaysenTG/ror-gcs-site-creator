@@ -2,7 +2,7 @@
   <div class="stage-container" id="stage-name">
     <div class="container">
       <div class="container w-75">
-        <h1 class="mb-3 mt-3">Create a new site</h1>
+        <h1 class="h1 mb-3 mt-3">Create a new site</h1>
         <nav aria-label="breadcrumb" class="mb-3">
           <ol class="breadcrumb">
             <li class="breadcrumb-item active" aria-current="page">Name</li>
@@ -30,7 +30,7 @@
   </div>
   <div class="stage-container d-none" id="stage-theme">
     <div class="container">
-      <h1 class="mb-3 mt-3">Create a new site</h1>
+      <h1 class="h1 mb-3 mt-3">Create a new site</h1>
       <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
           <li class="breadcrumb-item">
@@ -80,7 +80,7 @@
         </div>
         <br>
         <div class="w-100 d-flex justify-content-between mt-3">
-          <button data-target-stage="name" data-action="newsite#handleToggleStage" class="mb-3 w-25 text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-2.5" type="button" style="padding: 15px; margin-bottom: 5rem;">
+          <button id="back-to-name-btn" data-target-stage="name" data-action="newsite#handleToggleStage" class="mb-3 w-25 text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-2.5" type="button" style="padding: 15px; margin-bottom: 5rem;">
             Back
           </button>
           <button class="mb-3 w-25 focus:outline-none text-white text-sm py-2.5 px-5 rounded-md bg-blue-500 disabled:bg-blue-200" id="create-site-button" data-action="newsite#createNewSite" type="button" style="padding: 15px; margin-bottom: 5rem;">
