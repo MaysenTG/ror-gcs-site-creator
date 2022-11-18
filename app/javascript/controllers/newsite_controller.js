@@ -53,7 +53,6 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         if (data.status == "success") {
           next_button.querySelector("span").classList.add("d-none");
 
@@ -97,7 +96,6 @@ export default class extends Controller {
       let button = event.target.closest("button");
       theme = button.dataset.theme;
     } else {
-      console.log(event.target.dataset.theme);
       theme = event.target.dataset.theme;
     }
 
@@ -125,11 +123,13 @@ export default class extends Controller {
     let theme_type = document.querySelector("#theme-type-label").innerText;
     let next_button = document.querySelector("#next-stage-new-site");
     let create_button = document.querySelector("#create-site-button");
+    let back_button = document.querySelector("#back-to-name-btn");
 
     next_button.disabled = true;
     next_button.querySelector("span").classList.remove("d-none");
     create_button.disabled = true;
     create_button.querySelector("span").classList.remove("d-none");
+    back_button.disabled = true;
 
     // Post to the validate site name endpoint
     fetch(
@@ -144,7 +144,6 @@ export default class extends Controller {
     )
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         if (data.status == "success") {
           next_button.querySelector("span").classList.add("d-none");
           create_button.querySelector("span").classList.add("d-none");

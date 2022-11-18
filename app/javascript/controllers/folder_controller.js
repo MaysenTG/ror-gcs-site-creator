@@ -47,7 +47,6 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         if (data.status == "success") {
           delete_folder_button.disabled = false;
           delete_folder_button.querySelector("span").classList.add("d-none");
