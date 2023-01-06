@@ -1,4 +1,4 @@
-require "google/apis/compute_v1"
+#require "google/apis/compute_v1"
 require "google/cloud/storage"
 
 ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.json"
