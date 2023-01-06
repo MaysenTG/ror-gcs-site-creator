@@ -1,16 +1,14 @@
-<%= javascript_tag do %>
-  window.all_files_and_folders = <%= raw @site_files_and_folders.to_json %>
-<% end %>
-
 <div data-controller="general" class="container">
   <div class="container mt-3">
     <a href="/admin/sites" class="mb-3 btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to sites</a>
     <div class="mb-3 d-flex justify-content-start">
       &nbsp;
       <div class="w-100 d-flex justify-content-between flex-wrap align-items-center">
-        <h1>Files</h1>
+        <h1 class="font-medium leading-tight text-3xl mt-0 mb-2 text-black-600">Files</h1>
       </div>
     </div>
+    
+    <!-- Begin general -->
     <div class="mb-3 d-flex justify-content-start">
       &nbsp;
       <div class="w-100 d-flex justify-content-between flex-wrap">
@@ -27,154 +25,44 @@
             </svg>
           </div>
           <div class="col-10">
-            <h3><%= @site.name %></h3>
-            <a target="_blank" href="https://<%= @site.name %>.maysengreenwood.com">
-              <h3><%= @site.name %>.maysengreenwood.com</h3>
+            <h3 class="font-medium leading-tight text-3xl mt-0 text-black-600 md:text-lg"><%= @site.name %></h3>
+            <a class="font-medium text-3xl mt-0 mb-2 text-blue-600 md:text-lg" target="_blank" href="https://<%= @site.name %>.maysengreenwood.com">
+              <%= @site.name %>.maysengreenwood.com
             </a>
           </div>
         </div>
         <div class="dropdown">
-          <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">New file/folder</button>
+          <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2.5 text-center inline-flex items-center dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">New file/folder</button>
           <ul class="dropdown-menu">
-            <li><button type="button" class="btn btn-primary dropdown-item" data-bs-toggle="modal" data-bs-target="#createFileModal">Create a new file</button></li>
+            <li><button type="button" data-action="general#openCreateFileModal" class="btn btn-primary dropdown-item" data-bs-toggle="modal" data-bs-target="#createFileModal">Create a new file</button></li>
             <li><button type="button" class="btn btn-primary dropdown-item" data-bs-toggle="modal" data-bs-target="#createFolderModal">Create a new folder</button></li>
             <li><button type="button" class="btn btn-primary dropdown-item" data-bs-toggle="modal" data-bs-target="#uploadFileModal">Upload a file</button></li>
           </ul>
         </div>
       </div>
     </div>
-    <nav class="mb-3" aria-label="breadcrumb">
+    <!-- End general -->
+    
+    <!-- Breadcrumb -->
+    <%# <nav class="mb-3" aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item active" aria-current="page">Root folder</li>
       </ol>
-    </nav>
+    </nav> %>
+    <!-- End breadcrumb -->
     
     <div data-controller="folder">
       <a id="toggle-back-to-root-folder" href="#" class="d-none" data-action="folder#viewRootFolder">
-        <i class="bi bi-arrow-left"></i>
-        Back to root folder
+      <i class="bi bi-arrow-left"></i>
+      Back to root folder
       </a>
     </div>
     
-    <table id="site-files" class="files-table table table-hover" style="border: 1px solid black;">
-      <thead>
-        <tr>
-          <th scope="col">Filename</th>
-          <th scope="col">Size</th>
-          <th scope="col">Copy URL</th>
-          <th scope="col">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @site_files_and_folders.each do |file| %>
-          <tr data-controller="folder" data-file="<%= file["name"] %>">
-            <th scope="row">
-            
-            <!-- If the file name ends with "/" -->
-            
-            <% if file["type"] == "file" %>
-              <a href="/admin/sites/<%= @site.name %>/files/edit?file_name=<%= file["name"] %>"><%= file["name"] %></a>
-            <% else %>
-              <i class="bi bi-folder-fill"></i>
-              <a href="#" data-action="folder#viewFolderFiles" data-folder-name="<%= file["name"] %>"><%= file["name"] %></a>
-            <% end %>
-            
-            <% if file["is_main"] %>
-              <i class="bi bi-star-fill"></i>
-            <% end %>
-            </th>
-            <td>
-            <% if file["type"] == "file" %>
-              <% if file["size"] > 1000 %>
-                <%= file["size"].to_i / 1000 %> kb
-              <% else %>
-                <%= file["size"] %> b
-              <% end %>
-            <% end %>
-            </td>
-            <td><button class="btn" type="button"><i data-file-name="<%= file["name"] %>" class="bi bi-clipboard"></i></button></td>
-            <td>
-              <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                
-                <ul class="dropdown-menu" data-controller="file">
-                  <% if file["type"] == "file" %>
-                    <li>
-                      <a class="dropdown-item" href="#" data-action="file#openRenameFileModal" data-bs-target="#renameFileModal" data-bs-toggle="modal" data-file-name="<%= file["name"] %>">Rename file</a>
-                    </li>
-                  <% end %>
-                  <li>
-                    <button data-file-name="<%= file["name"] %>" data-action="file#openDeleteFileModal" data-bs-target="#deleteFileModal" data-bs-toggle="modal" class="btn btn-danger dropdown-item" type="button">Delete</button>
-                  </li>
-                </ul>
-              </div>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+    <turbo-frame id="all-site-files">
+      <%= render partial: "admin/sites/allfiles", :locals => { :site => @site, :site_files_and_folders => @site_files_and_folders } %>
+    </turbo-frame>
     
-    <% @folders_with_files.each do |folder| %>
-      <%# <table id="site-folder-files-" class="table table-hover" style="border: 1px solid black;"> %>
-      <table id="site-files-for-<%= folder[:name] %>" class="d-none files-table table table-hover" style="border: 1px solid black;">
-      <thead>
-        <tr>
-          <th scope="col">Filename</th>
-          <th scope="col">Size</th>
-          <th scope="col">Copy URL</th>
-          <th scope="col">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-      <% if folder[:files].length == 0 %>
-        <tr>
-          <td colspan="4">This folder is empty.</td>
-        </tr>
-      <% end %>
-      <% folder[:files].each do |file| %>
-      <% file = file.as_json %>
-          <tr data-controller="folder" data-file="<%= file["name"] %>">
-            <th scope="row">
-            
-            <!-- If the file name ends with "/" -->
-            
-            <a href="/admin/sites/<%= @site.name %>/files/edit?file_name=<%= folder[:name] %>/<%= file["name"] %>"><%= file["name"] %></a>
-            
-            <% if file["is_main"] %>
-              <i class="bi bi-star-fill"></i>
-            <% end %>
-            </th>
-            <td>
-            <% if file["type"] == "file" %>
-              <% if file["size"] > 1000 %>
-                <%= file["size"].to_i / 1000 %> kb
-              <% else %>
-                <%= file["size"] %> b
-              <% end %>
-            <% end %>
-            </td>
-            <td><button class="btn" type="button"><i data-file-name="<%= file["name"] %>" class="bi bi-clipboard"></i></button></td>
-            <td>
-              <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                
-                <ul class="dropdown-menu" data-controller="file">
-                  <% if file["type"] == "file" %>
-                    <li>
-                      <a class="dropdown-item" href="#" data-action="file#openRenameFileModal" data-bs-target="#renameFileModal" data-bs-toggle="modal" data-folder-name="<%= folder[:name] %>" data-file-name="<%= file["name"] %>">Rename file</a>
-                    </li>
-                  <% end %>
-                  <li>
-                    <button data-file-name="<%= folder[:name] %>/<%= file["name"] %>" data-folder-name="<%= folder[:name] %>" data-action="file#openDeleteFileModal" data-bs-target="#deleteFileModal" data-bs-toggle="modal" class="btn btn-danger dropdown-item" type="button">Delete</button>
-                  </li>
-                </ul>
-              </div>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-    <% end %>
+    <!-- END HERE -->
     
     <div class="modal fade" id="createFileModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -186,9 +74,11 @@
           <div class="modal-body">
             <div class="container">
               <div class="mb-3">
-                <form action="/admin/sites/<%= @site["name"] %>/files/new" id="create-file-form">
+                <form action="/admin/sites/<%= @site["name"] %>/files/new" method="post" data-turbo="true" id="create-file-form">
                   <input type="hidden" name="site_id" value="1">
                   <input type="hidden" name="site_name" id="site_name" value="<%= @site["name"] %>">
+                  <input type="hidden" name="folder_name" id="folder_name" value="">
+                  
                   <div data-controller="validation" class="mb-3">
                     <label for="name" class="form-label">File name</label>
                     <input data-action="input->validation#validate" type="text" class="form-control" id="name" name="file_name">
@@ -205,22 +95,21 @@
                     <option value="none">Set file type</option>
                     <option value="set_as_main">Set as main page</option>
                     <option value="set_as_404">Set as the 404 page</option>
-                  </select> %>
+                    </select> %>
                 </form>
               </div>
             </div>
           </div>
           <div data-controller="file" class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button data-action="file#createFile" type="button" form="create-file-form" disabled="" class="btn btn-primary">
-              <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              Create file
+            <button type="button" class="text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-2.5" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" form="create-file-form" disabled="" class="focus:outline-none text-white text-sm py-2.5 px-5 rounded-md bg-blue-500 disabled:bg-blue-200">
+            <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Create file
             </button>
           </div>
         </div>
       </div>
-    </div>    
-    
+    </div>
     <%= render :partial => "layouts/modals/sites/show/createfolder", :locals => { :site => @site } %>
     <%= render :partial => "layouts/modals/sites/show/renamefile", :locals => { :site => @site } %>
     <%= render :partial => "layouts/modals/sites/show/uploadfile", :locals => { :site => @site } %>

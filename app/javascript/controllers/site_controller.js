@@ -3,14 +3,15 @@ import { Controller } from "@hotwired/stimulus";
 export default class extends Controller {
   initialize() {
     //this.element.textContent = "Hello World!"
-    console.log("Hello World!");
-    console.log(this.element);
   }
 
   openDeleteSiteModal(event) {
-    document.querySelector("#site_name").value = event.target.dataset.siteName;
+    let target_tr = event.target.closest("tr");
+    let site_name = target_tr.getAttribute("data-site-name");
+
+    document.querySelector("#site_name").value = site_name;
     document.querySelector("#deleting-site-name-for-modal").innerText =
-      event.target.dataset.siteName;
+      site_name;
   }
 
   deleteSite(event) {
@@ -33,7 +34,6 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         if (data.status == "success") {
           delete_site_button.disabled = false;
           delete_site_button.querySelector("span").classList.add("d-none");
