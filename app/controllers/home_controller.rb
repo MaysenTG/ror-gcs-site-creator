@@ -1,5 +1,5 @@
-require "HTTParty"
-require 'net/http'
+#require "HTTParty"
+#require 'net/http'
 
 # require "google/apis/compute_v1"
 # require "google/cloud/storage"
