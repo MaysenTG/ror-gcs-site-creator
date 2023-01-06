@@ -22,7 +22,7 @@
                     <p class="mb-0">@johnny.s</p>
                     <div class="text-muted"><small>Last seen 2 hours ago</small></div>
                     <div class="mt-2">
-                      <button class="btn btn-primary" type="button">
+                      <button class="mb-3 focus:outline-none text-white py-2.5 px-5 rounded-md bg-blue-500 disabled:bg-blue-200" type="button">
                         <i class="fa fa-fw fa-camera"></i>
                         <span>Change Photo</span>
                       </button>
@@ -131,13 +131,13 @@
                         <% action_url = "/accounts/sign_out/" + current_account.id.to_s %>
                         <form class="button_to" method="post" action="<%= action_url %>">
                           <input type="hidden" name="_method" value="delete" autocomplete="off">
-                          <button type="submit" class="btn btn-block btn-secondary">
+                          <button type="submit" class="mb-3 w-25 text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-2.5">
                             <i class="fa fa-sign-out"></i>
                             <span>Sign out</span>
                           </button>
                           <input type="hidden" name="authenticity_token" value="S6oYWaQcvFvqV90VJMgK21C8raIpn_4Hc4-8jnRFbERv105hjGuncmIXFIUpFk5gcJ5boa-3im0fTtDzfvb-dg" autocomplete="off">
                         </form>
-                        <button class="btn btn-primary" type="submit">Save Changes</button>
+                        <button class="mb-3 focus:outline-none text-white py-2.5 px-5 rounded-md bg-blue-500 disabled:bg-blue-200" type="submit">Save Changes</button>
                       </div>
                     </div>
                   </form>
