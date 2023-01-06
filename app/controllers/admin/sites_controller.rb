@@ -1,4 +1,3 @@
-require "google/apis/compute_v1"
 require "google/cloud/storage"
 
 ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.json"
@@ -75,12 +74,7 @@ class Admin::SitesController < ApplicationController
       
       
       @site = site_by_name
-      @site_files = all_files.as_json
-      
-      
-      # Loop over the files/folders, and structure it like below:
-      
-      # [ file1, file2, file3, {folder1: files} ]
+      site_files = all_files.as_json
       
       all_folders = []
       
@@ -101,7 +95,7 @@ class Admin::SitesController < ApplicationController
       all_folders.uniq!
       
       all_folders.each do |folder|
-        @site_files.each do |file|
+        site_files.each do |file|
           if file["name"].include? folder[:name] and !file["name"].ends_with?("/")
             file_without_folder = file["name"].split("/")[1]
             folder[:files].push({type: "file", name: file_without_folder, size: file["size"], last_updated: file["last_updated"], is_main: false, is_404: false})
@@ -116,6 +110,8 @@ class Admin::SitesController < ApplicationController
       @folders_with_files = all_folders
       
       @site_files_and_folders = @site_files_and_folders.as_json
+
+      puts @site_files_and_folders
       
       #render json: { site: site_by_id, site_files: all_files, status: "success" }
     rescue
@@ -125,7 +121,9 @@ class Admin::SitesController < ApplicationController
   end
   
   def validate_site_name
-    reserved_names = ["cdn", "cv", "portfolio"]
+    #
+    reserved_names = ["cdn", "cv", "portfolio", "new", "files", "file"]
+    
     all_sites = Site.all
     
     name_taken = false

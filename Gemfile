@@ -69,12 +69,6 @@ group :test do
   gem "webdrivers"
 end
 
-gem "google-cloud-storage", "~> 1.43"
-
-gem 'google-cloud', '~> 0.64.0'
-
-gem 'google-api-client', '~> 0.7.1'
-
-gem 'google-apis-compute_v1', '~> 0.53.0'
+gem "google-cloud-storage"
 
 gem "httparty", "~> 0.20.0"
