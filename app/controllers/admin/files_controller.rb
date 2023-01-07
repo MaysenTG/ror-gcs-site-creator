@@ -17,6 +17,10 @@ class Admin::FilesController < ApplicationController
     
     folder_name = params[:folder_name]
     
+    puts "---------"
+    puts file_name_plus_type
+    puts "---------"
+    
     if !folder_name.nil? || folder_name != ""
       if folder_name.ends_with?("/")
         folder_name.gsub(/\/$/, '')
@@ -25,6 +29,15 @@ class Admin::FilesController < ApplicationController
       file_name_plus_type = folder_name + "/" + file_name_plus_type
       file_name_plus_type.gsub!(/\/\//, '/')
     end
+    
+    if folder_name.nil? || folder_name == ""
+      # Remove the first slash
+      file_name_plus_type.gsub!(/^\//, '')
+    end
+    
+    puts "---------"
+    puts file_name_plus_type
+    puts "---------"
 
     bucket_name = site.name + ".maysengreenwood.com"
     
