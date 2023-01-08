@@ -3,6 +3,9 @@
   <head>
     <title>WebsiteBuilder</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <!-- Show a favicon from an imagve saved in the app's public directory using Rails helper methods -->
+    <%= favicon_link_tag %>
+    
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
