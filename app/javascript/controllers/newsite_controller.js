@@ -8,7 +8,6 @@ export default class extends Controller {
   handleToggleStage(event) {
     let stage = event.target.dataset.targetStage;
     let new_stage_id = `stage-${stage}`;
-    let new_stage_selector = document.querySelector(`#${new_stage_id}`);
 
     let all_stages = document.querySelectorAll(".stage-container");
 

@@ -1,57 +1,108 @@
 <% if current_account %>
-<% action_url = "/accounts/sign_out/" + current_account.id.to_s %>
-                  <form id="sign-out-account-form" class="button_to" method="post" action="/accounts/sign_out">
-                    <input type="hidden" name="_method" value="delete" autocomplete="off">
-                    <input type="hidden" name="account_id" value="<%= current_account.id %>">
-                    <input type="hidden" name="account[id]" value="<%= current_account.id %>">
-                    <input type="hidden" name="authenticity_token" value="S6oYWaQcvFvqV90VJMgK21C8raIpn_4Hc4-8jnRFbERv105hjGuncmIXFIUpFk5gcJ5boa-3im0fTtDzfvb-dg" autocomplete="off">
-                  </form>
-                  <% end %>
-<header class="p-3 mb-3 border-bottom">
-    <div class="container">
-      <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-        <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
-          <img src="/images/static-site-generator-logo.png" alt="logo" class="img-fluid image-fluid" width="100">
-          <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
-        </a>
-        <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-          <li><a href="/" class="nav-link px-2 link-secondary">Home</a></li>
-          <li><a href="/admin/sites" class="nav-link px-2 link-dark">All sites</a></li>
-        </ul>
+  <% action_url = "/accounts/sign_out/" + current_account.id.to_s %>
+  <form id="sign-out-account-form" class="button_to" method="post" action="/accounts/sign_out">
+    <input type="hidden" name="_method" value="delete" autocomplete="off">
+    <input type="hidden" name="account_id" value="<%= current_account.id %>">
+    <input type="hidden" name="account[id]" value="<%= current_account.id %>">
+    <input type="hidden" name="authenticity_token" value="S6oYWaQcvFvqV90VJMgK21C8raIpn_4Hc4-8jnRFbERv105hjGuncmIXFIUpFk5gcJ5boa-3im0fTtDzfvb-dg" autocomplete="off">
+  </form>
+<% end %>
 
-        <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
-          <input type="search" class="form-control" placeholder="Search..." aria-label="Search">
-        </form>
-        <% if current_account%>
-          <div class="dropdown text-end">
-            <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-              <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
-            </a>
-            <ul class="dropdown-menu text-small">
-              <li><a class="dropdown-item" href="/admin/sites/new">New site...</a></li>
-              <li><a class="dropdown-item" href="/accounts/edit">Edit profile</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <button class="dropdown-item" form="sign-out-account-form">
-                  Sign out
-                </button>
-              </li>
-            </ul>
-          </div>
-        <% else %>
-          <ul class="nav col-12 col-lg-auto mb-2 text-end">
-            <li class="nav-item">
-              <a class="nav-link" href="<%= new_account_session_path %>">
-              Sign in
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="<%= new_account_registration_path %>">
-              Sign up
-              </a>
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#"><img src="/images/static-site-generator-logo.png" alt="logo" class="img-fluid image-fluid" width="100"></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Dropdown
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Action</a></li>
+            <li><a class="dropdown-item" href="#">Another action</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Something else here</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link disabled">Disabled</a>
+        </li>
+      </ul>
+      <form class="d-flex" role="search">
+        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+      </form>
+      <% if current_account %>
+      <div class="btn-group dropstart">
+        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          Dropstart
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="#">Action</a></li>
+          <li><a class="dropdown-item" href="#">Another action</a></li>
+          <li><a class="dropdown-item" href="#">Something else here</a></li>
+        </ul>
+      </div>
+      <% end %>
+    </div>
+  </div>
+</nav>
+
+<!--
+<header class="p-3 mb-3 border-bottom">
+  <div class="container">
+    <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+      <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
+        <img src="/images/static-site-generator-logo.png" alt="logo" class="img-fluid image-fluid" width="100">
+        <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
+      </a>
+      <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+        <li><a href="/" class="nav-link px-2 <% if request.path == "/" %>link-dark<% else %>link-secondary<% end %>">Home</a></li>
+        <li><a href="/admin/sites" class="nav-link px-2 <% if request.path == "/admin/sites" or (controller_name == "sites" and action_name == "show") or (controller_name == "files" and action_name == "show") %>link-dark<% else %>link-secondary<% end %>">All sites</a></li>
+        <li><a href="/admin/sites/new" class="nav-link px-2 <% if request.path == "/admin/sites/new" %>link-dark<% else %>link-secondary<% end %>">Create a new site</a></li>
+      </ul>
+      
+      <% if current_account%>
+        <div class="dropdown text-end">
+          <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" aria-expanded="false">
+            <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
+          </a>
+          <ul class="dropdown-menu text-small" style="margin-left: -110px;">
+            <li><a class="dropdown-item" href="/admin/sites/new">New site...</a></li>
+            <li><a class="dropdown-item" href="/accounts/edit">Edit profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <button class="dropdown-item" form="sign-out-account-form">
+                Sign out
+              </button>
             </li>
           </ul>
-        <% end %>
-      </div>
+        </div>
+      <% else %>
+        <ul class="nav col-12 col-lg-auto mb-2 text-end">
+          <li class="nav-item">
+            <a class="nav-link" href="<%= new_account_session_path %>">
+            Sign in
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="<%= new_account_registration_path %>">
+            Sign up
+            </a>
+          </li>
+        </ul>
+      <% end %>
     </div>
-  </header>
+  </div>
+</header>
+
+-->
