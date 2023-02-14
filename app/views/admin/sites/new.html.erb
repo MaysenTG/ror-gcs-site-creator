@@ -1,35 +1,33 @@
 <div class="new-site-wrapper" data-controller="newsite">
   <div class="stage-container" id="stage-name">
-    <div class="container">
-      <div class="container w-75">
-        <h1 class="h1 mb-3 mt-3">Create a new site</h1>
-        <nav aria-label="breadcrumb" class="mb-3">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item active" aria-current="page">Name</li>
-          </ol>
-        </nav>
-        <div id="new-site-name-error-wrapper" class="d-none alert alert-danger alert-dismissible fade show" role="alert">
-          Error: Site name is already taken or invalid.
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <form>
-          <div class="input-group mb-3">
-            <label for="basic-url" class="form-label">Your site URL</label>
-            <div class="input-group mb-3">
-              <input type="text" class="form-control" data-action="input->newsite#validateSiteName" id="basic-url" name="name" aria-describedby="basic-addon3" value="">
-              <span class="input-group-text" id="basic-addon3">.maysengreenwood.com</span>
-            </div>
-          </div>
-          <button class="mb-3 w-25 focus:outline-none text-white text-sm py-2.5 px-5 rounded-md bg-blue-500 disabled:bg-blue-200" data-target-stage="theme" data-action="newsite#handleToggleStage" data-next-stage="true" type="button" id="next-stage-new-site" disabled="" data-goal-step="theme" style="float: right; padding: 15px; margin-bottom: 5rem;">
-          <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Next
-          </button>
-        </form>
+    <div class="container w-75">
+      <h1 class="h1 mb-3 mt-3">Create a new site</h1>
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item active" aria-current="page">Name</li>
+        </ol>
+      </nav>
+      <div id="new-site-name-error-wrapper" class="d-none alert alert-danger alert-dismissible fade show" role="alert">
+        Error: Site name is already taken or invalid.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
+      <form>
+        <div class="input-group mb-3">
+          <label for="basic-url" class="form-label">Your site URL</label>
+          <div class="input-group mb-3">
+            <input placeholder="Enter a subdomain for your website" type="text" class="form-control" data-action="input->newsite#validateSiteName" id="basic-url" name="name" aria-describedby="basic-addon3" value="">
+            <span class="input-group-text" id="basic-addon3">.maysengreenwood.com</span>
+          </div>
+        </div>
+        <button class="btn btn-primary w-25 py-2.5 px-5" data-target-stage="theme" data-action="newsite#handleToggleStage" data-next-stage="true" type="button" id="next-stage-new-site" disabled="" data-goal-step="theme" style="float: right; padding: 15px; margin-bottom: 5rem;">
+        <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Next
+        </button>
+      </form>
     </div>
   </div>
   <div class="stage-container d-none" id="stage-theme">
-    <div class="container">
+    <div class="container w-75">
       <h1 class="h1 mb-3 mt-3">Create a new site</h1>
       <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
@@ -43,7 +41,7 @@
         <div class="row">
           <div class="col-4">
             <div class="input-group mb-3">
-              <label for="basic-url" class="form-label h3">Choose a theme for your site for <br><a href="#"><span id="new-site-name"></span>.maysengreenwood.com</a></label><br>
+              <label for="basic-url" class="form-label h4">Choose a theme for <a href="#"><span id="new-site-name"></span>.maysengreenwood.com</a></label>
               <div class="list-group">
                 <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action active" aria-current="true" data-theme="blank">
                   <div class="d-flex w-100 justify-content-between">
@@ -79,11 +77,11 @@
           <br>
         </div>
         <br>
-        <div class="w-100 d-flex justify-content-between mt-3">
-          <button id="back-to-name-btn" data-target-stage="name" data-action="newsite#handleToggleStage" class="mb-3 w-25 text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-2.5" type="button" style="padding: 15px; margin-bottom: 5rem;">
+        <div class="w-100 d-flex justify-content-between align-items-center mt-3">
+          <button style="padding: 2rem 4rem;" id="back-to-name-btn" data-target-stage="name" data-action="newsite#handleToggleStage" class="mb-3 btn btn-secondary" type="button">
             Back
           </button>
-          <button class="mb-3 w-25 focus:outline-none text-white text-sm py-2.5 px-5 rounded-md bg-blue-500 disabled:bg-blue-200" id="create-site-button" data-action="newsite#createNewSite" type="button" style="padding: 15px; margin-bottom: 5rem;">
+          <button style="padding: 2rem 4rem;" class="btn btn-primary mb-3" id="create-site-button" data-action="newsite#createNewSite" type="button">
             <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             Create my site!
           </button>

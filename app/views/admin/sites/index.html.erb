@@ -9,19 +9,19 @@
       <div class="min-w-screen font-sans overflow-hidden">
         <div class="w-full">
           <div class="bg-white shadow-md rounded my-6">
-            <table class="min-w-max w-full table-auto">
-              <thead>
-                <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                  <th class="py-3 px-6 text-left">Name</th>
-                  <th class="py-3 px-6 text-left">Total size</th>
-                  <th class="py-3 px-6 text-center">Actions</th>
+            <table class="table align-middle table-hover table-responsive">
+              <thead class="table-secondary">
+                <tr>
+                  <th scope="col" class="p-3">Name</th>
+                  <th scope="col" class="p-3">Total size</th>
+                  <th scope="col" class="text-center p-3">Actions</th>
                 </tr>
               </thead>
-              <tbody class="text-gray-600 text-sm font-light">
+              <tbody>
                 <% @sites.each do |site| %>
                 <tr data-site-id="<%= site["id"] %>" data-site-name="<%= site["name"] %>" class="border-b border-gray-200 hover:bg-gray-100">
                   <td class="py-3 px-6 text-left whitespace-nowrap">
-                    <a href="/admin/sites/<%= site["name"] %>" class="flex items-center">
+                    <a href="/admin/sites/<%= site["name"] %>" class="d-flex align-items-center p-3">
                       <div class="mr-2">
                         <svg width="54" height="54" class="space-icon-window OPEN" viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path fill-rule="evenodd" clip-rule="evenodd" d="M26.25 2.75H3.75C2.71447 2.75 1.875 3.58947 1.875 4.625V8.375H28.125V4.625C28.125 3.58947 27.2855 2.75 26.25 2.75ZM1.875 23.375V10.25H28.125V19.0015C28.7904 19.0179 29.4235 19.1642 30 19.416V4.625C30 2.55393 28.3211 0.875 26.25 0.875H3.75C1.67893 0.875 0 2.55393 0 4.625V23.375C0 25.4461 1.67893 27.125 3.75 27.125H24.0966C23.6609 26.5815 23.3364 25.945 23.1575 25.25H3.75C2.71447 25.25 1.875 24.4105 1.875 23.375ZM4.6875 6.5C5.20527 6.5 5.625 6.08027 5.625 5.5625C5.625 5.04473 5.20527 4.625 4.6875 4.625C4.16973 4.625 3.75 5.04473 3.75 5.5625C3.75 6.08027 4.16973 6.5 4.6875 6.5ZM8.4375 5.5625C8.4375 6.08027 8.01777 6.5 7.5 6.5C6.98223 6.5 6.5625 6.08027 6.5625 5.5625C6.5625 5.04473 6.98223 4.625 7.5 4.625C8.01777 4.625 8.4375 5.04473 8.4375 5.5625ZM10.3125 6.5C10.8303 6.5 11.25 6.08027 11.25 5.5625C11.25 5.04473 10.8303 4.625 10.3125 4.625C9.79473 4.625 9.375 5.04473 9.375 5.5625C9.375 6.08027 9.79473 6.5 10.3125 6.5Z" fill="#282A35"></path>
@@ -38,7 +38,7 @@
                     </a>
                   </td>
                   <td class="py-3 px-6 text-left">
-                    <div class="flex items-center">
+                    <div class="d-flex align-items-center">
                       <span>
                       <% if site["total_size"] > 1000 %>
                       <%= site["total_size"].to_i / 1000 %> kb
@@ -49,12 +49,10 @@
                     </div>
                   </td>
                   <td class="py-3 px-6 text-center">
-                    <div data-controller="site" class="flex item-center justify-center">
+                    <div data-controller="site" class="d-flex align-item-center justify-content-center">
                       <!-- Delete file -->
-                      <div data-action="click->site#openDeleteSiteModal" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" data-bs-target="#deleteSiteModal" data-bs-toggle="modal">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                      <div data-action="click->site#openDeleteSiteModal" class="fs-4" data-bs-target="#deleteSiteModal" data-bs-toggle="modal">
+                        <i class="bi bi-trash3"></i>
                       </div>
                     </div>
                   </td>
@@ -66,44 +64,45 @@
         </div>
       </div>
     </div>
-    <script>
-      // When the turbo-frame updates the editor, show the toast to show the user that the file was saved
-      document.addEventListener("turbo:before-fetch-response", function (e) {
-        // Hide all modals when the turbo frame loads
-        document.querySelectorAll(".modal").forEach(function (modal) {
-          
-          var modalInstance = bootstrap.Modal.getInstance(modal);
-          if (modalInstance) {
-            modalInstance.hide();
-          }
-        });
-      })
-    </script>
-    
-    <div class="modal fade" id="deleteSiteModal" tabindex="-1" aria-labelledby="deleteSiteLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="deleteSiteLabel">Delete site</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            Are you sure you want to delete <strong><span id="deleting-site-name-for-modal"></span>.maysengreenwood.com</strong>? 
-            <br/>
-            <br/>
-            This action is irreversible
-            <input type="hidden" value="" name="site_name" id="site_name">
-          </div>
-          <div data-controller="site" class="modal-footer">
-            <button type="button" class="text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 disabled:bg-gray-200 font-medium rounded-lg text-sm px-4 py-2.5" data-bs-dismiss="modal">Cancel</button>
-            <button data-action="site#deleteSite" type="button" class="focus:outline-none text-white text-sm py-2.5 px-5 rounded-md bg-red-500 disabled:bg-red-200">
-            <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              Delete site
-            </button>
-          </div>
-        </div>
+  </div>
+</div>
+
+
+<script>
+  // When the turbo-frame updates the editor, show the toast to show the user that the file was saved
+  document.addEventListener("turbo:before-fetch-response", function (e) {
+    // Hide all modals when the turbo frame loads
+    document.querySelectorAll(".modal").forEach(function (modal) {
+      
+      var modalInstance = bootstrap.Modal.getInstance(modal);
+      if (modalInstance) {
+        modalInstance.hide();
+      }
+    });
+  })
+</script>
+
+<div class="modal fade" id="deleteSiteModal" tabindex="-1" aria-labelledby="deleteSiteLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="deleteSiteLabel">Delete site</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete <strong><span id="deleting-site-name-for-modal"></span>.maysengreenwood.com</strong>? 
+        <br/>
+        <br/>
+        This action is irreversible
+        <input type="hidden" value="" name="site_name" id="site_name">
+      </div>
+      <div data-controller="site" class="modal-footer">
+        <button type="button" class="text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 disabled:bg-gray-200 font-medium rounded-lg text-sm px-4 py-2.5" data-bs-dismiss="modal">Cancel</button>
+        <button data-action="site#deleteSite" type="button" class="focus:outline-none text-white text-sm py-2.5 px-5 rounded-md bg-red-500 disabled:bg-red-200">
+        <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Delete site
+        </button>
       </div>
     </div>
-    
   </div>
 </div>
