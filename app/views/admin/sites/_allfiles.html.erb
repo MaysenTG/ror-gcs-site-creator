@@ -173,7 +173,7 @@
     // Hide all modals when the turbo frame loads
     document.querySelectorAll(".modal").forEach(function (modal) {
       
-      var modalInstance = bootstrap.Modal.getInstance(modal);
+      var modalInstance = new bootstrap.Modal.getInstance(modal);
       if (modalInstance) {
         modalInstance.hide();
       }

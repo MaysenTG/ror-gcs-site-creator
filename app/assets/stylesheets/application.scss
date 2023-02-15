@@ -1,0 +1,45 @@
+@import "bootstrap";
+
+html {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background-color: #fbfcfc;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+a.btn:hover, a.dropdown-item:hover, a[role="button"]:hover {
+  text-decoration: none;
+}
+  
+i.bi:active {
+  color: #0f0fce;
+}
+
+i.bi:hover {
+  color: blue;
+}
+
+.dot {
+  fill: #04aa6d;
+}
+
+tbody > tr:hover {
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
