@@ -14,23 +14,22 @@
                     <div class="d-flex justify-content-center align-items-center rounded" style="height: 140px; background-color: rgb(233, 236, 239);">
                       <span style="color: rgb(166, 168, 170); font: bold 8pt Arial;">140x140</span>
                     </div>
-                  </div>
-                </div>
-                <div class="col d-flex flex-column flex-sm-row justify-content-between mb-3">
-                  <div class="text-center text-sm-left mb-2 mb-sm-0">
-                    <h4 class="pt-sm-2 pb-1 mb-0 text-nowrap">John Smith</h4>
-                    <p class="mb-0">@johnny.s</p>
-                    <div class="text-muted"><small>Last seen 2 hours ago</small></div>
                     <div class="mt-2">
-                      <button class="mb-3 focus:outline-none text-white py-2.5 px-5 rounded-md bg-blue-500 disabled:bg-blue-200" type="button">
+                      <button class="btn btn-primary" type="button">
                         <i class="fa fa-fw fa-camera"></i>
                         <span>Change Photo</span>
                       </button>
                     </div>
                   </div>
+                </div>
+                <div class="col d-flex flex-column flex-sm-row justify-content-between mb-3">
+                  <div>
+                    <h4><strong>Name:</strong></h4>
+                    <p><%= current_account.name %></p>
+                  </div>
                   <div class="text-center text-sm-right">
                     <span class="badge badge-secondary">administrator</span>
-                    <div class="text-muted"><small>Joined 09 Dec 2017</small></div>
+                    <div class="text-muted"><small>Joined <%= current_account.created_at.to_fs(:custom_datetime) %></small></div>
                   </div>
                 </div>
               </div>
@@ -48,13 +47,7 @@
                           <div class="col">
                             <div class="form-group">
                               <label>Full Name</label>
-                              <input class="form-control" type="text" name="name" placeholder="John Smith" value="<%= current_account.name %>">
-                            </div>
-                          </div>
-                          <div class="col">
-                            <div class="form-group">
-                              <label>Username</label>
-                              <input class="form-control" type="text" name="username" placeholder="johnny.s" disabled value="johnny.s">
+                              <input class="form-control" type="text" name="account[name]" placeholder="John Smith" value="<%= current_account.name %>">
                             </div>
                           </div>
                         </div>
@@ -66,60 +59,42 @@
                             </div>
                           </div>
                         </div>
-                        <div class="row">
-                          <div class="col mb-3">
-                            <div class="form-group">
-                              <label>About</label>
-                              <textarea class="form-control" rows="5" disabled placeholder="My Bio"></textarea>
-                            </div>
-                          </div>
-                        </div>
                       </div>
                     </div>
                     <div class="row">
-                      <div class="col-12 col-sm-6 mb-3">
-                        <div class="mb-2"><b>Change Password</b></div>
-                        <div class="row">
-                          <div class="col">
-                            <div class="form-group">
-                              <label>Current Password</label>
-                              <input class="form-control" name="account[password]" type="password" placeholder="••••••">
-                            </div>
-                          </div>
-                        </div>
-                        <div class="row">
-                          <div class="col">
-                            <div class="form-group">
-                              <label>New Password</label>
-                              <input class="form-control" name="account[password_confirmation]" type="password" placeholder="••••••">
-                            </div>
-                          </div>
-                        </div>
-                        <div class="row">
-                          <div class="col">
-                            <div class="form-group">
-                              <label>Confirm <span class="d-none d-xl-inline">Password</span></label>
-                              <input class="form-control" type="password" placeholder="••••••"></div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-12 col-sm-5 offset-sm-1 mb-3">
-                        <div class="mb-2"><b>Keeping in Touch</b></div>
-                        <div class="row">
-                          <div class="col">
-                            <label>Email Notifications</label>
-                            <div class="custom-controls-stacked px-2">
-                              <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="notifications-blog" checked="">
-                                <label class="custom-control-label" for="notifications-blog">Blog posts</label>
-                              </div>
-                              <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="notifications-news" checked="">
-                                <label class="custom-control-label" for="notifications-news">Newsletter</label>
-                              </div>
-                              <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="notifications-offers" checked="">
-                                <label class="custom-control-label" for="notifications-offers">Personal Offers</label>
+                      <div class="col-12 col-12 mb-3 mt-3">
+                        <div class="accordion" id="accordionExample">
+                          <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                <p><strong>Update password</strong></p>
+                              </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                              <div class="accordion-body">
+                                <div class="row">
+                                  <div class="col">
+                                    <div class="mb-3 form-group">
+                                      <label>Current Password</label>
+                                      <input class="form-control" name="account[password]" type="password" placeholder="••••••">
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="row">
+                                  <div class="col">
+                                    <div class="mb-3 form-group">
+                                      <label>New Password</label>
+                                      <input class="form-control" name="account[password_confirmation]" type="password" placeholder="••••••">
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="row">
+                                  <div class="col">
+                                    <div class="mb-3 form-group">
+                                      <label>Confirm <span class="d-none d-xl-inline">Password</span></label>
+                                      <input class="form-control" type="password" placeholder="••••••"></div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -131,13 +106,13 @@
                         <% action_url = "/accounts/sign_out/" + current_account.id.to_s %>
                         <form class="button_to" method="post" action="<%= action_url %>">
                           <input type="hidden" name="_method" value="delete" autocomplete="off">
-                          <button type="submit" class="mb-3 w-25 text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-2.5">
+                          <button type="submit" class="btn btn-secondary">
                             <i class="fa fa-sign-out"></i>
                             <span>Sign out</span>
                           </button>
                           <input type="hidden" name="authenticity_token" value="S6oYWaQcvFvqV90VJMgK21C8raIpn_4Hc4-8jnRFbERv105hjGuncmIXFIUpFk5gcJ5boa-3im0fTtDzfvb-dg" autocomplete="off">
                         </form>
-                        <button class="mb-3 focus:outline-none text-white py-2.5 px-5 rounded-md bg-blue-500 disabled:bg-blue-200" type="submit">Save Changes</button>
+                        <button class="btn btn-success" type="submit">Save Changes</button>
                       </div>
                     </div>
                   </form>

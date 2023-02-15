@@ -1,42 +1,65 @@
-<style>
- .main-content {
-  background-color: gray;
- }
-</style>
-<!-- component -->
-<div class="text-center mt-16">
-      <div class="flex items-center justify-center">
-         <svg fill="none" viewBox="0 0 24 24" class="w-12 h-12 text-blue-500" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-         </svg>
+<!-- Section: Design Block -->
+<section class="">
+  <!-- Jumbotron -->
+  <div class="px-4 py-5 px-md-5 text-center text-lg-start" style="background-color: hsl(0, 0%, 96%)">
+    <div class="container">
+      <div class="row gx-lg-5 align-items-center">
+        <div class="col-lg-6 mb-5 mb-lg-0">
+          <h1 class="my-5 display-4 fw-bold ls-tight">
+            Register an account to <br />
+            <span class="text-primary">create custom static websites</span>
+          </h1>
+          <p style="color: hsl(217, 10%, 50.8%)">
+            With a registered account, you can create, edit, and delete static websites hosted on Google's global delivery service.
+          </p>
+        </div>
+        <div class="col-lg-6 mb-5 mb-lg-0">
+          <div class="card">
+            <div class="card-body py-5 px-md-5">
+              <%= form_for(resource, as: resource_name, url: registration_path(resource_name), data: { turbo: "false" }) do |f| %>
+                <!-- 2 column grid layout with text inputs for the first and last names -->
+                <%= render partial: "devise/shared/error_messages", resource: resource %>
+                <div class="row">
+                  <div class="col-md-6 mb-4">
+                    <div class="form-outline">
+                      <input type="text" id="signupFormFirstName" placeholder="John" class="form-control" />
+                      <label class="form-label" for="signupFormFirstName">First name</label>
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-4">
+                    <div class="form-outline">
+                      <input type="text" id="signupFormLastName" placeholder="Smith" class="form-control" />
+                      <label class="form-label" for="signupFormLastName">Last name</label>
+                    </div>
+                  </div>
+                </div>
+                <!-- Email input -->
+                <div class="form-outline mb-4">
+                  <input type="email" id="signupFormEmail" placeholder="john.smith@gmail.com" name="account[email]" class="form-control" />
+                  <label class="form-label" for="signupFormEmail">Email address</label>
+                </div>
+                <!-- Password input -->
+                <div class="form-outline mb-4">
+                  <input type="password" id="signupFormPass" name="account[password]" class="form-control" />
+                  <label class="form-label" for="signupFormPass">Password</label>
+                </div>
+                <div class="form-outline mb-4">
+                  <input type="password" id="signupFormPassConf" name="account[password_confirmation]" class="form-control" />
+                  <label class="form-label" for="signupFormPassConf">Password confirmation</label>
+                </div>
+                <!-- Submit button -->
+                <button type="submit" class="btn btn-primary btn-block w-100 mb-4">
+                  Sign up
+                </button>
+                <span class="w-100 d-flex justify-content-center align-items-center">Or</span>
+                <a href="/accounts/sign_in" class="d-flex justify-content-center align-items-center btn-block w-100 mt-4">Sign in</a>
+              <% end %>
+            </div>
+          </div>
+        </div>
       </div>
-      <h2 class="text-4xl tracking-tight">
-         Create a new account
-      </h2>
-      <span class="text-sm">or <a href="/accounts/sign_in" class="text-blue-500"> 
-         login to an existing account
-      </a>
-   </span>
-</div>
-<div class="flex justify-center my-2 mx-4 md:mx-0">
-   <%= form_for(resource, as: resource_name, url: registration_path(resource_name), data: { turbo: "false" }, html: { class: "w-full max-w-xl bg-white rounded-lg shadow-md p-6" }) do |f| %>
-   <%= render partial: "devise/shared/error_messages", resource: resource %>
-      <div class="flex flex-wrap -mx-3 mb-6">
-         <div class="w-full md:w-full px-3 mb-6">
-            <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for='Password'>Email address</label>
-            <input name="account[email]" class="appearance-none block w-full bg-white text-gray-900 font-medium border border-gray-400 rounded-lg py-3 px-3 leading-tight focus:outline-none" type='email' required>
-         </div>
-         <div class="w-full md:w-full px-3 mb-6">
-            <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for='Password'>Password</label>
-            <input name="account[password]" class="appearance-none block w-full bg-white text-gray-900 font-medium border border-gray-400 rounded-lg py-3 px-3 leading-tight focus:outline-none" type='password' required>
-         </div>
-         <div class="w-full md:w-full px-3 mb-6">
-            <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for='Password'>Password confirmation</label>
-            <input name="account[password_confirmation]" class="appearance-none block w-full bg-white text-gray-900 font-medium border border-gray-400 rounded-lg py-3 px-3 leading-tight focus:outline-none" type='password' required>
-         </div>
-         <div class="w-full md:w-full px-3 mb-6">
-            <button type="submit" class="appearance-none block w-full bg-blue-600 text-gray-100 font-bold border border-gray-200 rounded-lg py-3 px-3 leading-tight hover:bg-blue-500 focus:outline-none focus:bg-white focus:border-gray-500">Sign up</button>
-         </div>
-      </div>
-   <% end %>
-</div>
+    </div>
+  </div>
+  <!-- Jumbotron -->
+</section>
+<!-- Section: Design Block -->

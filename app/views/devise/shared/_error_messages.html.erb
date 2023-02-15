@@ -1,17 +1,17 @@
 <% if resource.errors.any? %>
-<div class="mb-3 bg-red-50 border border-red-500 text-red-900 placeholder-red-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 dark:bg-red-100 dark:border-red-400">
-  <div id="error_explanation">
-    <h2 class="text-xl">
-      <strong><%= I18n.t("errors.messages.not_saved",
+  <div>
+    <div id="error_explanation">
+      <h2 class="text-red text-xl">
+        <strong><%= I18n.t("errors.messages.not_saved",
                  count: resource.errors.count,
                  resource: resource.class.model_name.human.downcase)
        %></strong>
-    </h2>
-    <ul class="ml-7 list-disc">
-      <% resource.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-    </ul>
+      </h2>
+      <ul class="ml-7 list-disc">
+        <% resource.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
   </div>
-</div>
 <% end %>

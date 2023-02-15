@@ -7,10 +7,9 @@
     <input type="hidden" name="authenticity_token" value="S6oYWaQcvFvqV90VJMgK21C8raIpn_4Hc4-8jnRFbERv105hjGuncmIXFIUpFk5gcJ5boa-3im0fTtDzfvb-dg" autocomplete="off">
   </form>
 <% end %>
-
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">Navbar</a>
+    <a class="navbar-brand" href="/"><img src="/images/static-site-generator-logo.png" alt="logo" class="img-fluid image-fluid" width="100"></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -28,69 +27,30 @@
           </li>
         <% end %>
       </ul>
-      <ul class="navbar-nav ms-auto mb-2 mx-5 mb-lg-0">
-        <li class="nav-item dropdown">
-          <a class="nav-link <% if request.path.include?("account") %>active<% end %> dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Your account
-          </a>
-          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="/admin/sites/new">Create a new site</a></li>
-            <li><a class="dropdown-item <% if request.path == "/accounts/edit" %>active<% end %>" href="/accounts/edit">Edit your account</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><button type="submit" form="sign-out-account-form" class="dropdown-item">Sign out</button></li>
-          </ul>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
-
-<!--
-<header class="p-3 mb-3 border-bottom">
-  <div class="container">
-    <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-      <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
-        <img src="/images/static-site-generator-logo.png" alt="logo" class="img-fluid image-fluid" width="100">
-        <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
-      </a>
-      <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-        <li><a href="/" class="nav-link px-2 <% if request.path == "/" %>link-dark<% else %>link-secondary<% end %>">Home</a></li>
-        <li><a href="/admin/sites" class="nav-link px-2 <% if request.path == "/admin/sites" or (controller_name == "sites" and action_name == "show") or (controller_name == "files" and action_name == "show") %>link-dark<% else %>link-secondary<% end %>">All sites</a></li>
-        <li><a href="/admin/sites/new" class="nav-link px-2 <% if request.path == "/admin/sites/new" %>link-dark<% else %>link-secondary<% end %>">Create a new site</a></li>
-      </ul>
-      
-      <% if current_account%>
-        <div class="dropdown text-end">
-          <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" aria-expanded="false">
-            <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
-          </a>
-          <ul class="dropdown-menu text-small" style="margin-left: -110px;">
-            <li><a class="dropdown-item" href="/admin/sites/new">New site...</a></li>
-            <li><a class="dropdown-item" href="/accounts/edit">Edit profile</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <button class="dropdown-item" form="sign-out-account-form">
-                Sign out
-              </button>
-            </li>
-          </ul>
-        </div>
-      <% else %>
-        <ul class="nav col-12 col-lg-auto mb-2 text-end">
-          <li class="nav-item">
-            <a class="nav-link" href="<%= new_account_session_path %>">
-            Sign in
+      <% if current_account %>
+        <ul class="navbar-nav ms-auto mb-2 mx-5 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link <% if request.path.include?("account") %>active<% end %> dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Your account
             </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href="/admin/sites/new">Create a new site</a></li>
+              <li><a class="dropdown-item <% if request.path == "/accounts/edit" %>active<% end %>" href="/accounts/edit">Edit your account</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><button type="submit" form="sign-out-account-form" class="dropdown-item">Sign out</button></li>
+            </ul>
+          </li>
+        </ul>
+      <% else %>
+        <ul class="navbar-nav ms-auto mb-2 mx-5 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link <% if request.path == "/accounts/sign_in" %>active<% end %>" href="/accounts/sign_in">Sign in</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="<%= new_account_registration_path %>">
-            Sign up
-            </a>
+            <a class="nav-link <% if request.path == "/accounts/sign_up" %>active<% end %>" href="/accounts/sign_up">Create an account</a>
           </li>
         </ul>
       <% end %>
     </div>
   </div>
-</header>
-
--->
+</nav>
