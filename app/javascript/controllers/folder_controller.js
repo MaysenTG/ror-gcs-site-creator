@@ -34,7 +34,7 @@ export default class extends Controller {
     delete_folder_button.querySelector("span").classList.remove("d-none");
 
     var myModalEl = document.getElementById("createFolderModal");
-    var modal = bootstrap.Modal.getInstance(myModalEl);
+    //var modal = bootstrap.Modal.getInstance(myModalEl);
 
     // Post to the delete folder endpoint
     fetch(`/admin/sites/${site_name}/folders/new`, {

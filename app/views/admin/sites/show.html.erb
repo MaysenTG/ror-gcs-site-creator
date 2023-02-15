@@ -7,7 +7,6 @@
         <h1>Files</h1>
       </div>
     </div>
-    
     <!-- Begin general -->
     <div class="mb-3 d-flex justify-content-start">
       &nbsp;
@@ -42,7 +41,6 @@
       </div>
     </div>
     <!-- End general -->
-    
     <!-- Breadcrumb -->
     <%# <nav class="mb-3" aria-label="breadcrumb">
       <ol class="breadcrumb">
@@ -50,18 +48,15 @@
       </ol>
     </nav> %>
     <!-- End breadcrumb -->
-    
     <div data-controller="folder">
       <a id="toggle-back-to-root-folder" href="#" class="d-none" data-action="folder#viewRootFolder">
-      <i class="bi bi-arrow-left"></i>
-      Back to root folder
+        <i class="bi bi-arrow-left"></i>
+        Back to root folder
       </a>
     </div>
-    
     <turbo-frame id="all-site-files">
       <%= render partial: "admin/sites/allfiles", :locals => { :site => @site, :site_files_and_folders => @site_files_and_folders } %>
     </turbo-frame>
-    
     <div class="modal fade" id="createFileModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -76,7 +71,6 @@
                   <input type="hidden" name="site_id" value="1">
                   <input type="hidden" name="site_name" id="site_name" value="<%= @site["name"] %>">
                   <input type="hidden" name="folder_name" id="folder_name" value="">
-                  
                   <div data-controller="validation" class="mb-3">
                     <label for="name" class="form-label">File name</label>
                     <input data-action="input->validation#validate" type="text" class="form-control" id="name" name="file_name">
@@ -101,8 +95,8 @@
           <div data-controller="file" class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" form="create-file-form" disabled="" class="btn btn-primary">
-            <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Create file
+              <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Create file
             </button>
           </div>
         </div>

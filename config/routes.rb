@@ -15,7 +15,8 @@ Rails.application.routes.draw do
   get 'file/rename'
   get 'file/set_main'
   get 'file/set_404'
-  devise_for :accounts
+  #devise_for :accounts
+  devise_for :accounts, controllers: { registrations: 'registrations' }
   
   
   get '/test_response', to: 'home#test_response'

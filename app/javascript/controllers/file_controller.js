@@ -15,7 +15,7 @@ export default class extends Controller {
     upload_file_button.querySelector("span").classList.remove("d-none");
 
     var myModalEl = document.getElementById("uploadFileModal");
-    var modal = bootstrap.Modal.getInstance(myModalEl);
+    //var modal = bootstrap.Modal.getInstance(myModalEl);
 
     // Post to the create file endpoint
     fetch(`/admin/sites/${site_name}/files/upload`, {
@@ -28,34 +28,34 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        if (data.status == "success") {
-          upload_file_button.disabled = false;
-          upload_file_button.querySelector("span").classList.add("d-none");
+        window.location.reload();
+        // if (data.status == "success") {
+        //   upload_file_button.disabled = false;
+        //   upload_file_button.querySelector("span").classList.add("d-none");
 
-          modal.hide();
-          // Append the new file to the table
-          let table = document.querySelector("#site-files");
-          let row = table.insertRow(-1);
-          row.setAttribute("data-file-name", data.file_name);
-          let file_size = data.file_size;
-          let file_size_string = "";
-          if (file_size > 1000) {
-            file_size_string = `${(file_size / 1000).toFixed(2)} kb`;
-          } else {
-            file_size_string = `${file_size} b`;
-          }
+        //   //modal.hide();
+        //   // Append the new file to the table
+        //   let table = document.querySelector("#site-files");
+        //   let row = table.insertRow(-1);
+        //   row.setAttribute("data-file-name", data.file_name);
+        //   let file_size = data.file_size;
+        //   let file_size_string = "";
+        //   if (file_size > 1000) {
+        //     file_size_string = `${(file_size / 1000).toFixed(2)} kb`;
+        //   } else {
+        //     file_size_string = `${file_size} b`;
+        //   }
 
-          // if the table already contains a row of the filename, update the size
+        //   // if the table already contains a row of the filename, update the size
 
-          window.location.reload();
-        } else {
-          console.log("Error");
-        }
+        // } else {
+        //   console.log("Error");
+        // }
       });
   }
 
+  // Migrated to turbo
   createFile(event) {
-
     let queryStrings = window.location.search;
     let urlParams = new URLSearchParams(queryStrings);
     let folder_name = urlParams.get("folder");
@@ -81,7 +81,7 @@ export default class extends Controller {
     create_file_button.querySelector("span").classList.remove("d-none");
 
     var myModalEl = document.getElementById("createFileModal");
-    var modal = bootstrap.Modal.getInstance(myModalEl);
+    //var modal = bootstrap.Modal.getInstance(myModalEl);
 
     // Post to the create file endpoint
     fetch(`/admin/sites/${site_name}/files/new`, {
@@ -98,7 +98,7 @@ export default class extends Controller {
           create_file_button.disabled = false;
           create_file_button.querySelector("span").classList.add("d-none");
 
-          modal.hide();
+          //modal.hide();
           // Append the new file to the table
           let table = "";
           if (folder_name) {
@@ -129,6 +129,7 @@ export default class extends Controller {
       });
   }
 
+  // Migrated to turbo
   deleteFile(event) {
     let form = document.querySelector("#delete-file-form");
     let formData = new FormData(form);
@@ -141,7 +142,7 @@ export default class extends Controller {
     delete_file_button.querySelector("span").classList.remove("d-none");
 
     var myModalEl = document.getElementById("deleteFileModal");
-    var modal = bootstrap.Modal.getInstance(myModalEl);
+    //var modal = bootstrap.Modal.getInstance(myModalEl);
 
     // Post to the create file endpoint
     fetch(`/admin/sites/${site_name}/files/delete`, {
@@ -172,13 +173,14 @@ export default class extends Controller {
               .remove();
           }
 
-          modal.hide();
+          //modal.hide();
         } else {
           console.log("Error");
         }
       });
   }
 
+  // Migrated to turbo
   renameFile(event) {
     let form = document.querySelector("#rename-file-form");
     let formData = new FormData(form);
@@ -191,7 +193,7 @@ export default class extends Controller {
     rename_file_button.querySelector("span").classList.remove("d-none");
 
     var myModalEl = document.getElementById("renameFileModal");
-    var modal = bootstrap.Modal.getInstance(myModalEl);
+    //var modal = bootstrap.Modal.getInstance(myModalEl);
 
     // Post to the create file endpoint
     fetch(`/admin/sites/${site_name}/files/rename`, {
@@ -208,7 +210,7 @@ export default class extends Controller {
           rename_file_button.disabled = false;
           rename_file_button.querySelector("span").classList.add("d-none");
 
-          modal.hide();
+          //modal.hide();
           // Update the file name in the table
           window.location.reload(true);
         } else {

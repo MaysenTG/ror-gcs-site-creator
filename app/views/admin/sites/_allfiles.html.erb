@@ -1,27 +1,24 @@
 <%= javascript_tag do %>
   window.all_files_and_folders = <%= raw @site_files_and_folders.to_json %>
 <% end %>
-
-  <div id="site-files" class="files-table overflow-x-auto">
-      <div class="min-w-screen font-sans overflow-hidden">
-        <div class="w-full">
-          <div class="bg-white shadow-md rounded my-6">
-          
-            <table class="table align-middle table-hover table-responsive shadow-sm p-3 mb-5 bg-body-tertiary rounded">
-              <thead class="table-secondary">
-                <tr>
-                  <th scope="col" class="p-3">Filename</th>
-                  <th scope="col" class="p-3">Size</th>
-                  <th scope="col" class="text-center p-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% @site_files_and_folders.each do |file| %>
-                <tr data-controller="folder" data-file-name="<%= file["name"] %>" class="border-b border-gray-200 hover:bg-gray-100">
-                  <td class="py-3 px-6 text-left whitespace-nowrap">
-                    <a <% if file["type"] == "file" %>href="/admin/sites/<%= @site.name %>/files/edit?file_name=<%= file["name"] %>"<% else %>data-action="folder#viewFolderFiles" data-folder-name="<%= file["name"] %>"<% end %> class="<% if file["type"] == "folder" %>div-folder-target<% end %> d-flex align-items-center px-2 text-dark">
-                      <div class="mr-2">
-                        
+<div id="site-files" class="files-table overflow-x-auto">
+  <div class="min-w-screen font-sans overflow-hidden">
+    <div class="w-full">
+      <div class="bg-white shadow-md rounded my-6 table-responsive">
+        <table class="table align-middle table-hover shadow-sm p-3 mb-5 bg-body-tertiary rounded">
+          <thead class="table-secondary">
+            <tr>
+              <th scope="col" class="p-3">Filename</th>
+              <th scope="col" class="p-3">Size</th>
+              <th scope="col" class="text-center p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @site_files_and_folders.each do |file| %>
+              <tr data-controller="folder" data-file-name="<%= file["name"] %>" class="border-b border-gray-200 hover:bg-gray-100">
+                <td class="py-3 px-6 text-left whitespace-nowrap">
+                  <a <% if file["type"] == "file" %>href="/admin/sites/<%= @site.name %>/files/edit?file_name=<%= file["name"] %>"<% else %>data-action="folder#viewFolderFiles" data-folder-name="<%= file["name"] %>"<% end %> class="<% if file["type"] == "folder" %>div-folder-target<% end %> d-flex align-items-center px-2 text-dark">
+                    <div class="mr-2">
                       <!-- Begin file logo -->
                       <% if file["type"] == "file" %>
                         <% unless file["name"].nil? %>
@@ -39,14 +36,13 @@
                         <i class="fs-3 bi bi-folder-fill"></i>
                       <% end %>
                       <!-- End file logo -->
-                        
-                      </div>
-                      <span class="font-medium"><%= file["name"] %></span>
-                    </a>
-                  </td>
-                  <td class="py-3 px-6 text-left">
-                    <div class="d-flex align-items-center">
-                      <span>
+                    </div>
+                    <span class="font-medium"><%= file["name"] %></span>
+                  </a>
+                </td>
+                <td class="py-3 px-6 text-left">
+                  <div class="d-flex align-items-center">
+                    <span>
                       <% if file["type"] == "file" %>
                         <% if file["size"] > 1000 %>
                           <%= file["size"].to_i / 1000 %> kb
@@ -56,138 +52,50 @@
                       <% else %>
                         -
                       <% end %>
-                      </span>
-                    </div>
-                  </td>
-                  <td class="py-3 px-6 text-center">
-                    <div data-controller="file" class="d-flex align-item-center justify-content-center">
-                    
-                      <% unless file["name"].include?("index") %>
-                        <!-- Edit file -->
-                        <% if file["type"] == "file" %>
-                          <div data-action="click->file#openRenameFileModal" data-bs-target="#renameFileModal" data-bs-toggle="modal" class="div-edit-toggle mx-3 fs-5">
-                            <i class="bi bi-pencil"></i>
-                          </div>
-                        <% end %>
-                        <!-- Delete file -->
-                        <div data-action="click->file#openDeleteFileModal" class="fs-5" data-bs-target="#deleteFileModal" data-bs-toggle="modal">
-                          <i class="bi bi-trash3"></i>
+                    </span>
+                  </div>
+                </td>
+                <td class="py-3 px-6 text-center">
+                  <div data-controller="file" class="d-flex align-item-center justify-content-center">
+                    <% unless file["name"].include?("index") %>
+                      <!-- Edit file -->
+                      <% if file["type"] == "file" %>
+                        <div data-action="click->file#openRenameFileModal" data-bs-target="#renameFileModal" data-bs-toggle="modal" class="div-edit-toggle mx-3 fs-5">
+                          <i class="bi bi-pencil"></i>
                         </div>
                       <% end %>
-                    </div>
-                  </td>
-                </tr>
-                <% end %>
-              </tbody>
-            </table>
-            
-            <!--
-                      
-            <table class="min-w-max w-full table-auto">
-              <thead>
-                <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                  <th class="py-3 px-6 text-left">Filename</th>
-                  <th class="py-3 px-6 text-left">Size</th>
-                  <th class="py-3 px-6 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="text-gray-600 text-sm font-light">
-                <% @site_files_and_folders.each do |file| %>
-                <tr data-controller="folder" data-file-name="<%= file["name"] %>" class="border-b border-gray-200 hover:bg-gray-100">
-                  <td class="py-3 px-6 text-left whitespace-nowrap">
-                    <a <% if file["type"] == "file" %>href="/admin/sites/<%= @site.name %>/files/edit?file_name=<%= file["name"] %>"<% else %>data-action="folder#viewFolderFiles" data-folder-name="<%= file["name"] %>"<% end %> class="<% if file["type"] == "folder" %>div-folder-target<% end %> flex items-center">
-                      <div class="mr-2">
-                        
-                      <% if file["type"] == "file" %>
-                        <% unless file["name"].nil? %>
-                          <% if file["name"].include?(".css") %>
-                            <i class="fs-3 bi bi-filetype-css"></i>
-                          <% elsif file["name"].include?(".js") %>
-                            <i class="fs-3 bi bi-filetype-js"></i>
-                          <% elsif file["name"].include?(".html") %>
-                            <i class="fs-3 bi bi-filetype-html"></i>
-                          <% else %>
-                            <i class="fs-3 bi bi-file-code"></i>
-                          <% end %>
-                        <% end %>
-                      <% elsif file["type"] == "folder" %>
-                        <i class="fs-3 bi bi-folder-fill"></i>
-                      <% end %>
-                        
+                      <!-- Delete file -->
+                      <div data-action="click->file#openDeleteFileModal" class="fs-5" data-bs-target="#deleteFileModal" data-bs-toggle="modal">
+                        <i class="bi bi-trash3"></i>
                       </div>
-                      <span class="font-medium"><%= file["name"] %></span>
-                    </a>
-                  </td>
-                  <td class="py-3 px-6 text-left">
-                    <div class="flex items-center">
-                      <span>
-                      <% if file["type"] == "file" %>
-                        <% if file["size"] > 1000 %>
-                          <%= file["size"].to_i / 1000 %> kb
-                        <% else %>
-                          <%= file["size"] %> b
-                        <% end %>
-                      <% else %>
-                        -
-                      <% end %>
-                      </span>
-                    </div>
-                  </td>
-                  <td class="py-3 px-6 text-center">
-                    <div data-controller="file" class="flex item-center justify-center">
-                    
-                      <% unless file["name"].include?("index") %>
-                        <% if file["type"] == "file" %>
-                          <div data-action="click->file#openRenameFileModal" data-bs-target="#renameFileModal" data-bs-toggle="modal" class="div-edit-toggle w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                          </div>
-                        <% end %>
-                        <div data-action="click->file#openDeleteFileModal" class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" data-bs-target="#deleteFileModal" data-bs-toggle="modal">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </div>
-                      <% end %>
-                    </div>
-                  </td>
-                </tr>
-                <% end %>
-              </tbody>
-            </table>
-            -->
-          </div>
-        </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
       </div>
     </div>
-    
-    <!-- HERE -->
-    <% @folders_with_files.each do |folder| %>
-      <%= render partial: "admin/sites/filestable", :locals => { :folder => folder, :site => @site } %>
-    <% end %>
-    
+  </div>
+</div>
+<!-- Table for each folder's files -->
+<% @folders_with_files.each do |folder| %>
+  <%= render partial: "admin/sites/filestable", :locals => { :folder => folder, :site => @site } %>
+<% end %>
 <script>
   // When the turbo-frame updates the editor, show the toast to show the user that the file was saved
-  document.addEventListener("turbo:before-fetch-response", function (e) {
-    // Hide all modals when the turbo frame loads
-    document.querySelectorAll(".modal").forEach(function (modal) {
-      
-      var modalInstance = new bootstrap.Modal.getInstance(modal);
-      if (modalInstance) {
-        modalInstance.hide();
-      }
-    });
-    
+  // document.addEventListener("turbo:before-fetch-response", function (e) {
+  document.addEventListener("turbo:before-render", function (e) {
     // Get the params from the URL
     let queryStrings = window.location.search;
     let urlParams = new URLSearchParams(queryStrings);
     let folder_name = urlParams.get("folder");
-    
+
     let folder_files_id = `#site-files-for-${folder_name}`;
 
     let folder_files_table = document.querySelector(folder_files_id);
-    
+
     document
       .querySelector("#toggle-back-to-root-folder")
       .classList.remove("d-none");
@@ -198,5 +106,12 @@
     });
 
     folder_files_table.classList.remove("d-none");
+  })
+
+  document.addEventListener("turbo:before-fetch-response", function() {
+    const modalDismissBtns = document.querySelectorAll('[data-bs-dismiss="modal"]');
+    modalDismissBtns.forEach((btn) => {
+      btn.click();
+    });
   })
 </script>

@@ -22,7 +22,7 @@ export default class extends Controller {
     delete_site_button.querySelector("span").classList.remove("d-none");
 
     var myModalEl = document.getElementById("deleteSiteModal");
-    var modal = bootstrap.Modal.getInstance(myModalEl);
+    //var modal = bootstrap.Modal.getInstance(myModalEl);
 
     // Post to the delete site endpoint
     fetch(`/admin/sites/${site_name}/delete`, {
@@ -38,7 +38,7 @@ export default class extends Controller {
           delete_site_button.disabled = false;
           delete_site_button.querySelector("span").classList.add("d-none");
 
-          modal.hide();
+          //modal.hide();
           // Remove the site from the table
           let row = document.querySelector(`[data-site-name="${site_name}"]`);
           row.remove();
