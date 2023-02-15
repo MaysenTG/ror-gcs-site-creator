@@ -8,51 +8,39 @@
   </form>
 <% end %>
 
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#"><img src="/images/static-site-generator-logo.png" alt="logo" class="img-fluid image-fluid" width="100"></a>
+    <a class="navbar-brand" href="#">Navbar</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
+          <a class="nav-link <% if request.path == "/" %>active<% end %>" aria-current="page" href="/">Home</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Link</a>
-        </li>
+        <% if current_account %>
+          <li class="nav-item">
+            <a class="nav-link <% if request.path == "/admin/sites" or (controller_name == "sites" and action_name == "show") or (controller_name == "files") %>active<% end %>" href="/admin/sites">View your sites</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <% if request.path == "/admin/sites/new" %>active<% end %>" href="/admin/sites/new">Create a new site</a>
+          </li>
+        <% end %>
+      </ul>
+      <ul class="navbar-nav ms-auto mb-2 mx-5 mb-lg-0">
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Dropdown
+          <a class="nav-link <% if request.path.include?("account") %>active<% end %> dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Your account
           </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Action</a></li>
-            <li><a class="dropdown-item" href="#">Another action</a></li>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="/admin/sites/new">Create a new site</a></li>
+            <li><a class="dropdown-item <% if request.path == "/accounts/edit" %>active<% end %>" href="/accounts/edit">Edit your account</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Something else here</a></li>
+            <li><button type="submit" form="sign-out-account-form" class="dropdown-item">Sign out</button></li>
           </ul>
         </li>
-        <li class="nav-item">
-          <a class="nav-link disabled">Disabled</a>
-        </li>
       </ul>
-      <form class="d-flex" role="search">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">Search</button>
-      </form>
-      <% if current_account %>
-      <div class="btn-group dropstart">
-        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-          Dropstart
-        </button>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="#">Action</a></li>
-          <li><a class="dropdown-item" href="#">Another action</a></li>
-          <li><a class="dropdown-item" href="#">Something else here</a></li>
-        </ul>
-      </div>
-      <% end %>
     </div>
   </div>
 </nav>

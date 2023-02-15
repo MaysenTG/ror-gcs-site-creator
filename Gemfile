@@ -72,3 +72,5 @@ end
 gem "google-cloud-storage"
 
 gem "httparty", "~> 0.20.0"
+
+gem 'bootstrap', '~> 5.1.3'
