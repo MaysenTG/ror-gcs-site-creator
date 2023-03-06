@@ -8,30 +8,27 @@ class Admin::FilesController < ApplicationController
   def create
     storage = Google::Cloud::Storage.new
     
-    
     # Create a file and add metadata to set cache control to "no-store"
     all_sites = Site.where(account_id: current_account.id, name: params[:site_name])
     
     #site_id = params[:site_id]
     site = all_sites.first
     
-    file_name_plus_type = params[:file_name] + "." + params[:file_type]
-    
-    folder_name = params[:folder_name]
+    file_name_plus_type = params[:file_name]# + "." + params[:file_type]
 
-    if !folder_name.nil? || folder_name != ""
-      if folder_name.ends_with?("/")
-        folder_name.gsub(/\/$/, '')
-      end
+    # if !folder_name.nil? || folder_name != ""
+    #   if folder_name.ends_with?("/")
+    #     folder_name.gsub(/\/$/, '')
+    #   end
       
-      file_name_plus_type = folder_name + "/" + file_name_plus_type
-      file_name_plus_type.gsub!(/\/\//, '/')
-    end
+    #   file_name_plus_type = folder_name + "/" + file_name_plus_type
+    #   file_name_plus_type.gsub!(/\/\//, '/')
+    # end
     
-    if folder_name.nil? || folder_name == ""
-      # Remove the first slash
-      file_name_plus_type.gsub!(/^\//, '')
-    end
+    # if folder_name.nil? || folder_name == ""
+    #   # Remove the first slash
+    #   file_name_plus_type.gsub!(/^\//, '')
+    # end
 
     bucket_name = site.name + ".maysengreenwood.com"
     
@@ -164,8 +161,11 @@ class Admin::FilesController < ApplicationController
       
       @site = site.as_json
       @file_contents = contents
-      @file_name = file_name    
-    
+      @file_name = file_name
+      
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.update("editor", partial: "admin/files/editor", :locals => { :file_contents => @file_contents, :file_name => @file_name, :site => @site }) }
+      end    
       #render json: { status: "success", site: site.as_json, file_contents: contents, file_name: file_name, is_404: is_404, is_main: is_main }
     # rescue
     #   render json: { status: "error", message: "This site doesn't exist, or you're not authorized to view it" }
@@ -190,8 +190,9 @@ class Admin::FilesController < ApplicationController
     
     file = bucket.create_file StringIO.new(@file_contents), @file_name, cache_control: "no-store"
     
+    @site = site.as_json
     # Respond with the turbo stream
-    render turbo_stream: turbo_stream.replace("file-editor-turbo-frame", partial: "admin/files/editor", :locals => { @file_contents => @file_contents, @file_name => @file_name })
+    render turbo_stream: turbo_stream.update("editor", partial: "admin/files/editor", :locals => { @file_contents => @file_contents, @file_name => @file_name, :site => @site })
   end
   
   def upload
@@ -245,81 +246,12 @@ class Admin::FilesController < ApplicationController
       file.delete
     end
     
+    response.set_header('ACTION-TYPE', 'delete')
+    
     formatFoldersForTurboResponse(bucket, site)
-    
-    # if file_name_plus_type.include? "/" and file_name_plus_type.split("/").length > 1
-    #   file_name_plus_type = file_name_plus_type.split("/").last
-    # end
-    
-    #render json: { status: "success", messages: "File successfully deleted", file_name: file_name_plus_type }
-    
-    # all_files = []
-      
-    # only_main_folders = []
-
-    # unless bucket.files.nil?
-    #   bucket.files.each do |file|
-    #     if bucket.website_main == file.name
-    #       all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: true, is_404: false})
-    #     elsif bucket.website_404 == file.name
-    #       all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: false, is_404: true})
-    #     else
-    #       all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: false, is_404: false})
-    #     end
-    #   end
-    # end
-    
-    # # Loop through all the files, and find the main folders
-    # main_folders = []
-    # all_files.each do |file|
-    #   if file[:name].include? "/"
-    #     main_folders.push(file[:name].split("/")[0])
-    #   end
-    # end
-    
-    
-    # @site = site
-    # site_files = all_files.as_json
-    
-    # all_folders = []
-    
-    # files = []
-    
-    # all_files.each do |file|
-    #   if file[:name].include? "/"
-    #     # This is a folder
-    #     folder_name = file[:name].split("/")[0]
-    #     all_folders.push({type: "folder", name: folder_name, files: [], size: 0})
-    #   else
-    #     # This is a file
-    #     files.push(file)
-    #   end
-    # end
-    
-    # # Remove duplicates
-    # all_folders.uniq!
-    
-    # all_folders.each do |folder|
-    #   site_files.each do |file|
-    #     if file["name"].include? folder[:name] and !file["name"].ends_with?("/")
-    #       file_without_folder = file["name"].split("/")[1]
-    #       folder[:files].push({type: "file", name: file_without_folder, size: file["size"], last_updated: file["last_updated"], is_main: false, is_404: false})
-    #       #folder[:files].push(file_without_folder)  
-    #     elsif !file["name"].include?("/")
-    #     end
-    #   end
-    # end
-    
-    # @site_files_and_folders = files + all_folders
-    # @site_files_and_folders = @site_files_and_folders.as_json
-    # @folders_with_files = all_folders
-    
-    # respond_to do |format|
-    #   format.turbo_stream { render turbo_stream: turbo_stream.update("all-site-files", partial: "admin/sites/allfiles", :locals => { :site => @site, :site_files_and_folders => @site_files_and_folders, :folders_with_files => @folders_with_files }) }
-    # end
   end
 
-  def rename
+  def rename  
     storage = Google::Cloud::Storage.new
     
     site_name = params[:site_name]
@@ -331,12 +263,7 @@ class Admin::FilesController < ApplicationController
     
     file_name_plus_type = params[:current_file_name]
     new_file_name = params[:new_file_name]
-    
-    # if params[:folder_name] != ""
-    #   file_name_plus_type = params[:folder_name] + "/" + file_name_plus_type
-    #   new_file_name = params[:folder_name] + "/" + params[:new_file_name]
-    # else
-    
+
     if params[:folder_name].length > 0 and params[:folder_name] != "undefined"
       file_name_plus_type = params[:folder_name] + "/" + file_name_plus_type
       new_file_name = params[:folder_name] + "/" + new_file_name
@@ -352,9 +279,10 @@ class Admin::FilesController < ApplicationController
 
     file.delete
     
+    response.set_header('ACTION-TYPE', 'rename')
+    response.set_header('new-file-name', new_file_name)
+    
     formatFoldersForTurboResponse(bucket, site)
-
-    #render json: { status: "success", new_file_name: new_file_name }
   end
   
   def create_folder
@@ -504,10 +432,9 @@ class Admin::FilesController < ApplicationController
     
     @site_files_and_folders = files + all_folders
     @site_files_and_folders = @site_files_and_folders.as_json
-    @folders_with_files = all_folders
     
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.update("all-site-files", partial: "admin/sites/allfiles", :locals => { :site => @site, :site_files_and_folders => @site_files_and_folders, :folders_with_files => @folders_with_files }) }
+      format.turbo_stream { render turbo_stream: turbo_stream.update("filepicker", partial: "admin/files/filepicker", :locals => { :site => @site, :site_files_and_folders => @site_files_and_folders }) }
     end
   end
 end

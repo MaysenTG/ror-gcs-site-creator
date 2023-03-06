@@ -229,7 +229,6 @@ class Api::V1::FilesController < ApplicationController
   
   private
   def set_site_details
-    puts "set_site_details"
     
     # @site_id = params[:site_id]
     # @site_name = params[:site_name]

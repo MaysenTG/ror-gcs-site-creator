@@ -221,19 +221,27 @@ export default class extends Controller {
 
   openDeleteFileModal(event) {
     // The clicked element is the SVG
-    let target_tr = event.target.closest("tr");
+    let target_a = event.target.closest("a");
+    
+    event.preventDefault();
 
-    document.querySelector("#file_name").value = target_tr.dataset.fileName;
-    document.querySelector("#folder_name").value = target_tr.dataset.folderName;
+    document.querySelector("form[action*='delete'] #file_name").value =
+      target_a.dataset.filename;
+    document.querySelector("#filename_text").innerText =
+      target_a.dataset.filename;
+    //document.querySelector("#folder_name").value = target_tr.dataset.folderName;
   }
 
   // Populate the open file modal with the file name
   openRenameFileModal(event) {
-    let target_tr = event.target.closest("tr");
+    let target_a = event.target.closest("a");
+
+    // Stop the parent anchor tag from opening the file
+    event.preventDefault();
 
     // If the file name contains a "/" then it is a folder
-    if (target_tr.dataset.fileName.includes("/")) {
-      let folder_and_file = target_tr.dataset.fileName.split("/");
+    if (target_a.dataset.filename.includes("/")) {
+      let folder_and_file = target_a.dataset.filename.split("/");
       let file_name = folder_and_file[1];
       let folder_name = folder_and_file[0];
       document.querySelector("#current_file_name").value = file_name;
@@ -242,10 +250,28 @@ export default class extends Controller {
         element.value = folder_name;
       });
     } else {
-      let file_name = target_tr.dataset.fileName;
-      let folder_name = target_tr.dataset.folderName;
+      let file_name = target_a.dataset.filename;
+      let folder_name = target_a.dataset.folderName;
       document.querySelector("#current_file_name").value = file_name;
       document.querySelector("#new_file_name").value = file_name;
     }
+  }
+  
+  openNewFileInFolderModal(event) {
+    let target_a = event.target.closest("a");
+    let folder_name = target_a.dataset.folder;
+    
+    document.querySelector("#create-file-form #folder_name").value = folder_name;
+  }
+  
+  setFullFileName(event) {
+    let target_input_value = event.target.value;
+    let folder_name = document.querySelector("#folder_name").value;
+    let full_filename = folder_name ? folder_name + "/" + target_input_value : target_input_value;
+
+    
+    full_filename += "." + document.querySelector("#create-file-form #file_type").value;
+    
+    document.querySelector("#create-file-form input[name='file_name']").value = full_filename;
   }
 }

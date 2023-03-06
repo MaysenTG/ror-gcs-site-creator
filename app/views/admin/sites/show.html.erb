@@ -1,3 +1,24 @@
+<style>
+  .accordion-body:not(.accordion-active):hover {
+    background-color: #f7f7f7;
+  }
+
+  .accordion-body.add-new-file:hover {
+    background-color: #f7f7f7;
+  }
+
+  .accordion-active.accordion-body {
+    background: #e6e6e6;
+  }
+
+  .files-icons-container {
+    display: block;
+  }
+
+  .accordion-body:not(.accordion-active) .file-icons-container {
+    display: none !important;
+  }
+</style>
 <div data-controller="general" class="container">
   <div class="container mt-3">
     <a href="/admin/sites" class="mb-3 btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to sites</a>
@@ -31,32 +52,23 @@
           </div>
         </div>
         <div class="dropdown">
-          <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">New file/folder</button>
-          <ul class="dropdown-menu">
-            <li><button type="button" data-action="general#openCreateFileModal" class="btn btn-primary dropdown-item" data-bs-toggle="modal" data-bs-target="#createFileModal">Create a new file</button></li>
-            <li><button type="button" class="btn btn-primary dropdown-item" data-bs-toggle="modal" data-bs-target="#createFolderModal">Create a new folder</button></li>
-            <li><button type="button" class="btn btn-primary dropdown-item" data-bs-toggle="modal" data-bs-target="#uploadFileModal">Upload a file</button></li>
-          </ul>
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFileModal">Upload a file</button>
         </div>
       </div>
     </div>
-    <!-- End general -->
-    <!-- Breadcrumb -->
-    <%# <nav class="mb-3" aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item active" aria-current="page">Root folder</li>
-      </ol>
-    </nav> %>
-    <!-- End breadcrumb -->
-    <div data-controller="folder">
-      <a id="toggle-back-to-root-folder" href="#" class="d-none" data-action="folder#viewRootFolder">
-        <i class="bi bi-arrow-left"></i>
-        Back to root folder
-      </a>
+    <div class="row">
+      <div class="col-12 col-lg-3 col-md-12 col-sm-12" style="margin: 5rem 0;">
+        <turbo-frame id="filepicker">
+          <%= render partial: "admin/files/filepicker", @site => @site, @site_files_and_folders => @site_files_and_folders %>
+        </turbo-frame>
+      </div>
+      <div class="col-12 col-9 col-lg-9 col-md-12 col-sm-12">
+        <!-- Create a turbo frame tag for the editor partial -->
+        <%= turbo_frame_tag "editor" do %>
+        <% end %>
+      </div>
     </div>
-    <turbo-frame id="all-site-files">
-      <%= render partial: "admin/sites/allfiles", :locals => { :site => @site, :site_files_and_folders => @site_files_and_folders } %>
-    </turbo-frame>
+    <br>
     <div class="modal fade" id="createFileModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -71,23 +83,19 @@
                   <input type="hidden" name="site_id" value="1">
                   <input type="hidden" name="site_name" id="site_name" value="<%= @site["name"] %>">
                   <input type="hidden" name="folder_name" id="folder_name" value="">
-                  <div data-controller="validation" class="mb-3">
+                  <div data-controller="file validation" class="mb-3">
                     <label for="name" class="form-label">File name</label>
-                    <input data-action="input->validation#validate" type="text" class="form-control" id="name" name="file_name">
+                    <input data-action="validation#validate file#setFullFileName" type="text" class="form-control" id="visual_filename" >
+                    <input type="hidden" name="file_name" >
                   </div>
                   <div class="mb-3">
                     <label for="name" class="form-label">File type</label>
-                    <select class="form-select" aria-label="Default select example" name="file_type">
+                    <select class="form-select" aria-label="Default select example" name="file_type" id="file_type">
                       <option value="html" selected="">HTML</option>
                       <option value="js">JS</option>
                       <option value="css">CSS</option>
                     </select>
                   </div>
-                  <%# <select class="form-select" aria-label="Default select example" name="main_or_404">
-                    <option value="none">Set file type</option>
-                    <option value="set_as_main">Set as main page</option>
-                    <option value="set_as_404">Set as the 404 page</option>
-                    </select> %>
                 </form>
               </div>
             </div>
@@ -108,3 +116,191 @@
     <%= render :partial => "layouts/modals/sites/show/deletefile", :locals => { :site => @site } %>
   </div>
 </div>
+
+<!-- Toast when saving file -->
+<div id="snackbar">File saved..</div>
+
+<!-- Scroll to top button -->
+<button onclick="topFunction()" id="scrollToTop" title="Go to top">
+  <i class="bi bi-arrow-up"></i>
+</button>
+
+<script>
+  document.addEventListener("turbo:before-fetch-response", function(e) {
+    waitForElm('#file_content').then((elm) => {
+      let fileName = elm.dataset.filename;
+      let fileExtension = fileName.split('.').pop();
+      let mode = "htmlmixed";
+      if (fileExtension == "js") {
+        mode = "text/javascript";
+      } else if (fileExtension == "css") {
+        mode = "text/css";
+      }
+
+      const fileContentTextArea = document.getElementById("file_content");
+      let fileContentTextAreaHasCodemirror = fileContentTextArea.parentElement.querySelector(".CodeMirror")
+
+      if (!fileContentTextAreaHasCodemirror) {
+        let editor = CodeMirror.fromTextArea(fileContentTextArea, {
+          mode: mode,
+          lineNumbers: true,
+          autoCloseTags: true,
+          autoCloseBrackets: true,
+          matchBrackets: true,
+          foldGutter: true,
+          //gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+          styleActiveLine: true,
+          indentUnit: 2,
+          indentWithTabs: false,
+          tabSize: 2,
+          extraKeys: {
+            "Ctrl-Space": "autocomplete",
+            "Cmd-S": function (instance) {
+              document.querySelector("#save-file-btn").click();
+            },
+          },
+        });
+        editor.on("change", function(cm, change) {
+          document.getElementById("file_content").value = cm.getValue();
+          // Enable save button
+          document.querySelector("#save-file-btn").disabled = false;
+        });
+      }
+
+    });
+
+    const allModals = document.querySelectorAll(".modal");
+
+    allModals.forEach((modal) => {
+      let modalInstanceDismissBtn = modal.querySelector("[data-bs-dismiss]");
+      if (modalInstanceDismissBtn) {
+        modalInstanceDismissBtn.click();
+      }
+    });
+    
+    if(e.detail.fetchResponse.response.url.includes("/files/update")) {
+      showFileSavePopup();
+    }
+    
+    try {
+      let eventType = event.detail.fetchResponse.response.headers.get("action-type")
+      if (eventType == "rename") {
+        // Click the file link to reload the file
+        waitForElm(`a[data-filename="${event.detail.fetchResponse.response.headers.get("new-file-name")}"]`).then((elm) => {
+          elm.click();
+        });
+      } else if(eventType == "delete") {
+        // remove the file from the URL
+        // and delete the inner contents of the editor tag
+        let url = new URL(window.location.href);
+        url.searchParams.delete("filename");
+        window.history.pushState({}, "", url);
+        document.getElementById("editor").innerHTML = "";
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  });
+</script>
+<script>
+  // When the CMD+S key is pressed, save the file
+  document.addEventListener("keydown", function(e) {
+    if (e.key == "s" && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
+      e.preventDefault();
+      document.querySelector("#save-file-btn").click();
+    }
+  });
+  
+  document.addEventListener("turbo:before-fetch-request", function(e) {
+    // Make the code editor appear like it's loading
+    waitForElm("#editor").then((elm) => {
+      elm.innerHTML = `<%= render :partial => "layouts/snippets/code_loading" %>`;
+    });
+  })
+
+  document.addEventListener("turbo:load", function() {
+    addEventListenerToFileLinks();
+
+    // Get the filename from the URL using the URLSearchParams API
+    const urlParams = new URLSearchParams(window.location.search);
+    const filename = urlParams.get("filename");
+
+    if (filename) {
+      const fileLink = document.querySelector(`a[data-filename="${filename}"]`);
+      if(fileLink) {
+        fileLink.click();
+        fileLink.querySelector(".accordion-body").classList.add("accordion-active");
+      } else {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("filename");
+        window.history.replaceState({}, document.title, url);
+      }
+    }
+
+    window.onscroll = function() {scrollFunction()};
+  })
+</script>
+<script>
+  // Whole bunch of functions
+  function scrollFunction() {
+    let mybutton = document.getElementById("scrollToTop");
+    if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
+      mybutton.style.display = "block";
+    } else {
+      mybutton.style.display = "none";
+    }
+  }
+
+  // When the user clicks on the button, scroll to the top of the document
+  function topFunction() {
+    document.body.scrollTop = 0; // For Safari
+    document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+  }
+
+  function showFileSavePopup() {
+    // Get the snackbar DIV
+    var x = document.getElementById("snackbar");
+
+    // Add the "show" class to DIV
+    x.className = "show";
+
+    // After 3 seconds, remove the show class from DIV
+    setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+  }
+
+  function waitForElm(selector) {
+    return new Promise(resolve => {
+        if (document.querySelector(selector)) {
+            return resolve(document.querySelector(selector));
+        }
+
+        const observer = new MutationObserver(mutations => {
+            if (document.querySelector(selector)) {
+                resolve(document.querySelector(selector));
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    });
+  }
+
+  function addEventListenerToFileLinks() {
+    const allFileLinks = document.querySelectorAll("a[data-filename]");
+
+    allFileLinks.forEach((fileLink) => {
+      fileLink.addEventListener("click", (event) => {
+        const allAccordionCollapse = document.querySelectorAll(".accordion-body");
+        allAccordionCollapse.forEach((accordionCollapse) => {
+          accordionCollapse.classList.remove("accordion-active");
+        });
+
+        const accordionCollapse = fileLink.querySelector(".accordion-body");
+        accordionCollapse.classList.add("accordion-active");
+      });
+    });
+  }
+</script>

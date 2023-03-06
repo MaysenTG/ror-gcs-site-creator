@@ -98,7 +98,10 @@ class Admin::SitesController < ApplicationController
         site_files.each do |file|
           if file["name"].include? folder[:name] and !file["name"].ends_with?("/")
             file_without_folder = file["name"].split("/")[1]
-            folder[:files].push({type: "file", name: file_without_folder, size: file["size"], last_updated: file["last_updated"], is_main: false, is_404: false})
+            
+            unless file_without_folder.nil?
+              folder[:files].push({type: "file", name: file_without_folder, size: file["size"], last_updated: file["last_updated"], is_main: false, is_404: false})
+            end
             #folder[:files].push(file_without_folder)  
           elsif !file["name"].include?("/")
           end
@@ -110,10 +113,12 @@ class Admin::SitesController < ApplicationController
       @folders_with_files = all_folders
       
       @site_files_and_folders = @site_files_and_folders.as_json
-
-      puts @site_files_and_folders
       
       #render json: { site: site_by_id, site_files: all_files, status: "success" }
+      
+      puts "-------"
+      puts @site_files_and_folders
+      puts "-------"
     rescue
       @error = "Site not found"
       render json: { status: "error", message: "Site not found" }
