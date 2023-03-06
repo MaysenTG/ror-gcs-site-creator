@@ -35,7 +35,8 @@ Rails.application.routes.draw do
     post 'sites/create_new_site' => 'sites#create'
     delete 'sites/:site_name/delete' => 'sites#delete'
     
-    get 'sites/:site_name/files/edit' => 'files#show'
+    #get 'sites/:site_name/files/edit' => 'files#show'
+    get 'sites/:site_name/files/editor' => 'files#show'
     post 'sites/:site_name/files/update' => 'files#update'
     post 'sites/:site_name/files/new' => 'files#create'
     post 'sites/:site_name/files/upload' => 'files#upload'

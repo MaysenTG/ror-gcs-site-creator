@@ -1,64 +1,79 @@
-<turbo-frame id="file-editor-turbo-frame">
-
-<textarea name="contents" id="file_content"><%= @file_contents %></textarea>
-
-<style>
-  .CodeMirror {
-    height: 100%;
-    border: 1px solid black;
-    min-height: 300px;
-  }
-</style>
-
+<div class="container">
+  <div id="code-editor-bar" class="mb-3 d-flex justify-content-start">
+    <div class="w-100 d-flex justify-content-between">
+      <div class="d-flex justify-content-start align-items-center">
+        <h3 class="text-primary">Editing "<%= @file_name %>"</h3>
+        &nbsp;
+        <% if @file_name.include?("/") %>
+          <% folder_name,file_name = @file_name.split("/") %>
+        <% else %>
+          <% file_name = @file_name %>
+        <% end %>
+        <% if folder_name.nil? %>
+          <% a_href = "https://"+@site["name"]+".maysengreenwood.com/" + file_name %>
+        <% else %>
+          <% a_href = "https://"+@site["name"]+".maysengreenwood.com/"+folder_name + "/" + file_name %>
+        <% end %>
+        <% if @file_name.include?(".html") %>
+          <a target="_blank" href="<%= a_href %>">
+            <i class="fs-3 bi bi-eye"></i>
+          </a>
+        <% end %>
+      </div>
+      <button type="submit" class="p-3 btn btn-success" id="save-file-btn" form="file-editor-form" disabled="">
+        <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Save changes
+      </button>
+    </div>
+  </div>
+  <form action="/admin/sites/<%= @site["name"] %>/files/update" id="file-editor-form" method="post" data-turbo="true">
+    <input type="hidden" id="site_id" name="site_id" value="<%= @site["id"] %>">
+    <input type="hidden" id="site_name" name="site_name" value="<%= @site["name"] %>">
+    <input type="hidden" id="file_name" name="file_name" value="<%= @file_name %>">
+    <turbo-frame id="file-editor-turbo-frame">
+      <textarea data-filename="<%= @file_name %>" name="contents" id="file_content"><%= @file_contents %></textarea>
+      <style>
+        .CodeMirror {
+          height: 100%;
+          border: 1px solid black;
+          min-height: 300px;
+        }
+      </style>
+    </turboframe>
+  </form>
+</div>
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+  <!-- Position it: -->
+  <!-- - `.toast-container` for spacing between toasts -->
+  <!-- - `.position-absolute`, `top-0` & `end-0` to position the toasts in the upper right corner -->
+  <!-- - `.p-3` to prevent the toasts from sticking to the edge of the container  -->
+  <div class="toast-container position-absolute top-0 end-0 p-3">
+    <!-- Then put toasts within -->
+    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <img src="..." class="rounded me-2" alt="...">
+        <strong class="me-auto">Bootstrap</strong>
+        <small class="text-muted">just now</small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body">
+        See? Just like this.
+      </div>
+    </div>
+    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <img src="..." class="rounded me-2" alt="...">
+        <strong class="me-auto">Bootstrap</strong>
+        <small class="text-muted">2 seconds ago</small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body">
+        Heads up, toasts will stack automatically
+      </div>
+    </div>
+  </div>
+</div>
 <script>
-  document.querySelector("#save-file-btn").disabled = true;
-  
-  // Create a codeeditor instance and add the contents
-  var editor = CodeMirror.fromTextArea(document.getElementById("file_content"), {
-    <% if @file_name.include?(".js") %>
-      mode: "text/javascript",
-    <% elsif @file_name.include?(".css") %>
-      mode: "text/css",
-    <% else %>
-      mode: "htmlmixed",
-    <% end %>
-    lineNumbers: true,
-    autoCloseTags: true,
-    autoCloseBrackets: true,
-    matchBrackets: true,
-    foldGutter: true,
-    //gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
-    styleActiveLine: true,
-    indentUnit: 2,
-    indentWithTabs: false,
-    tabSize: 2,
-    extraKeys: {
-      "Ctrl-Space": "autocomplete",
-      "Cmd-S": function (instance) {
-        saveFile();
-      },
-    },
-  });
-  
-  // Update the textarea so saving the file saves the latest changes
-  editor.on("change", function(cm, change) {
-      document.getElementById("file_content").value = cm.getValue();
-      // Enable save button
-      document.querySelector("#save-file-btn").disabled = false;
-    });
-    
-    // Used for extra keys in the Codemirror instance
-  function saveFile() {
-    document.querySelector("#save-file-btn").click();
-  }
-  
-  // When the button is clicked (either by clicking or pressing CMD+S), show the spinner
-  document.querySelector("#save-file-btn").addEventListener("click", function() {
-    // Disable save button
-    //document.querySelector("#save-file-btn").disabled = true;
-    this.querySelector("span").classList.remove("d-none");
-  });
+  // Add the filename to the URL
+  window.history.pushState({}, "", "?filename=<%= @file_name %>");
 </script>
-
-</turboframe>
-

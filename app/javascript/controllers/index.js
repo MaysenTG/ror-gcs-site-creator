@@ -49,7 +49,6 @@ document.addEventListener("turbo:load", () => {
   const allModals = document.querySelectorAll(".modal");
   allModals.forEach((modal) => {
     modal.addEventListener("show.bs.modal", (event) => {
-      console.log(document.querySelectorAll(".modal-backdrop"));
       // Delete all but the last backdrop
       const allBackdrops = document.querySelectorAll(".modal-backdrop");
       allBackdrops.forEach((backdrop, index) => {
