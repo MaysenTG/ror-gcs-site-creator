@@ -17,7 +17,7 @@ body {
 }
 
 a.btn:hover, a.dropdown-item:hover, a[role="button"]:hover {
-  text-decoration: none;
+  text-decoration: none !important;
 }
   
 i.bi:active {
@@ -44,6 +44,11 @@ a {
 
 a:not(.accordion-item a):hover {
   text-decoration: underline;
+}
+
+a.btn:hover {
+  text-decoration: none !important;
+  cursor: pointer;
 }
 
 /* The snackbar - position it at the bottom and in the middle of the screen */

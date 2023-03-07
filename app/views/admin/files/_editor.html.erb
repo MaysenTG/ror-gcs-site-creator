@@ -1,4 +1,8 @@
 <div class="container">
+  
+  <%= turbo_frame_tag "editor_message" do %>
+  <% end %>
+  
   <div id="code-editor-bar" class="mb-3 d-flex justify-content-start">
     <div class="w-100 d-flex justify-content-between">
       <div class="d-flex justify-content-start align-items-center">
@@ -14,6 +18,12 @@
         <% else %>
           <% a_href = "https://"+@site["name"]+".maysengreenwood.com/"+folder_name + "/" + file_name %>
         <% end %>
+        
+        <% if @file_name == "index.html" %>
+          <% root_path = "https://"+@site["name"]+".maysengreenwood.com" %>
+          <% a_href = root_path %>
+        <% end %>
+        
         <% if @file_name.include?(".html") %>
           <a target="_blank" href="<%= a_href %>">
             <i class="fs-3 bi bi-eye"></i>
@@ -22,7 +32,8 @@
       </div>
       <button type="submit" class="p-3 btn btn-success" id="save-file-btn" form="file-editor-form" disabled="">
         <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        Save changes
+        <span class="save-btn-text">Save</span>
+        <span class="save-btn-text-loading d-none">Saving...</span>
       </button>
     </div>
   </div>
@@ -31,6 +42,7 @@
     <input type="hidden" id="site_name" name="site_name" value="<%= @site["name"] %>">
     <input type="hidden" id="file_name" name="file_name" value="<%= @file_name %>">
     <turbo-frame id="file-editor-turbo-frame">
+      <textarea class="d-none" name="original_contents"><%= @file_contents %></textarea>
       <textarea data-filename="<%= @file_name %>" name="contents" id="file_content"><%= @file_contents %></textarea>
       <style>
         .CodeMirror {
@@ -41,37 +53,6 @@
       </style>
     </turboframe>
   </form>
-</div>
-<div aria-live="polite" aria-atomic="true" class="position-relative">
-  <!-- Position it: -->
-  <!-- - `.toast-container` for spacing between toasts -->
-  <!-- - `.position-absolute`, `top-0` & `end-0` to position the toasts in the upper right corner -->
-  <!-- - `.p-3` to prevent the toasts from sticking to the edge of the container  -->
-  <div class="toast-container position-absolute top-0 end-0 p-3">
-    <!-- Then put toasts within -->
-    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <img src="..." class="rounded me-2" alt="...">
-        <strong class="me-auto">Bootstrap</strong>
-        <small class="text-muted">just now</small>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body">
-        See? Just like this.
-      </div>
-    </div>
-    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <img src="..." class="rounded me-2" alt="...">
-        <strong class="me-auto">Bootstrap</strong>
-        <small class="text-muted">2 seconds ago</small>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body">
-        Heads up, toasts will stack automatically
-      </div>
-    </div>
-  </div>
 </div>
 <script>
   // Add the filename to the URL
