@@ -1,0 +1,18 @@
+<div class="modal fade" id="mainOr404" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Main website files</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>The <code>index.html</code> file is the main file for the site. When you visit <strong><%= @site.name %>.maysengreenwood.com</strong>, this file is served</p>
+        <br>
+        <p>The <code>404.html</code> is the main 404 file for the site. When you visit a URL which has no matching file/directory, this file is served</p>
+      </div>
+      <div data-controller="file" class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

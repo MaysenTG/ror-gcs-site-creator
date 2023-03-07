@@ -23,12 +23,22 @@
                   </div>
                 </div>
                 <div class="col d-flex flex-column flex-sm-row justify-content-between mb-3">
-                  <div>
-                    <h4><strong>Name:</strong></h4>
-                    <p><%= current_account.name %></p>
+                  <div class="d-flex flex-column">
+                    <div>
+                      <h4><strong>Name:</strong></h4>
+                      <p><%= current_account.name %></p>
+                    </div>
+                    <br>
+                    <div>
+                      <h4><strong>Max site size (per site):</strong></h4>
+                      <p><%= current_account.max_site_size %>MB</p>
+                    </div>
+                    <div>
+                      <h4><strong>Number of sites</strong></h4>
+                      <p><%= current_account.sites.count %>/<%= current_account.max_sites %></p>
+                    </div>
                   </div>
                   <div class="text-center text-sm-right">
-                    <span class="badge badge-secondary">administrator</span>
                     <div class="text-muted"><small>Joined <%= current_account.created_at.to_fs(:custom_datetime) %></small></div>
                   </div>
                 </div>

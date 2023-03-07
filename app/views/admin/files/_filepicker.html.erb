@@ -41,7 +41,7 @@
                 <%= item["name"] %>
               </div>
               <div class="d-flex file-icons-container" data-controller="file">
-                <% unless item["name"].include?("index") %>
+                <% unless item["name"].include?("index") or item["name"].include?("404") %>
                   <!-- Edit file -->
                   <% if item["type"] == "file" %>
                     <div data-action="click->file#openRenameFileModal" data-bs-target="#renameFileModal" data-bs-toggle="modal" class="div-edit-toggle mx-3 fs-5">
@@ -51,6 +51,10 @@
                   <!-- Delete file -->
                   <div data-action="click->file#openDeleteFileModal" class="fs-5" data-bs-target="#deleteFileModal" data-bs-toggle="modal">
                     <i class="bi bi-trash3"></i>
+                  </div>
+                <% else %>
+                  <div class="fs-5" data-bs-target="#mainOr404" data-bs-toggle="modal">
+                    <i class="bi bi-question-lg"></i>
                   </div>
                 <% end %>
               </div>

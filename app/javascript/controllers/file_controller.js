@@ -3,55 +3,77 @@ import { Controller } from "@hotwired/stimulus";
 export default class extends Controller {
   connect() {}
 
+  // uploadFile(event) {
+  //   let form = document.querySelector("#upload-file-form");
+  //   let formData = new FormData(form);
+
+  //   let site_name = document.querySelector("#site_name").value;
+  //   let csrf_token = document.querySelector("#csrf_token").value;
+
+  //   let upload_file_button = event.target;
+  //   upload_file_button.disabled = true;
+  //   upload_file_button.querySelector("span").classList.remove("d-none");
+    
+    
+  //   // If there is no file in the form data, return
+  //   if(!formData.get("file")) {
+  //     upload_file_button.disabled = false;
+  //     upload_file_button.querySelector("span").classList.add("d-none");
+  //     return;
+  //   }
+
+  //   // Post to the create file endpoint
+  //   fetch(`/admin/sites/${site_name}/files/upload`, {
+  //     method: "POST",
+  //     headers: {
+  //       "X-CSRF-Token": csrf_token,
+  //       Accept: "application/json",
+  //     },
+  //     body: formData,
+  //   })
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       if(data.status == "success") {
+  //         window.location.reload(true);
+  //       } else {
+  //         console.log("Error");
+  //         // Close the upload modal by clicking the close button
+  //         //document.querySelector("#uploadFileModal").querySelector('[data-bs-dismiss="modal"]').click();
+  //         // Add the error message to the modal
+  //         if(!document.querySelector("#uploadFileModal").querySelector(".alert")) {
+  //           const error = document.createElement("div");
+  //           error.classList.add("alert", "alert-warning", "alert-dismissible", "fade", "show");
+  //           error.innerHTML = data.message;
+            
+  //           const closeButton = document.createElement("button");
+  //           closeButton.classList.add("btn-close");
+  //           closeButton.setAttribute("data-bs-dismiss", "alert");
+  //           closeButton.setAttribute("aria-label", "Close");
+  //           error.appendChild(closeButton);
+            
+  //           document.querySelector("#uploadFileModal").querySelector(".modal-body").appendChild(error);
+  //         }
+          
+  //         upload_file_button.disabled = false;
+  //         upload_file_button.querySelector("span").classList.add("d-none");
+  //       }
+  //     });
+  // }
+  
+  // Migrated to turbo, but needed to avoid submitting no files
   uploadFile(event) {
     let form = document.querySelector("#upload-file-form");
-    let formData = new FormData(form);
-
-    let site_name = document.querySelector("#site_name").value;
-    let csrf_token = document.querySelector("#csrf_token").value;
-
-    let upload_file_button = event.target;
-    upload_file_button.disabled = true;
-    upload_file_button.querySelector("span").classList.remove("d-none");
-
-    var myModalEl = document.getElementById("uploadFileModal");
-    //var modal = bootstrap.Modal.getInstance(myModalEl);
-
-    // Post to the create file endpoint
-    fetch(`/admin/sites/${site_name}/files/upload`, {
-      method: "POST",
-      headers: {
-        "X-CSRF-Token": csrf_token,
-        Accept: "application/json",
-      },
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        window.location.reload();
-        // if (data.status == "success") {
-        //   upload_file_button.disabled = false;
-        //   upload_file_button.querySelector("span").classList.add("d-none");
-
-        //   //modal.hide();
-        //   // Append the new file to the table
-        //   let table = document.querySelector("#site-files");
-        //   let row = table.insertRow(-1);
-        //   row.setAttribute("data-file-name", data.file_name);
-        //   let file_size = data.file_size;
-        //   let file_size_string = "";
-        //   if (file_size > 1000) {
-        //     file_size_string = `${(file_size / 1000).toFixed(2)} kb`;
-        //   } else {
-        //     file_size_string = `${file_size} b`;
-        //   }
-
-        //   // if the table already contains a row of the filename, update the size
-
-        // } else {
-        //   console.log("Error");
-        // }
-      });
+    let fileInput = form.querySelector("input[name='file']");
+    
+    // If there is no file in the form data, return
+    if(fileInput.files.length == 0) {
+      return;
+    } else {
+      form.requestSubmit();
+      // Disable the submit button
+      let upload_file_button = event.target;
+      upload_file_button.disabled = true;
+    }
   }
 
   // Migrated to turbo

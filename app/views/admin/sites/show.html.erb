@@ -114,6 +114,7 @@
     <%= render :partial => "layouts/modals/sites/show/renamefile", :locals => { :site => @site } %>
     <%= render :partial => "layouts/modals/sites/show/uploadfile", :locals => { :site => @site } %>
     <%= render :partial => "layouts/modals/sites/show/deletefile", :locals => { :site => @site } %>
+    <%= render :partial => "layouts/modals/sites/show/mainor404", :locals => { :site => @site } %>
   </div>
 </div>
 
@@ -166,7 +167,11 @@
           document.querySelector("#save-file-btn").disabled = false;
         });
       }
-
+      
+      // Hide the loading spinner
+      document.querySelector("#save-file-btn").querySelector("span").classList.add("d-none");
+      document.querySelector("#save-file-btn").querySelector(".save-btn-text-loading").classList.add("d-none");
+      document.querySelector("#save-file-btn").querySelector(".save-btn-text").classList.remove("d-none");
     });
 
     const allModals = document.querySelectorAll(".modal");
@@ -178,8 +183,22 @@
       }
     });
     
-    if(e.detail.fetchResponse.response.url.includes("/files/update")) {
+    if(e.detail.fetchResponse.response.url.includes("/files/update") && !e.detail.fetchResponse.response.headers.get("site-over-limit")) {
+      let fileTooBigError = document.querySelector(".file__too__big__error");
+      if(fileTooBigError) {
+        fileTooBigError.classList.add("d-none");
+      }
       showFileSavePopup();
+    }
+    
+    if(e.detail.fetchResponse.response.url.includes("/files/upload")) {
+      waitForElm(`a[data-filename="${e.detail.fetchResponse.response.headers.get("file-name")}"]`).then((elm) => {
+        elm.click();
+      });
+    }
+    
+    if(e.detail.fetchResponse.response.headers.get("site-over-limit")) {
+      document.querySelector(".file__too__big__error").classList.remove("d-none");
     }
     
     try {
@@ -212,10 +231,17 @@
   });
   
   document.addEventListener("turbo:before-fetch-request", function(e) {
-    // Make the code editor appear like it's loading
-    waitForElm("#editor").then((elm) => {
-      elm.innerHTML = `<%= render :partial => "layouts/snippets/code_loading" %>`;
-    });
+    if(!e.detail.url.href.includes("/files/update")) {
+      // Make the code editor appear like it's loading
+      waitForElm("#editor").then((elm) => {
+        elm.innerHTML = `<%= render :partial => "layouts/snippets/code_loading" %>`;
+      });
+    } else {
+      document.querySelector("#save-file-btn").querySelector("span").classList.remove("d-none");
+      document.querySelector("#save-file-btn").querySelector(".save-btn-text-loading").classList.remove("d-none");
+      document.querySelector("#save-file-btn").querySelector(".save-btn-text").classList.add("d-none");
+      
+    }
   })
 
   document.addEventListener("turbo:load", function() {

@@ -3,8 +3,16 @@ require "google/cloud/storage"
 ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.json"
 
 class Admin::SitesController < ApplicationController
-  #before_action :set_view_path
+  RESERVED_NAMES = [
+    "cdn", "cv", "portfolio", "new", "files", "file", "static", "store", "linkinbio"
+  ]
+  
+  before_action :restrict_num_sites, only: [:new]
   before_action :authenticate_account!
+
+  def self.get_total_bucket_size(bucket)
+    bucket.files.inject(0) { |sum, file| sum + file.size }
+  end
   
   def index
     all_sites_for_user = Site.where(account_id: current_account.id)
@@ -112,13 +120,11 @@ class Admin::SitesController < ApplicationController
       
       @folders_with_files = all_folders
       
+      # Sort the files and folders
+      @site_files_and_folders.sort_by! { |file| [file[:name]=="index.html" ? 0 : 1, file[:name]=="404.html" ? 0 : 1, file[:type]=="file" ? 0 : 1, file[:type]=="folder" ? 0 : 1] }
+      
       @site_files_and_folders = @site_files_and_folders.as_json
       
-      #render json: { site: site_by_id, site_files: all_files, status: "success" }
-      
-      puts "-------"
-      puts @site_files_and_folders
-      puts "-------"
     rescue
       @error = "Site not found"
       render json: { status: "error", message: "Site not found" }
@@ -126,14 +132,14 @@ class Admin::SitesController < ApplicationController
   end
   
   def validate_site_name
-    reserved_names = ["cdn", "cv", "portfolio", "new", "files", "file", "bitch"]
+    sent_site_name = params[:site_name]
     
     all_sites = Site.all
     
     name_taken = false
     
     all_sites.each do |site|
-      if site.name == params[:site_name] or reserved_names.include? params[:site_name]
+      if site.name == sent_site_name or RESERVED_NAMES.include? sent_site_name
         name_taken = true
         break
       end
@@ -216,6 +222,15 @@ class Admin::SitesController < ApplicationController
       render json: { status: "success", site_id: @new_site.id }
     else
       render json: { status: "error", errors: @new_site.errors }
+    end
+  end
+  
+  private
+  def restrict_num_sites
+    max_sites_for_account = current_account.max_sites
+    
+    if current_account.sites.count >= max_sites_for_account
+      redirect_to admin_sites_path, notice: "You have reached the maximum number of sites you can create (#{max_sites_for_account})."
     end
   end
 end

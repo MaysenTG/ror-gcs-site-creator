@@ -42,6 +42,8 @@ export default class extends Controller {
           // Remove the site from the table
           let row = document.querySelector(`[data-site-name="${site_name}"]`);
           row.remove();
+          // Close the delete site modal
+          myModalEl.querySelector('[data-bs-dismiss="modal"]').click();
         }
       });
   }
