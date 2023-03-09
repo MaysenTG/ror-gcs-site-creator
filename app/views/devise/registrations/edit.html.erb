@@ -24,18 +24,19 @@
                 </div>
                 <div class="col d-flex flex-column flex-sm-row justify-content-between mb-3">
                   <div class="d-flex flex-column">
+                    <% account_plan = Plan.where(plan_handle: current_account.plan_handle).first %>
+                  
                     <div>
-                      <h4><strong>Name:</strong></h4>
-                      <p><%= current_account.name %></p>
+                      <h4><strong>Plan name:</strong> <%= account_plan.name %></h4>
                     </div>
                     <br>
                     <div>
-                      <h4><strong>Max site size (per site):</strong></h4>
-                      <p><%= current_account.max_site_size %>MB</p>
+                      <h4><strong>Max site size (per site):</strong> <%= account_plan.max_site_size %>MB</h4>
                     </div>
+                    <br>
                     <div>
-                      <h4><strong>Number of sites</strong></h4>
-                      <p><%= current_account.sites.count %>/<%= current_account.max_sites %></p>
+                      <h4><strong>Max number of sites:</strong> <%= account_plan.max_sites %></h4>
+                      <p>Sites created: <%= current_account.sites.count %></p>
                     </div>
                   </div>
                   <div class="text-center text-sm-right">

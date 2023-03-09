@@ -1,0 +1,30 @@
+<%# Used as the loading partial for all account's sites %>
+
+<table class="table align-middle table-hover">
+  <thead class="table-secondary">
+    <tr>
+      <th scope="col" class="col-8 p-3">Name</th>
+      <th scope="col" class="p-3">Total size</th>
+      <th scope="col" class="text-center p-3">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% 2.times.each do %>
+      <tr>
+        <!-- Using Bootstrap 5.1 placeholders, make a table row with a loading animation -->
+        <td class="p-3">
+          <div class="p-4 placeholder-glow">
+            <div class="placeholder col-4"></div>
+          </div>
+        </td>
+        <td class="p-3">
+          <div class="p-4 placeholder-glow">
+            <div class="placeholder col-4"></div>
+          </div>
+        </td>
+        <td class="p-3">
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

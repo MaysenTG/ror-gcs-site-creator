@@ -30,10 +30,11 @@ Rails.application.routes.draw do
     #resources :sites
     get 'sites/new' => 'sites#new'
     get 'sites' => 'sites#index'
+    get 'sites/all' => 'sites#all_sites'
     get 'sites/:site_name' => 'sites#show'
     post 'sites/validate_site_name' => 'sites#validate_site_name'
     post 'sites/create_new_site' => 'sites#create'
-    delete 'sites/:site_name/delete' => 'sites#delete'
+    delete 'sites/delete' => 'sites#delete'
     
     #get 'sites/:site_name/files/edit' => 'files#show'
     get 'sites/:site_name/files/editor' => 'files#show'

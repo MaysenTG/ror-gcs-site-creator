@@ -5,10 +5,6 @@ ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.j
 class Admin::FilesController < ApplicationController
   before_action :authenticate_account!
   
-  #before_action :set_size_size, only: [:create, :update, :destroy]
-  #before_action :check_site_size, only: [:create, :update, :destroy]
-  
-  
   def create
     storage = Google::Cloud::Storage.new
     
@@ -161,16 +157,14 @@ class Admin::FilesController < ApplicationController
 
   def delete
     storage = Google::Cloud::Storage.new
-    #site_id = params[:site_id]
     
     site_name = params[:site_name]
-  
-    #all_sites = Site.where(account_id: current_account.id, name: site_name).first  
+
     all_sites = Site.where(account_id: current_account.id, name: site_name)
     site = all_sites.first
     
     if params[:file_name].include? "/" or params[:file_name].include? "."
-      file_name_plus_type = params[:file_name]# + "." + params[:format]
+      file_name_plus_type = params[:file_name]
     else
       file_name_plus_type = params[:file_name] + "/"
     end
@@ -240,7 +234,6 @@ class Admin::FilesController < ApplicationController
     # Create a file and add metadata to set cache control to "no-store"
     all_sites = Site.where(account_id: current_account.id, name: params[:site_name])
     
-    #site_id = params[:site_id]
     site = all_sites.first
     
     folder_name = params[:folder_name] + "/"
@@ -251,13 +244,12 @@ class Admin::FilesController < ApplicationController
     
     folder = bucket.create_file StringIO.new(""), folder_name
     
-    #render json: { status: "success", folder_name: folder_name }
     formatFoldersForTurboResponse(bucket, site)
   end
   
   
   private
-  
+  # Updates the file picker with the updated files
   def formatFoldersForTurboResponse(bucket, site)
     all_files = []
       
@@ -334,7 +326,6 @@ class Admin::FilesController < ApplicationController
     end
   end
   
-  private
   # Makes sure the website is set up correctly
   def set_main_or_404(file_name, bucket)
     bucket.update do |b|

@@ -24,7 +24,7 @@ i.bi:active {
   color: #0f0fce;
 }
 
-i.bi:hover {
+i.bi:not(i.bi-plus-square-dotted):hover {
   color: blue;
   font-size: 1.3rem;
 }

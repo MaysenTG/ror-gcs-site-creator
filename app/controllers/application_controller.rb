@@ -14,12 +14,12 @@ class ApplicationController < ActionController::Base
   
   def self.get_max_site_size_for_account_in_mb(current_account)
     # max_site_size is in MB, so convert to bytes
-    current_account.max_site_size
+    Plan.where(plan_handle: current_account.plan_handle).first.max_site_size.to_i
   end
   
   def self.get_max_site_size_for_account_in_bytes(current_account)
     # max_site_size is in MB, so convert to bytes
-    current_account.max_site_size * 1048576
+    Plan.where(plan_handle: current_account.plan_handle).first.max_site_size.to_i * 1048576
   end
     
 end

@@ -1,0 +1,9 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  max_sites: MyString
+  max_site_size: MyString
+
+two:
+  max_sites: MyString
+  max_site_size: MyString
