@@ -1,5 +1,4 @@
 require "google/cloud/storage"
-
 ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.json"
 
 class Admin::SitesController < ApplicationController
@@ -14,7 +13,15 @@ class Admin::SitesController < ApplicationController
     bucket.files.inject(0) { |sum, file| sum + file.size }
   end
   
+  # Route: /admin/sites
   def index
+    all_sites_for_user = Site.where(account_id: current_account.id)
+    
+    @num_sites_left =  Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - all_sites_for_user.size
+  end
+  
+  # Used to lazy load the sites using Turbo Frames on the index page
+  def all_sites
     all_sites_for_user = Site.where(account_id: current_account.id)
     
     # Using the google cloud storage API, find the bucket for each site, and find the total size of the bucket
@@ -32,12 +39,16 @@ class Admin::SitesController < ApplicationController
       sites_as_json.push(site_as_json)
     end
     
+    
+    @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - sites_as_json.size
     @sites = sites_as_json.as_json
   end
   
+  # Route: /admin/sites/new
   def new
   end
   
+  # Route: /admin/sites/:site_name
   def show
     all_user_sites = Site.where(account_id: current_account.id, name: params[:site_name])
     
@@ -131,6 +142,7 @@ class Admin::SitesController < ApplicationController
     end
   end
   
+  # Validates the site name to make sure it is not taken
   def validate_site_name
     sent_site_name = params[:site_name]
     
@@ -151,6 +163,7 @@ class Admin::SitesController < ApplicationController
   def delete
     site_name = params[:site_name]
     
+    all_sites_for_user = Site.where(account_id: current_account.id)
     site = Site.where(name: site_name, account_id: current_account.id).first
     
     bucket_name_with_site = site_name + ".maysengreenwood.com"
@@ -167,8 +180,26 @@ class Admin::SitesController < ApplicationController
     end
     
     site.destroy
+    
+    sites_as_json = []
+    
+    all_sites_for_user.each do |site|
+      bucket_name = site["name"] + ".maysengreenwood.com"
+      bucket = storage.bucket bucket_name, skip_lookup: true
+      
+      site_as_json = site.as_json
+      site_as_json["total_size"] = bucket.files.inject(0) { |sum, file| sum + file.size }
+      
+      sites_as_json.push(site_as_json)
+    end
+    
+    @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - sites_as_json.size
+    @sites = sites_as_json.as_json
 
-    render json: { status: "success" }
+    # Respond as a turbo stream with the all_sites file
+    respond_to do |format|
+      format.turbo_stream { render turbo_stream: turbo_stream.update("site_files", partial: "admin/sites/all_sites", locals: { sites: @sites, num_sites_left: @num_sites_left }) }
+    end
   end
   
   def create
@@ -227,7 +258,7 @@ class Admin::SitesController < ApplicationController
   
   private
   def restrict_num_sites
-    max_sites_for_account = current_account.max_sites
+    max_sites_for_account = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i
     
     if current_account.sites.count >= max_sites_for_account
       redirect_to admin_sites_path, notice: "You have reached the maximum number of sites you can create (#{max_sites_for_account})."
