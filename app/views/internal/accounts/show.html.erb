@@ -1,0 +1,135 @@
+
+<% if notice %>  
+  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <%= notice %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% end %>
+<a class="btn btn-secondary my-3 mx-5" href="/internal/accounts">Back to all accounts</a>
+<h1 style="margin-top: 4rem;" class="mb-3 text-center">Account details</h1>
+<div class="container">
+  <div class="row flex-lg-nowrap">
+    <div class="col-2"></div>
+    <div class="col-8">
+      <div class="col mb-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="e-profile">
+              <div id="save-account-plan-change-banner" class="d-none alert alert-primary d-flex justify-content-between align-items-center" role="alert">
+                <span>Unsaved plan changes.</span>
+                <button type="submit" form="plan-change-form" class="btn btn-primary">Save plan change</button>
+              </div>
+              <div class="col d-flex flex-column flex-sm-row justify-content-between mb-3">
+                <div class="d-flex flex-column">
+                  <% account_plan = Plan.where(plan_handle: @account.plan_handle).first %>
+                  <div>
+                    <h4 class="d-flex">
+                      <strong>Plan name:&nbsp;</strong>
+                      <!-- Render a select input -->
+                      <form id="plan-change-form" action="/internal/accounts/update" method="put">
+                        <input type="hidden" name="account_id" value="<%= @account.id %>">
+                        <select name="plan_handle" onchange="handleShowSave(this)" class="w-50 form-select" aria-label="Default select example">
+                          <option value="" selected><%= account_plan.name %></option>
+                          <% @plans.each do |plan| %>
+                            <% if plan.name != account_plan.name %>
+                              <option value="<%= plan.plan_handle %>"><%= plan.name %>(<%= plan.max_sites %> max sites, <%= plan.max_site_size %>MB max site size)</option>
+                            <% end %>
+                          <% end %>
+                        </select>
+                      </form>
+                    </h4>
+                  </div>
+                  <br>
+                  <div>
+                    <h4><strong>Max site size (per site):</strong> <%= account_plan.max_site_size %>MB</h4>
+                  </div>
+                  <br>
+                  <div>
+                    <h4><strong>Max number of sites:</strong> <%= account_plan.max_sites %></h4>
+                    <p>Sites created: <%= @account.sites.count %></p>
+                  </div>
+                </div>
+                <div class="text-center text-sm-right">
+                  <div class="text-muted"><small>Joined <%= @account.created_at.to_fs(:custom_datetime) %></small></div>
+                </div>
+              </div>
+            </div>
+            <ul class="nav nav-tabs">
+              <li class="nav-item"><a href="" class="active nav-link">Settings</a></li>
+            </ul>
+            <div class="tab-content pt-3">
+              <div class="tab-pane active">
+                <div class="row">
+                  <div class="col">
+                    <div class="form-group">
+                      <label>Full Name</label>
+                      <input class="form-control" type="text" disabled value="<%= @account.name %>">
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col">
+                    <div class="form-group">
+                      <label>Email</label>
+                      <input class="form-control" type="email" value="<%= @account.email %>" disabled>
+                    </div>
+                  </div>
+                </div>
+                <div class="row mt-5">
+                  <div class="col text-end">
+                    <div class="form-group">
+                      <form action="/internal/accounts/delete" method="DELETE" data-turbo="true">
+                        <input type="hidden" name="id" value="<%= @account.id %>">
+                        <button type="submit" class="btn btn-danger">Delete account</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <h2 class="mb-3">User sites</h2>
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+      <% if @account.sites.length == 0 %>
+        <div class="col">
+          <h4>This user has no sites</h4>
+        </div>
+      <% else %>
+        <% @account.sites.each do |site| %>
+          <a href="/internal/accounts/<%= @account.id %>/sites/<%= site.id %>">
+            <div class="col">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title"><%= site.name %>.maysengreenwood.com</h5>
+                </div>
+              </div>
+            </div>
+          </a>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+  function handleShowSave(e) {
+    // Get the selected plan handle
+    let selectedPlanHandle = e.value;
+    console.log(selectedPlanHandle);
+
+    if(selectedPlanHandle == "") {
+      // Hide the save alert
+      let saveAlert = document.getElementById("save-account-plan-change-banner");
+      saveAlert.classList.add("d-none");
+      return;
+    }
+
+    let saveAlert = document.getElementById("save-account-plan-change-banner");
+    saveAlert.classList.remove("d-none");
+  }
+</script>

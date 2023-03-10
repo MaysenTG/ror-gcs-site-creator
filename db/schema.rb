@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_03_07_220343) do
+ActiveRecord::Schema[7.0].define(version: 2023_03_10_043547) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -26,6 +26,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_07_220343) do
     t.integer "max_site_size", default: 1
     t.integer "max_sites", default: 3
     t.string "plan_handle", default: "free"
+    t.boolean "admin", default: false
     t.index ["email"], name: "index_accounts_on_email", unique: true
     t.index ["reset_password_token"], name: "index_accounts_on_reset_password_token", unique: true
   end

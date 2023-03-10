@@ -1,0 +1,26 @@
+<div class="container">
+  <h2 class="mb-3">Create a new account</h2>
+  <form action="/internal/accounts/create" method="post" data-turbo="true">
+    <div class="mb-3">
+      <label for="exampleInputEmail1" class="form-label">Email address</label>
+      <input type="email" class="form-control" name="email" id="exampleInputEmail1" aria-describedby="emailHelp">
+    </div>
+    <div class="mb-3">
+      <label for="exampleInputEmail1" class="form-label">Full name</label>
+      <input type="text" class="form-control" name="name" id="exampleInputEmail1" aria-describedby="emailHelp">
+    </div>
+    <div class="mb-3">
+      <label for="exampleInputPassword1" class="form-label">Password</label>
+      <input type="text" class="form-control" name="password" id="exampleInputPassword1" value="temp_pass_123">
+    </div>
+    <div class="mb-3">
+      <select class="form-select" name="plan_handle" aria-label="Default select example">
+        <option selected>Select a plan</option>
+        <option value="free">Free (3 sites, 1MB max per site)</option>
+        <option value="enthusiast">Enthusiast (10 sites, 10MB max per site)</option>
+        <option value="enterprise">Enterprise (100 sites, 100MB max per site)</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Create account</button>
+  </form>
+</div>

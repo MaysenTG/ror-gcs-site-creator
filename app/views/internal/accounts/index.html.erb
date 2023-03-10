@@ -1,0 +1,23 @@
+<!-- Loop over all accounts and return a table -->
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center">
+    <h2 class="mb-3">All accounts</h2>
+    <a class="btn btn-primary" href="/internal/accounts/new">Create account</a>
+  </div>
+  <div class="row row-cols-1 row-cols-md-2 g-4">
+    <% @accounts.each do |account| %>
+      <a href="/internal/accounts/<%= account.id %>">
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><% if account.name.nil? %>Unknown name<% else %><%= account.name %><% end %></h5>
+              <p class="card-text">Email: <%= account.email %></p>
+              <p class="card-text">Plan: <%= account.plan_handle %></p>
+              <p class="card-text">Number of stores: <%= account.sites.length %></p>
+            </div>
+          </div>
+        </div>
+      </a>
+    <% end %>
+  </div>
+</div>
