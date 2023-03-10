@@ -1,0 +1,27 @@
+<% if @query and @query != "" %>
+  Your query: <strong>"<%= @query %>"</strong> returned <%= @accounts.length %> accounts
+<% end %>
+<div class="row row-cols-1 row-cols-md-2 g-4 mb-3 mt-3">
+  <% if @accounts.length == 0 %>
+    <div class="col">
+      <h4>Oops, there aren't any results, try broadening your search</h4>
+    </div>
+  <% else %>
+    <% @accounts.each do |account| %>
+      <a href="/internal/accounts/<%= account.id %>">
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><% if account.name.nil? %>Unknown name<% else %><%= account.name %><% end %></h5>
+              <p class="card-text">Email: <%= account.email %></p>
+              <p class="card-text">Plan: <%= account.plan_handle %></p>
+              <p class="card-text">Number of stores: <%= account.sites.length %></p>
+            </div>
+          </div>
+        </div>
+      </a>
+    <% end %>
+  <% end %>
+</div>
+
+<%== pagy_bootstrap_nav(@pagy) %>

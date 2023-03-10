@@ -80,7 +80,7 @@
                     <div class="form-group">
                       <form action="/internal/accounts/delete" method="DELETE" data-turbo="true">
                         <input type="hidden" name="id" value="<%= @account.id %>">
-                        <button type="submit" class="btn btn-danger">Delete account</button>
+                        <button type="submit" onclick="if(confirm('Are you sure want delete this account?')) {this.form.requestSubmit()}" data-turbo-confirm="Are you sure you want to delete this account?" class="btn btn-danger">Delete account</button>
                       </form>
                     </div>
                   </div>

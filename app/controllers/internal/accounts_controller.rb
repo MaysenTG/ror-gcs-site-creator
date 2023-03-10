@@ -2,7 +2,8 @@ class Internal::AccountsController < ApplicationController
   before_action :authenticate_internal_staff
   
   def index
-    @accounts = Account.all
+    #@accounts = Account.all
+    @pagy, @accounts = pagy(Account.all)
   end
 
   def show
@@ -47,11 +48,30 @@ class Internal::AccountsController < ApplicationController
     redirect_to internal_accounts_path, notice: "Account successfully deleted."
   end
   
+  def search
+    search_term = params[:q]
+    
+    
+    if search_term.present?
+      @pagy, @accounts = pagy(Account.where("name LIKE :search or email LIKE :search or plan_handle LIKE :search", search: "%#{search_term}%"))
+      @query = search_term
+    else
+      @query = ""
+      @pagy, @accounts = pagy(Account.all)
+    end
+    render turbo_stream: turbo_stream.update("accounts_list", partial: "internal/accounts/accounts", locals: { accounts: @accounts, query: @query })
+  end
+    
+  
   private
   def authenticate_internal_staff
     # Account must have the email of "greenwood.maysen@gmail.com" to access
     # the internal dashboard
-    if !current_account.admin
+    if current_account
+      if current_account.admin == false
+        redirect_to root_path, notice: "You do not have access to this page."
+      end
+    else
       redirect_to root_path, notice: "You do not have access to this page."
     end
   end

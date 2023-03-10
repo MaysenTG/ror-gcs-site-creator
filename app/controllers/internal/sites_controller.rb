@@ -4,8 +4,13 @@ ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.j
 
 class Internal::SitesController < ApplicationController
   def show
-    @site = Site.find(params[:id])
+    @site = Site.where(id: params[:id], account_id: params[:account_id]).first
     @account_id = params[:account_id]
+
+    if @site.nil?
+      redirect_to internal_path(params[:account_id]), notice: "The site ID of #{params[:id]} doesn't belong to the requested account."
+      return
+    end
     
     begin
       storage = Google::Cloud::Storage.new
