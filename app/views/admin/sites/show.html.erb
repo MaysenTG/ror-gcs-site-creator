@@ -57,6 +57,10 @@
       </div>
     </div>
     <div class="row">
+    <!-- Add the warning alert here -->
+      <%= turbo_frame_tag "file_delete_error" do %>
+      <% end %>
+      
       <div class="col-12 col-lg-3 col-md-12 col-sm-12" style="margin: 5rem 0;">
         <turbo-frame id="filepicker">
           <%= render partial: "admin/files/filepicker", @site => @site, @site_files_and_folders => @site_files_and_folders %>
@@ -231,7 +235,7 @@
   });
   
   document.addEventListener("turbo:before-fetch-request", function(e) {
-    if(!e.detail.url.href.includes("/files/update")) {
+    if(!e.detail.url.href.includes("/files/update") && !e.detail.url.href.includes("/files/delete")) {
       // Make the code editor appear like it's loading
       waitForElm("#editor").then((elm) => {
         elm.innerHTML = `<%= render :partial => "layouts/snippets/code_loading" %>`;

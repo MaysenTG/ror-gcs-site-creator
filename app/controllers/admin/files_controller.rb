@@ -4,6 +4,10 @@ ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.j
 
 class Admin::FilesController < ApplicationController
   before_action :authenticate_account!
+  before_action :check_file_for_deletion, only: [:delete]
+  
+  DOMAIN_NAME = "maysengreenwood.com"
+  FILES_NOT_DELETABLE = ["index.html", "404.html"]
   
   def create
     storage = Google::Cloud::Storage.new
@@ -11,12 +15,11 @@ class Admin::FilesController < ApplicationController
     # Create a file and add metadata to set cache control to "no-store"
     all_sites = Site.where(account_id: current_account.id, name: params[:site_name])
     
-    #site_id = params[:site_id]
     site = all_sites.first
     
     file_name = params[:file_name]
 
-    bucket_name = site.name + ".maysengreenwood.com"
+    bucket_name = site.name + "." + DOMAIN_NAME
     
     bucket = storage.bucket bucket_name, skip_lookup: true
     
@@ -36,7 +39,7 @@ class Admin::FilesController < ApplicationController
   def edit
   end
 
-  def show
+  def show    
     storage = Google::Cloud::Storage.new
     site_name = params[:site_name]
     
@@ -45,7 +48,7 @@ class Admin::FilesController < ApplicationController
     
     file_name = params[:file_name]
     
-    bucket_name = site.name + ".maysengreenwood.com"
+    bucket_name = site.name + "." + DOMAIN_NAME
     bucket = storage.bucket bucket_name, skip_lookup: true
     
     file = bucket.file file_name
@@ -71,7 +74,8 @@ class Admin::FilesController < ApplicationController
     @file_name = file_name
     
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.update("editor", partial: "admin/files/editor", :locals => { :file_contents => @file_contents, :file_name => @file_name, :site => @site }) }
+      format.turbo_stream { 
+        render turbo_stream: turbo_stream.update("editor", partial: "admin/files/editor", :locals => { :file_contents => @file_contents, :file_name => @file_name, :site => @site }) }
     end
   end
   
@@ -86,7 +90,7 @@ class Admin::FilesController < ApplicationController
     site = Site.where(account_id: current_account.id, name: site_name).first
     @site = site.as_json
     
-    bucket_name = site.name + ".maysengreenwood.com"
+    bucket_name = site.name + "." + DOMAIN_NAME
     
     bucket = storage.bucket bucket_name, skip_lookup: true
     
@@ -128,7 +132,7 @@ class Admin::FilesController < ApplicationController
     file_name = params[:file].original_filename
     
     # Get the bucket info
-    bucket_name = site.name + ".maysengreenwood.com"
+    bucket_name = site.name + "." + DOMAIN_NAME
     bucket = storage.bucket bucket_name, skip_lookup: true
     
     # Get the total size of the site (including the new file differences)
@@ -156,6 +160,8 @@ class Admin::FilesController < ApplicationController
   end
 
   def delete
+    file_name = params[:file_name]
+    
     storage = Google::Cloud::Storage.new
     
     site_name = params[:site_name]
@@ -163,13 +169,13 @@ class Admin::FilesController < ApplicationController
     all_sites = Site.where(account_id: current_account.id, name: site_name)
     site = all_sites.first
     
-    if params[:file_name].include? "/" or params[:file_name].include? "."
-      file_name_plus_type = params[:file_name]
+    if file_name.include? "/" or file_name.include? "."
+      file_name_plus_type = file_name
     else
-      file_name_plus_type = params[:file_name] + "/"
+      file_name_plus_type = file_name + "/"
     end
     
-    bucket_name = site.name + ".maysengreenwood.com"
+    bucket_name = site.name + "." + DOMAIN_NAME
     
     bucket = storage.bucket bucket_name, skip_lookup: true
     
@@ -207,7 +213,7 @@ class Admin::FilesController < ApplicationController
       new_file_name = params[:folder_name] + "/" + new_file_name
     end
     
-    bucket_name = site.name + ".maysengreenwood.com"
+    bucket_name = site.name + "." + DOMAIN_NAME
     
     bucket = storage.bucket bucket_name, skip_lookup: true
     
@@ -238,7 +244,7 @@ class Admin::FilesController < ApplicationController
     
     folder_name = params[:folder_name] + "/"
     
-    bucket_name = site.name + ".maysengreenwood.com"
+    bucket_name = site.name + "." + DOMAIN_NAME
     
     bucket = storage.bucket bucket_name, skip_lookup: true
     
@@ -252,8 +258,6 @@ class Admin::FilesController < ApplicationController
   # Updates the file picker with the updated files
   def formatFoldersForTurboResponse(bucket, site)
     all_files = []
-      
-    only_main_folders = []
 
     unless bucket.files.nil?
       bucket.files.each do |file|
@@ -310,10 +314,6 @@ class Admin::FilesController < ApplicationController
     
     @site_files_and_folders = files + all_folders
     
-    puts "----FIND ME-----"
-    puts @site_files_and_folders
-    puts "---------"
-    
     # Sort the folders so that index.html is first, then 404.html, then the rest
     @site_files_and_folders.sort_by! { |file| [file[:name]=="index.html" ? 0 : 1, file[:name]=="404.html" ? 0 : 1, file[:type]=="file" ? 0 : 1, file[:type]=="folder" ? 0 : 1] }
     
@@ -331,6 +331,19 @@ class Admin::FilesController < ApplicationController
     bucket.update do |b|
       b.website_main = "index.html"
       b.website_404 = "404.html"
+    end
+  end
+  
+  def check_file_for_deletion
+    file_name = params[:file_name]
+    if FILES_NOT_DELETABLE.include?(file_name)
+      @error_message = '<div class="alert alert-warning alert-dismissible fade show" role="alert">
+        You can\'t delete the '+ file_name +' file.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>'
+      
+      render turbo_stream: turbo_stream.update("file_delete_error", @error_message);
+      return
     end
   end
 end
