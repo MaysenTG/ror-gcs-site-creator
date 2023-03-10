@@ -15,7 +15,7 @@ class Internal::AccountsController < ApplicationController
 
   def update
     new_plan_handle = params[:plan_handle]
-    account_id = params[:account_id]
+    account_id = params[:id]
     
     account = Account.find(account_id)
     account.plan_handle = new_plan_handle
