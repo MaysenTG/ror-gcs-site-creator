@@ -10,7 +10,7 @@
     <button type="submit" class="w-25 btn btn-primary">Search</button>
   </form>
   
-  <%= turbo_frame_tag "accounts_list" do %>
+  <%= turbo_frame_tag "accounts_list", target: "_top" do %>
     <%= render partial: "internal/accounts/accounts", locales: { @accounts => @accounts, @query => @query } %>
   <% end %>
 </div>
