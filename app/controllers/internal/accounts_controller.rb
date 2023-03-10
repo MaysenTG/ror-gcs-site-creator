@@ -1,6 +1,4 @@
-class Internal::AccountsController < ApplicationController
-  before_action :authenticate_internal_staff
-  
+class Internal::AccountsController < ApplicationController  
   def index
     #@accounts = Account.all
     @pagy, @accounts = pagy(Account.all)
@@ -60,19 +58,5 @@ class Internal::AccountsController < ApplicationController
       @pagy, @accounts = pagy(Account.all)
     end
     render turbo_stream: turbo_stream.update("accounts_list", partial: "internal/accounts/accounts", locals: { accounts: @accounts, query: @query })
-  end
-    
-  
-  private
-  def authenticate_internal_staff
-    # Account must have the email of "greenwood.maysen@gmail.com" to access
-    # the internal dashboard
-    if current_account
-      if current_account.admin == false
-        redirect_to root_path, notice: "You do not have access to this page."
-      end
-    else
-      redirect_to root_path, notice: "You do not have access to this page."
-    end
   end
 end

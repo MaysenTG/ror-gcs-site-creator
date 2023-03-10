@@ -1,12 +1,12 @@
 <!-- Loop over all accounts and return a table -->
 <div class="container">
-  <div class="d-flex justify-content-between align-items-center">
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-3">All accounts</h2>
     <a class="btn btn-primary" href="/internal/accounts/new">Create account</a>
   </div>
   
-  <form action="/internal/accounts/search<% unless request.query_parameters[:page].nil? %>?page<%= request.query_parameters[:page] %><% end %>" class="mb-5 d-flex" data-turbo="true" method="get">
-    <input type="search" name="q" class="form-control" placeholder="site name, email, name...">
+  <form action="/internal/accounts/search<% unless request.query_parameters[:page].nil? %>?page<%= request.query_parameters[:page] %><% end %>" class="mb-3 d-flex" data-turbo="true" method="get">
+    <input type="search" name="q" class="form-control" placeholder="site name, email, name..."> &nbsp;
     <button type="submit" class="w-25 btn btn-primary">Search</button>
   </form>
   
