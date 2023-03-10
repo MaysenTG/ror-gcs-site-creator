@@ -27,7 +27,7 @@
                       <strong>Plan name:&nbsp;</strong>
                       <!-- Render a select input -->
                       <form id="plan-change-form" action="/internal/accounts/update" method="put">
-                        <input type="hidden" name="account_id" value="<%= @account.id %>">
+                        <input type="hidden" name="id" value="<%= @account.id %>">
                         <select name="plan_handle" onchange="handleShowSave(this)" class="w-50 form-select" aria-label="Default select example">
                           <option value="" selected><%= account_plan.name %></option>
                           <% @plans.each do |plan| %>
