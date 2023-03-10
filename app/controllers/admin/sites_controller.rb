@@ -2,12 +2,17 @@ require "google/cloud/storage"
 ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.json"
 
 class Admin::SitesController < ApplicationController
+  before_action :restrict_num_sites, only: [:new]
+  before_action :authenticate_account!
+  
+  before_action :set_storage_client, only: [:all_sites, :show, :delete, :create]
+  before_action :get_site_name, only: [:show, :delete, :create]
+  
   RESERVED_NAMES = [
     "cdn", "cv", "portfolio", "new", "files", "file", "static", "store", "linkinbio"
   ]
   
-  before_action :restrict_num_sites, only: [:new]
-  before_action :authenticate_account!
+  DOMAIN_NAME = "maysengreenwood.com"
 
   def self.get_total_bucket_size(bucket)
     bucket.files.inject(0) { |sum, file| sum + file.size }
@@ -24,14 +29,11 @@ class Admin::SitesController < ApplicationController
   def all_sites
     all_sites_for_user = Site.where(account_id: current_account.id)
     
-    # Using the google cloud storage API, find the bucket for each site, and find the total size of the bucket
-    storage = Google::Cloud::Storage.new
-    
     sites_as_json = []
     
     all_sites_for_user.each do |site|
-      bucket_name = site["name"] + ".maysengreenwood.com"
-      bucket = storage.bucket bucket_name, skip_lookup: true
+      bucket_name = construct_site_name(site["name"])
+      bucket = @storage.bucket bucket_name, skip_lookup: true
       
       site_as_json = site.as_json
       site_as_json["total_size"] = bucket.files.inject(0) { |sum, file| sum + file.size }
@@ -50,26 +52,16 @@ class Admin::SitesController < ApplicationController
   
   # Route: /admin/sites/:site_name
   def show
-    all_user_sites = Site.where(account_id: current_account.id, name: params[:site_name])
+    all_user_sites = Site.where(account_id: current_account.id, name: @site_name)
     
     begin
       site_by_name = all_user_sites.first
+
+      bucket_name_with_site = construct_site_name(site_by_name.name)
       
-      # if site_by_name.nil?
-      #   render json: { status: "error", message: "Site not found" }
-      #   return
-      # end
-      
-      bucket_name_with_site = site_by_name.name + ".maysengreenwood.com"
-      
+      bucket  = @storage.bucket bucket_name_with_site
+
       all_files = []
-      
-      storage = Google::Cloud::Storage.new
-      bucket  = storage.bucket bucket_name_with_site
-      
-      all_files = []
-      
-      only_main_folders = []
 
       unless bucket.files.nil?
         bucket.files.each do |file|
@@ -138,7 +130,8 @@ class Admin::SitesController < ApplicationController
       
     rescue
       @error = "Site not found"
-      render json: { status: "error", message: "Site not found" }
+      #render json: { status: "error", message: "Site not found" }
+      redirect_to "/admin/sites", notice: "Oops, that site doesn't exist!"
     end
   end
   
@@ -161,15 +154,12 @@ class Admin::SitesController < ApplicationController
   end
   
   def delete
-    site_name = params[:site_name]
-    
     all_sites_for_user = Site.where(account_id: current_account.id)
-    site = Site.where(name: site_name, account_id: current_account.id).first
+    site = Site.where(name: @site_name, account_id: current_account.id).first
     
-    bucket_name_with_site = site_name + ".maysengreenwood.com"
+    bucket_name_with_site = construct_site_name(@site_name)
     
-    storage = Google::Cloud::Storage.new
-    bucket  = storage.bucket bucket_name_with_site, skip_lookup: true
+    bucket  = @storage.bucket bucket_name_with_site, skip_lookup: true
 
     # Can only delete a bucket through the API if it is empty
     begin
@@ -184,8 +174,8 @@ class Admin::SitesController < ApplicationController
     sites_as_json = []
     
     all_sites_for_user.each do |site|
-      bucket_name = site["name"] + ".maysengreenwood.com"
-      bucket = storage.bucket bucket_name, skip_lookup: true
+      bucket_name = construct_site_name(site["name"])
+      bucket = @storage.bucket bucket_name, skip_lookup: true
       
       site_as_json = site.as_json
       site_as_json["total_size"] = bucket.files.inject(0) { |sum, file| sum + file.size }
@@ -202,19 +192,15 @@ class Admin::SitesController < ApplicationController
     end
   end
   
-  def create
-    siteName = params[:site_name]
+  def create    
+    cloud_friendly_name = construct_site_name(@site_name)
     
-    cloud_friendly_name = siteName + ".maysengreenwood.com"
-    
-    @new_site = Site.new(name: siteName)
+    @new_site = Site.new(name: @site_name)
     
     @new_site.account_id = current_account.id
-
-    storage = Google::Cloud::Storage.new
     
     if @new_site.save
-      bucket  = storage.create_bucket cloud_friendly_name,
+      bucket  = @storage.create_bucket cloud_friendly_name,
                                     location:      "US",
                                     storage_class: "STANDARD"
 
@@ -222,8 +208,8 @@ class Admin::SitesController < ApplicationController
         p.add "roles/storage.objectViewer", "allUsers"
       end
       
-      destination_bucket = storage.bucket cloud_friendly_name
-      theme_preview_bucket  = storage.bucket "theme_previews", skip_lookup: true
+      destination_bucket = @storage.bucket cloud_friendly_name
+      theme_preview_bucket  = @storage.bucket "theme_previews", skip_lookup: true
       
       # If the theme type is portfolio, then copy the portfolio theme files to the bucket
       if params[:theme_type] == "portfolio"
@@ -263,5 +249,18 @@ class Admin::SitesController < ApplicationController
     if current_account.sites.count >= max_sites_for_account
       redirect_to admin_sites_path, notice: "You have reached the maximum number of sites you can create (#{max_sites_for_account})."
     end
+  end
+  
+  
+  def set_storage_client
+    @storage = Google::Cloud::Storage.new
+  end
+  
+  def construct_site_name(site_name)
+    site_name + "." + DOMAIN_NAME
+  end
+  
+  def get_site_name
+    @site_name = params[:site_name]
   end
 end
