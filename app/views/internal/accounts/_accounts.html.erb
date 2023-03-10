@@ -14,8 +14,8 @@
             <div class="card-body">
               <h5 class="card-title"><% if account.name.nil? %>Unknown name<% else %><%= account.name %><% end %></h5>
               <p class="card-text">Email: <%= account.email %></p>
-              <p class="card-text">Plan: <%= account.plan_handle %></p>
-              <p class="card-text">Number of stores: <%= account.sites.length %></p>
+              <p class="card-text">Plan: <%= account.plan_handle.titleize %></p>
+              <p class="card-text">Number of stores: <%= account.sites.length %>/<%= Plan.where(plan_handle: account.plan_handle).first.max_sites %></p>
             </div>
           </div>
         </div>
