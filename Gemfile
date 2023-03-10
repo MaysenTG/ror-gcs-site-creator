@@ -75,3 +75,4 @@ gem "httparty", "~> 0.20.0"
 
 gem 'bootstrap', '~> 5.1.3'
 gem "htmlbeautifier", "~> 1.4"
+gem 'pagy', '~> 6.0', '>= 6.0.2'

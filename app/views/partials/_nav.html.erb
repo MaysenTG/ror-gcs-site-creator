@@ -25,14 +25,13 @@
           <li class="nav-item">
             <a class="nav-link <% if request.path == "/admin/sites/new" %>active<% end %>" href="/admin/sites/new">Create a new site</a>
           </li>
+          <% if current_account.admin %>
+            <li class="nav-item">
+              <a class="nav-link <% if request.path.include?("/internal") %>active<% end %>" href="/internal/accounts">Accounts internal</a>
+            </li>
+          <% end %>
         <% end %>
         
-        <% if current_account.admin %>
-          <li class="nav-item">
-            <a class="nav-link <% if request.path.include?("/internal") %>active<% end %>" href="/internal/accounts">Accounts internal</a>
-          </li>
-        
-        <% end %>
       </ul>
       <% if current_account %>
         <ul class="navbar-nav ms-auto mb-2 mx-5 mb-lg-0">
