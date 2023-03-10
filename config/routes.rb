@@ -52,6 +52,19 @@ Rails.application.routes.draw do
     #get 'sites/:site_id/files/:file_name' => 'sites#show_file'
   end
   
+  namespace :internal do
+    get 'accounts/new'
+    post 'accounts/create'
+    get 'accounts' => 'accounts#index'
+    put 'accounts/update'
+    delete 'accounts/delete' => 'accounts#destroy'
+    get 'accounts/:id' => 'accounts#show'
+    scope 'accounts/:account_id' do
+      get 'sites/:id' => 'sites#show', as: 'account_site'
+      delete 'sites/:id/delete_site' => 'sites#delete_site'
+      post 'sites/:id/create_bucket' => 'sites#create_bucket'
+    end
+  end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Defines the root path route ("/")

@@ -1,0 +1,21 @@
+<% if notice %>
+  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <%= notice %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% end %>
+<a class="btn btn-secondary my-3 mx-5" href="/internal/accounts/<%= @account_id %>">Back to account</a>
+<h1 style="margin-top: 4rem;" class="mb-3 text-center">Site details</h1>
+<div class="container">
+  <h2 class="mb-3">Viewing <%= @site.name %>.maysengreenwood.com</h2>
+  <div class="card">
+    <div class="card-header">
+      Featured
+    </div>
+    <div class="card-body">
+      <h5 class="card-title">Total size: <%= @total_site_size.to_f / 1000000.00 %>MB</h5>
+      <p class="card-text">Number of files: <%= @total_num_files %></p>
+      <a target="_blank" href="https://<%= @site.name %>.maysengreenwood.com" class="btn btn-primary">View site</a>
+    </div>
+  </div>
+</div>
