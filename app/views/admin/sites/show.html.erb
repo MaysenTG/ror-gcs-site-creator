@@ -124,6 +124,7 @@
 
 <!-- Toast when saving file -->
 <div id="snackbar">File saved..</div>
+<div id="file_404">File doesn't exist..</div>
 
 <!-- Scroll to top button -->
 <button onclick="topFunction()" id="scrollToTop" title="Go to top">
@@ -192,7 +193,7 @@
       if(fileTooBigError) {
         fileTooBigError.classList.add("d-none");
       }
-      showFileSavePopup();
+      showToast("snackbar");
     }
     
     if(e.detail.fetchResponse.response.url.includes("/files/upload")) {
@@ -264,6 +265,7 @@
         const url = new URL(window.location.href);
         url.searchParams.delete("filename");
         window.history.replaceState({}, document.title, url);
+        showToast("file_404");
       }
     }
 
@@ -287,9 +289,9 @@
     document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
   }
 
-  function showFileSavePopup() {
+  function showToast(selector) {
     // Get the snackbar DIV
-    var x = document.getElementById("snackbar");
+    var x = document.getElementById(selector);
 
     // Add the "show" class to DIV
     x.className = "show";

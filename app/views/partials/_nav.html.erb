@@ -15,9 +15,11 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link <% if request.path == "/" %>active<% end %>" aria-current="page" href="/">Home</a>
-        </li>
+        <% unless current_account %>
+          <li class="nav-item">
+            <a class="nav-link <% if request.path == "/" %>active<% end %>" aria-current="page" href="/">Home</a>
+          </li>
+        <% end %>
         <% if current_account %>
           <li class="nav-item">
             <a class="nav-link <% if request.path == "/admin/sites" or (controller_name == "sites" and action_name == "show") or (controller_name == "files") %>active<% end %>" href="/admin/sites">View your sites</a>

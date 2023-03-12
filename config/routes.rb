@@ -1,21 +1,28 @@
 Rails.application.routes.draw do
-  get 'files/create'
-  get 'files/edit'
-  get 'files/show'
-  get 'files/delete'
-  get 'files/rename'
-  get 'sites/index'
-  get 'sites/show'
-  get 'sites/new'
-  get 'sites/delete'
-  get 'sites/create'
-  get 'file/create'
-  get 'file/edit'
-  get 'file/show'
-  get 'file/rename'
-  get 'file/set_main'
-  get 'file/set_404'
+  # get 'files/create'
+  # get 'files/edit'
+  # get 'files/show'
+  # get 'files/delete'
+  # get 'files/rename'
+  # get 'sites/index'
+  # get 'sites/show'
+  # get 'sites/new'
+  # get 'sites/delete'
+  # get 'sites/create'
+  # get 'file/create'
+  # get 'file/edit'
+  # get 'file/show'
+  # get 'file/rename'
+  # get 'file/set_main'
+  # get 'file/set_404'
+  
+  
+  # Working on this
+  #get 'pricing' => 'home#pricing'
+  
   #devise_for :accounts
+  
+  
   devise_for :accounts, controllers: { registrations: 'registrations' }
   
   

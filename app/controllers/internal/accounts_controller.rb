@@ -7,6 +7,7 @@ class Internal::AccountsController < ApplicationController
   def show
     begin
       @account = Account.find(params[:id])
+      @pagy, @account_sites = pagy(@account.sites)
       @plans = Plan.all
     rescue ActiveRecord::RecordNotFound
       redirect_to internal_accounts_path, notice: "Account not found."

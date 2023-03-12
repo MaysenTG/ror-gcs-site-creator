@@ -4,13 +4,42 @@
     <h2 class="mb-3">All accounts</h2>
     <a class="btn btn-primary" href="/internal/accounts/new">Create account</a>
   </div>
-  
-  <form action="/internal/accounts/search<% unless request.query_parameters[:page].nil? %>?page<%= request.query_parameters[:page] %><% end %>" class="mb-3 d-flex" data-turbo="true" method="get">
-    <input type="search" name="q" class="form-control" placeholder="site name, email, name..."> &nbsp;
-    <button type="submit" class="w-25 btn btn-primary">Search</button>
+  <form data-controller="search" action="/internal/accounts/search<% unless request.query_parameters[:page].nil? %>?page<%= request.query_parameters[:page] %><% end %>" class="mb-3 d-flex" data-turbo="true" method="get">
+    <input data-action="input->search#debounceSearchInput" type="search" name="q" class="form-control" placeholder="site name, email, name..."> &nbsp;
   </form>
-  
-  <%= turbo_frame_tag "accounts_list", target: "_top" do %>
+  <%= turbo_frame_tag "accounts_list", target: "_top", class: "account-results-wrapper" do %>
     <%= render partial: "internal/accounts/accounts", locales: { @accounts => @accounts, @query => @query } %>
   <% end %>
+  <div class="account-load-placeholder d-none row row-cols-1 row-cols-md-2 g-4 mb-3 mt-3">
+    <% 4.times do %>
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title placeholder-glow">
+              <span class="placeholder col-6"></span>
+            </h5>
+            <p class="card-text placeholder-glow">
+              <span class="placeholder col-7"></span>
+            </p>
+            <p class="card-text placeholder-glow">
+              <span class="placeholder col-5"></span>
+            </p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    <nav aria-label="...">
+      <ul class="pagination">
+        <li class="page-item disabled">
+          <a class="page-link">‹ Prev</a>
+        </li>
+        <li class="page-item active" aria-current="page">
+          <a class="page-link" href="#">1</a>
+        </li>
+        <li class="page-item disabled">
+          <a class="page-link" href="#">Next ›</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
 </div>
