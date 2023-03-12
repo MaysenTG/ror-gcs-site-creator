@@ -11,6 +11,9 @@ class HomeController < ApplicationController
   def show
   end
   
+  def pricing
+  end
+  
   def test_response
     
     # bucket_name_with_site = "maysen.maysengreenwood.com"

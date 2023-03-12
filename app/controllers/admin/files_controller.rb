@@ -109,7 +109,7 @@ class Admin::FilesController < ApplicationController
       # Set a header to tell the user that the site is over 1MB
       response.set_header('site-over-limit', true)
       
-      @size_error = "This file pushes your site over #{user_max_site_size_mb}MB in size (total of #{total_site_size.to_f / 1000000}MB). Please delete some content before you can save this file."
+      @size_error = "This file update pushes your site over #{user_max_site_size_mb}MB in size (total of #{total_site_size.to_f / 1000000}MB). Please delete some content before you can save this file."
       render turbo_stream: turbo_stream.update("editor_message", partial: "admin/files/file_too_big_error", :locals => { @size_error => @size_error });
       return
     else

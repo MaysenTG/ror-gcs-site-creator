@@ -1,5 +1,4 @@
-
-<% if notice %>  
+<% if notice %>
   <div class="alert alert-warning alert-dismissible fade show" role="alert">
     <%= notice %>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -49,8 +48,9 @@
                     <p>Sites created: <%= @account.sites.count %></p>
                   </div>
                 </div>
-                <div class="text-center text-sm-right">
+                <div class="text-left text-sm-right">
                   <div class="text-muted"><small>Joined <%= @account.created_at.to_fs(:custom_datetime) %></small></div>
+                  <div class="text-muted"><small>Last updated <%= @account.updated_at.to_fs(:custom_datetime) %></small></div>
                 </div>
               </div>
             </div>
@@ -94,13 +94,13 @@
   </div>
   <div class="container">
     <h2 class="mb-3">User sites</h2>
-    <div class="row row-cols-1 row-cols-md-2 g-4">
-      <% if @account.sites.length == 0 %>
+    <div class="row row-cols-1 row-cols-md-2 g-4 mb-3">
+      <% if @account_sites.length == 0 %>
         <div class="col">
           <h4>This user has no sites</h4>
         </div>
       <% else %>
-        <% @account.sites.each do |site| %>
+        <% @account_sites.each do |site| %>
           <a href="/internal/accounts/<%= @account.id %>/sites/<%= site.id %>">
             <div class="col">
               <div class="card">
@@ -113,6 +113,7 @@
         <% end %>
       <% end %>
     </div>
+    <%== pagy_bootstrap_nav(@pagy) %>
   </div>
 </div>
 </div>

@@ -41,7 +41,6 @@ class Admin::SitesController < ApplicationController
       sites_as_json.push(site_as_json)
     end
     
-    
     @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - sites_as_json.size
     @sites = sites_as_json.as_json
   end

@@ -39,8 +39,9 @@
                       <p>Sites created: <%= current_account.sites.count %></p>
                     </div>
                   </div>
-                  <div class="text-center text-sm-right">
+                  <div class="text-left text-sm-right">
                     <div class="text-muted"><small>Joined <%= current_account.created_at.to_fs(:custom_datetime) %></small></div>
+                    <div class="text-muted"><small>Last updated <%= current_account.updated_at.to_fs(:custom_datetime) %></small></div>
                   </div>
                 </div>
               </div>
