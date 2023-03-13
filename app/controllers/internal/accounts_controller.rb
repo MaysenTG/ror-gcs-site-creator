@@ -8,7 +8,7 @@ class Internal::AccountsController < ApplicationController
     begin
       @account = Account.find(params[:id])
       @pagy, @account_sites = pagy(@account.sites)
-      @plans = Plan.all
+      @plans = Plan.all.sort_by { |user| user.max_sites.to_i }
     rescue ActiveRecord::RecordNotFound
       redirect_to internal_accounts_path, notice: "Account not found."
     end

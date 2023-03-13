@@ -28,7 +28,7 @@
                       <form id="plan-change-form" action="/internal/accounts/update" method="put">
                         <input type="hidden" name="id" value="<%= @account.id %>">
                         <select name="plan_handle" onchange="handleShowSave(this)" class="w-50 form-select" aria-label="Default select example">
-                          <option value="" selected><%= account_plan.name %></option>
+                          <option value="" selected>Current: <%= account_plan.name %></option>
                           <% @plans.each do |plan| %>
                             <% if plan.name != account_plan.name %>
                               <option value="<%= plan.plan_handle %>"><%= plan.name %>(<%= plan.max_sites %> max sites, <%= plan.max_site_size %>MB max site size)</option>
