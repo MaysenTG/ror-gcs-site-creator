@@ -1,0 +1,24 @@
+<!-- Loop over all accounts and return a table -->
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-3">All plans</h2>
+    <a class="btn btn-primary" href="/internal/accounts/new">Create plan</a>
+  </div>
+  <div class="row row-cols-1 row-cols-md-2 g-4 mb-3 mt-3">
+    <% @plans.each do |plan| %>
+      <a href="/internal/plans/<%= plan.id %>/edit">
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><%= plan.name %></h5>
+              <p class="card-text">Handle: <%= plan.plan_handle %></p>
+              <p class="card-text">Max sites: <%= plan.max_sites %></p>
+              <p class="card-text">Max site size: <%= plan.max_site_size %></p>
+              <p class="card-text">Price per month: $<%= plan.price %> NZD</p>
+            </div>
+          </div>
+        </div>
+      </a>
+    <% end %>
+  </div>
+</div>

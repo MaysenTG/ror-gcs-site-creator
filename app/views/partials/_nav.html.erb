@@ -29,7 +29,10 @@
           </li>
           <% if current_account.admin %>
             <li class="nav-item">
-              <a class="nav-link <% if request.path.include?("/internal") %>active<% end %>" href="/internal/accounts">Accounts internal</a>
+              <a class="nav-link <% if request.path.include?("/internal/account") %>active<% end %>" href="/internal/accounts">Accounts internal</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <% if request.path.include?("/internal/plan") %>active<% end %>" href="/internal/plans">Plans internal</a>
             </li>
           <% end %>
         <% end %>

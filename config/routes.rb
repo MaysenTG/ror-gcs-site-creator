@@ -60,6 +60,19 @@ Rails.application.routes.draw do
   end
   
   namespace :internal do
+    # get 'plans' => 'plans#index'
+    # get 'plans/edit'
+    # get 'plans/new'
+    # get 'plans/create'
+    # get 'plans/update'
+    # get 'plans/destroy'
+    # get 'plan/index'
+    # get 'plan/edit'
+    # get 'plan/new'
+    # get 'plan/create'
+    # get 'plan/update'
+    # get 'plan/destroy'
+    resources :plans
     get 'accounts/search'
     get 'accounts/new'
     post 'accounts/create'
