@@ -60,4 +60,16 @@
   document.addEventListener("DOMContentLoaded", function() {
     $('button.site-limit-tooltip').tooltip();
   })
+  
+  document.addEventListener("turbo:before-fetch-response", function(e) {
+    const allModals = document.querySelectorAll(".modal");
+
+    allModals.forEach((modal) => {
+      let modalInstanceDismissBtn = modal.querySelector("[data-bs-dismiss]");
+      if (modalInstanceDismissBtn) {
+        modalInstanceDismissBtn.click();
+      }
+    });
+  })
 </script>
+
