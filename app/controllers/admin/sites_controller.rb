@@ -27,22 +27,20 @@ class Admin::SitesController < ApplicationController
   
   # Used to lazy load the sites using Turbo Frames on the index page
   def all_sites
-    all_sites_for_user = Site.where(account_id: current_account.id)
+    #@pagy, @sites = pagy(Site.where(account_id: current_account.id), request_path: '/admin/sites')
+    @sites = Site.where(account_id: current_account.id).order(created_at: :asc)
     
-    sites_as_json = []
+    @size_per_site = {}
     
-    all_sites_for_user.each do |site|
-      bucket_name = construct_site_name(site["name"])
+    # Loop over each site, get it's total size from the bucket, and make a new hash with the site name and size
+    @sites.each do |site|
+      bucket_name = construct_site_name(site.name)
       bucket = @storage.bucket bucket_name, skip_lookup: true
       
-      site_as_json = site.as_json
-      site_as_json["total_size"] = bucket.files.inject(0) { |sum, file| sum + file.size }
-      
-      sites_as_json.push(site_as_json)
+      @size_per_site[site.name] = bucket.files.inject(0) { |sum, file| sum + file.size }
     end
     
-    @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - sites_as_json.size
-    @sites = sites_as_json.as_json
+    @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - @sites.size
   end
   
   # Route: /admin/sites/new
@@ -130,7 +128,7 @@ class Admin::SitesController < ApplicationController
     rescue
       @error = "Site not found"
       #render json: { status: "error", message: "Site not found" }
-      redirect_to "/admin/sites", notice: "Oops, that site doesn't exist!"
+      redirect_to "/admin/sites", notice: "Oops, the site '#{params[:site_name]}' doesn't exist on your account"
     end
   end
   
@@ -139,6 +137,10 @@ class Admin::SitesController < ApplicationController
     sent_site_name = params[:site_name]
     
     all_sites = Site.all
+    
+    all_site_names = Site.pluck(:name)
+    
+    
     
     name_taken = false
     
@@ -153,13 +155,12 @@ class Admin::SitesController < ApplicationController
   end
   
   def delete
-    all_sites_for_user = Site.where(account_id: current_account.id)
     site = Site.where(name: @site_name, account_id: current_account.id).first
     
     bucket_name_with_site = construct_site_name(@site_name)
     
     bucket  = @storage.bucket bucket_name_with_site, skip_lookup: true
-
+    
     # Can only delete a bucket through the API if it is empty
     begin
       bucket.delete
@@ -170,28 +171,27 @@ class Admin::SitesController < ApplicationController
     
     site.destroy
     
-    sites_as_json = []
+    @sites = Site.where(account_id: current_account.id).order(created_at: :asc)
     
-    all_sites_for_user.each do |site|
-      bucket_name = construct_site_name(site["name"])
+    @size_per_site = {}
+    
+    # Loop over each site, get it's total size from the bucket, and make a new hash with the site name and size
+    @sites.each do |site|
+      bucket_name = construct_site_name(site.name)
       bucket = @storage.bucket bucket_name, skip_lookup: true
       
-      site_as_json = site.as_json
-      site_as_json["total_size"] = bucket.files.inject(0) { |sum, file| sum + file.size }
-      
-      sites_as_json.push(site_as_json)
+      @size_per_site[site.name] = bucket.files.inject(0) { |sum, file| sum + file.size }
     end
     
-    @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - sites_as_json.size
-    @sites = sites_as_json.as_json
+    @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - @sites.size
 
     # Respond as a turbo stream with the all_sites file
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.update("site_files", partial: "admin/sites/all_sites", locals: { sites: @sites, num_sites_left: @num_sites_left }) }
+      format.turbo_stream { render turbo_stream: turbo_stream.update("site_files", partial: "admin/sites/all_sites", locals: { sites: @sites, num_sites_left: @num_sites_left, size_per_site: @size_per_site }) }
     end
   end
   
-  def create    
+  def create
     cloud_friendly_name = construct_site_name(@site_name)
     
     @new_site = Site.new(name: @site_name)
@@ -214,6 +214,8 @@ class Admin::SitesController < ApplicationController
       if params[:theme_type] == "portfolio"
         # Copy the portfolio theme files to the bucket
         file_name_target = "portfolio"
+      elsif params[:theme_type] == "skeleton_react"
+        file_name_target = "skeleton_react"
       else
         file_name_target = "blank"
       end
@@ -235,9 +237,17 @@ class Admin::SitesController < ApplicationController
         b.website_404 = main_404
       end
       
-      render json: { status: "success", site_id: @new_site.id }
+      redirect_to "/admin/sites/#{@site_name}?filename=index.html", notice: "Welcome to your new site"
+      return
+      
+      #render json: { status: "success", site_id: @new_site.id }
     else
-      render json: { status: "error", errors: @new_site.errors }
+      error_message = "<strong>Oops, there was an error creating your site. <a href='/admin/sites/new'>Click here to try again</a>.</strong>"
+      
+      full_error_message = "<div class=\"alert alert-danger alert-dismissible fade show\" role=\"alert\">#{error_message}</div>"
+      
+      render turbo_stream: turbo_stream.replace("create-site-errors", full_error_message.html_safe)
+      return
     end
   end
   

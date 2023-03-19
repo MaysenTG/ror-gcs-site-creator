@@ -7,17 +7,14 @@ export default class extends Controller {
 
   handleToggleStage(event) {
     let stage = event.target.dataset.targetStage;
-    let new_stage_id = `stage-${stage}`;
+    
+    let navtab_buttonTheme = document.querySelector(`#pills-theme-tab`);
+    
+    navtab_buttonTheme.removeAttribute("disabled");
+    navtab_buttonTheme.classList.remove("disabled");
 
-    let all_stages = document.querySelectorAll(".stage-container");
-
-    all_stages.forEach((stage) => {
-      if (stage.id != new_stage_id) {
-        stage.classList.add("d-none");
-      } else {
-        stage.classList.remove("d-none");
-      }
-    });
+    let navtab_button = document.querySelector(`#pills-${stage}-tab`);
+    navtab_button.click();
   }
 
   validateSiteName(event) {
@@ -66,7 +63,11 @@ export default class extends Controller {
             document
               .querySelector("#new-site-name-error-wrapper")
               .classList.add("d-none");
-            document.querySelector("#new-site-name").textContent = site_name;
+            document.querySelectorAll(".new-site-name").forEach((element) => {
+              element.textContent = site_name;
+            });
+            
+            document.querySelector("input[name='site_name']").value = site_name;
           }
         }
       });
@@ -114,40 +115,12 @@ export default class extends Controller {
 
     document.querySelector("#storage-bucket-iframe").src = theme_bucket_url;
     document.querySelector("#theme-type-label").innerText = theme;
+    document.querySelector("input[name='theme_type']").value = theme;
   }
 
   createNewSite(event) {
-    let site_name = document.querySelector("#new-site-name").innerText;
-    let csrf_token = document.querySelector("#csrf_token").value;
-    let theme_type = document.querySelector("#theme-type-label").innerText;
-    let next_button = document.querySelector("#next-stage-new-site");
-    let create_button = document.querySelector("#create-site-button");
-    let back_button = document.querySelector("#back-to-name-btn");
-
-    next_button.disabled = true;
-    next_button.querySelector("span").classList.remove("d-none");
-    create_button.disabled = true;
-    create_button.querySelector("span").classList.remove("d-none");
-    back_button.disabled = true;
-
-    // Post to the validate site name endpoint
-    fetch(
-      `/admin/sites/create_new_site?site_name=${site_name}&theme_type=${theme_type}`,
-      {
-        method: "POST",
-        headers: {
-          "X-CSRF-Token": csrf_token,
-          Accept: "application/json",
-        },
-      }
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.status == "success") {
-          next_button.querySelector("span").classList.add("d-none");
-          create_button.querySelector("span").classList.add("d-none");
-          window.location.href = `/admin/sites/${site_name}`;
-        }
-      });
+    let newSiteForm = document.querySelector("#new-site-form");
+    
+    newSiteForm.requestSubmit();
   }
 }
