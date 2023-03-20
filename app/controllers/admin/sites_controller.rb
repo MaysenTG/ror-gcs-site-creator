@@ -192,6 +192,17 @@ class Admin::SitesController < ApplicationController
   end
   
   def create
+    
+    # If the site name already exists, then return an error
+    if Site.where(name: params[:site_name]).exists?
+      error_message = "<strong>Oops, that site name already exists. <a href='/admin/sites/new'>Click here to try again</a>.</strong>"
+      
+      full_error_message = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">#{error_message}</div>"
+      
+      render turbo_stream: turbo_stream.replace("create-site-errors", full_error_message.html_safe)
+      return
+    end
+    
     cloud_friendly_name = construct_site_name(@site_name)
     
     @new_site = Site.new(name: @site_name)
