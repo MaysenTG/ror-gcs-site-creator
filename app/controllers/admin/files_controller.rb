@@ -39,7 +39,7 @@ class Admin::FilesController < ApplicationController
   def edit
   end
 
-  def show    
+  def show
     storage = Google::Cloud::Storage.new
     site_name = params[:site_name]
     
@@ -80,7 +80,7 @@ class Admin::FilesController < ApplicationController
   end
   
   # Edit the file
-  def update    
+  def update
     @file_contents = params[:contents]
     @original_file_contents = params[:original_contents]
     @file_name = params[:file_name]
@@ -102,7 +102,6 @@ class Admin::FilesController < ApplicationController
     
     user_max_site_size_mb = ApplicationController.get_max_site_size_for_account_in_mb(current_account)
     user_max_site_size_bytes = ApplicationController.get_max_site_size_for_account_in_bytes(current_account)
-    
     
     # If the bucket is over 1MB, don't allow the file to be updated
     if total_site_size > user_max_site_size_bytes

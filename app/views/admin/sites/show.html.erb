@@ -123,7 +123,7 @@
 </div>
 
 <!-- Toast when saving file -->
-<div id="snackbar">File saved..</div>
+<div id="file_saved">File saved..</div>
 <div id="file_404">File doesn't exist..</div>
 
 <!-- Scroll to top button -->
@@ -193,7 +193,10 @@
       if(fileTooBigError) {
         fileTooBigError.classList.add("d-none");
       }
-      showToast("snackbar");
+      showToast("file_saved");
+      // Disable save button
+      let saveBtn = document.querySelector("#save-file-btn");
+      saveBtn && saveBtn.classList.add("disabled");
     }
     
     if(e.detail.fetchResponse.response.url.includes("/files/upload")) {
