@@ -353,7 +353,7 @@ DEPENDENCIES
   devise
   erb_lint
   google-cloud-storage
-  htmlbeautifier (~> 1.4)
+  htmlbeautifier
   httparty (~> 0.20.0)
   importmap-rails
   jbuilder

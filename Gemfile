@@ -60,7 +60,6 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
-  gem 'erb_lint'
 end
 
 group :test do
@@ -75,5 +74,6 @@ gem "google-cloud-storage"
 gem "httparty", "~> 0.20.0"
 
 gem 'bootstrap', '~> 5.1.3'
-gem "htmlbeautifier", "~> 1.4"
+gem "htmlbeautifier"
 gem 'pagy', '~> 6.0', '>= 6.0.2'
+gem 'erb_lint', require: false

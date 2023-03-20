@@ -57,10 +57,9 @@
       </div>
     </div>
     <div class="row">
-    <!-- Add the warning alert here -->
+      <!-- Add the warning alert here -->
       <%= turbo_frame_tag "file_delete_error" do %>
       <% end %>
-      
       <div class="col-12 col-lg-3 col-md-12 col-sm-12" style="margin: 5rem 0;">
         <turbo-frame id="filepicker">
           <%= render partial: "admin/files/filepicker", @site => @site, @site_files_and_folders => @site_files_and_folders %>
@@ -121,16 +120,13 @@
     <%= render :partial => "layouts/modals/sites/show/mainor404", :locals => { :site => @site } %>
   </div>
 </div>
-
 <!-- Toast when saving file -->
 <div id="file_saved">File saved..</div>
 <div id="file_404">File doesn't exist..</div>
-
 <!-- Scroll to top button -->
 <button onclick="topFunction()" id="scrollToTop" title="Go to top">
   <i class="bi bi-arrow-up"></i>
 </button>
-
 <script>
   document.addEventListener("turbo:before-fetch-response", function(e) {
     waitForElm('#file_content').then((elm) => {
@@ -172,7 +168,7 @@
           document.querySelector("#save-file-btn").disabled = false;
         });
       }
-      
+
       // Hide the loading spinner
       document.querySelector("#save-file-btn").querySelector("span").classList.add("d-none");
       document.querySelector("#save-file-btn").querySelector(".save-btn-text-loading").classList.add("d-none");
@@ -187,7 +183,7 @@
         modalInstanceDismissBtn.click();
       }
     });
-    
+
     if(e.detail.fetchResponse.response.url.includes("/files/update") && !e.detail.fetchResponse.response.headers.get("site-over-limit")) {
       let fileTooBigError = document.querySelector(".file__too__big__error");
       if(fileTooBigError) {
@@ -198,17 +194,17 @@
       let saveBtn = document.querySelector("#save-file-btn");
       saveBtn && saveBtn.classList.add("disabled");
     }
-    
+
     if(e.detail.fetchResponse.response.url.includes("/files/upload")) {
       waitForElm(`a[data-filename="${e.detail.fetchResponse.response.headers.get("file-name")}"]`).then((elm) => {
         elm.click();
       });
     }
-    
+
     if(e.detail.fetchResponse.response.headers.get("site-over-limit")) {
       document.querySelector(".file__too__big__error").classList.remove("d-none");
     }
-    
+
     try {
       let eventType = event.detail.fetchResponse.response.headers.get("action-type")
       if (eventType == "rename") {
@@ -237,7 +233,7 @@
       document.querySelector("#save-file-btn").click();
     }
   });
-  
+
   document.addEventListener("turbo:before-fetch-request", function(e) {
     if(!e.detail.url.href.includes("/files/update") && !e.detail.url.href.includes("/files/delete")) {
       // Make the code editor appear like it's loading
@@ -248,7 +244,7 @@
       document.querySelector("#save-file-btn").querySelector("span").classList.remove("d-none");
       document.querySelector("#save-file-btn").querySelector(".save-btn-text-loading").classList.remove("d-none");
       document.querySelector("#save-file-btn").querySelector(".save-btn-text").classList.add("d-none");
-      
+
     }
   })
 
