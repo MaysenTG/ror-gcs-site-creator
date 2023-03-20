@@ -1,6 +1,6 @@
 <!-- Redesigned new site creation flow -->
 <div class="container w-75">
-<h1 class="h1 mb-3 mt-3">Create a new site</h1>
+  <h1 class="h1 mb-3 mt-3">Create a new site</h1>
   <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="pills-name-tab" data-bs-toggle="pill" data-bs-target="#pills-name" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Name</button>
@@ -9,7 +9,7 @@
       <button class="nav-link disabled" disabled id="pills-theme-tab" data-bs-toggle="pill" data-bs-target="#pills-theme" type="button" role="tab" aria-controls="pills-theme" aria-selected="false">Theme</button>
     </li>
   </ul>
-<hr>
+  <hr>
 </div>
 <div class="tab-content" id="pills-tabContent">
   <div class="tab-pane fade show active" id="pills-name" role="tabpanel" aria-labelledby="pills-name-tab">
@@ -32,72 +32,71 @@
           </div>
         </div>
         <button class="btn btn-primary w-25 py-2.5 px-5" data-target-stage="theme" data-action="newsite#handleToggleStage" data-next-stage="true" type="button" id="next-stage-new-site" disabled="" data-goal-step="theme" style="float: right; padding: 15px; margin-bottom: 5rem;">
-        <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        Next
+          <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Next
         </button>
       </div>
     </div>
   </div>
   <div class="tab-pane fade" id="pills-theme" role="tabpanel" aria-labelledby="pills-theme-tab">
     <div class="stage-container" data-controller="newsite" id="stage-theme">
-    <div class="container w-75">
-      <form id="new-site-form" action="/admin/sites/create_new_site" data-turbo="true" method="post">
-        <input type="hidden" name="site_name">
-        <input type="hidden" name="theme_type" value="blank">
-        <div class="row">
-          <div class="col-4">
-            <div class="input-group mb-3">
-              <label for="basic-url" class="form-label h4">Choose a theme for <a href="#"><span class="new-site-name"></span>.maysengreenwood.com</a></label>
-              <div class="list-group">
-                <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action active" aria-current="true" data-theme="blank">
-                  <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">Blank</h5>
-                  </div>
-                  <small>A blank theme with no content or styling. You will be given an index.html, style.css, and script.js file which are prelinked together.</small>
-                </button>
-                <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action" data-theme="portfolio">
-                  <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">Portfolio website</h5>
-                  </div>
-                  <small>A portfolio website to show off you development skills. This theme includes a header, footer, and sections for your projects.</small>
-                </button>
-                <button data-action="newsite#changeActiveTheme" type="button" class="list-group-item list-group-item-action" data-theme="skeleton_react">
-                  <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">Skeleton React</h5>
-                  </div>
-                  <small>A starter template for using React.js.</small>
-                </button>
+      <div class="container w-75">
+        <form id="new-site-form" action="/admin/sites/create_new_site" data-turbo="true" method="post">
+          <input type="hidden" name="site_name">
+          <input type="hidden" name="theme_type" value="blank">
+          <div class="row">
+            <div class="col-4">
+              <div class="input-group mb-3">
+                <label for="basic-url" class="form-label h4">Choose a theme for <a href="#"><span class="new-site-name"></span>.maysengreenwood.com</a></label>
+                <div class="list-group">
+                  <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action active" aria-current="true" data-theme="blank">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1">Blank</h5>
+                    </div>
+                    <small>A blank theme with no content or styling. You will be given an index.html, style.css, and script.js file which are prelinked together.</small>
+                  </button>
+                  <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action" data-theme="portfolio">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1">Portfolio website</h5>
+                    </div>
+                    <small>A portfolio website to show off you development skills. This theme includes a header, footer, and sections for your projects.</small>
+                  </button>
+                  <button data-action="newsite#changeActiveTheme" type="button" class="list-group-item list-group-item-action" data-theme="skeleton_react">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1">Skeleton React</h5>
+                    </div>
+                    <small>A starter template for using React.js.</small>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="col-1"></div>
-          <div class="col-7">
-            <label class="form-label h3">Theme type: <span id="theme-type-label">blank</span></label><br>
-            <div class="card">
-              <div class="card-body" style="background-color: rgb(240, 240, 240);">
-                <h5 class="card-title">Theme Preview</h5>
-                <iframe id="storage-bucket-iframe" src="https://storage.googleapis.com/theme_previews/blank/index.html" title="Theme Preview" width="100%" height="600px" style="border: 1px solid black;"></iframe>
+            <div class="col-1"></div>
+            <div class="col-7">
+              <label class="form-label h3">Theme type: <span id="theme-type-label">blank</span></label><br>
+              <div class="card">
+                <div class="card-body" style="background-color: rgb(240, 240, 240);">
+                  <h5 class="card-title">Theme Preview</h5>
+                  <iframe id="storage-bucket-iframe" src="https://storage.googleapis.com/theme_previews/blank/index.html" title="Theme Preview" width="100%" height="600px" style="border: 1px solid black;"></iframe>
+                </div>
               </div>
             </div>
+            <br>
           </div>
           <br>
-        </div>
-        <br>
-        <div class="w-100 d-flex justify-content-between align-items-center mt-3">
-          <button style="padding: 2rem 4rem;" id="back-to-name-btn" data-target-stage="name" data-action="newsite#handleToggleStage" class="mb-3 btn btn-secondary" type="button">
-            Back
-          </button>
-          <button data-action="click->newsite#createNewSite" data-bs-toggle="modal" data-bs-target="#newSiteLoading" style="padding: 2rem 4rem;" class="btn btn-primary mb-3" id="create-site-button" type="button">
-            <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Create my site!
-          </button>
-        </div>
-      </form>
+          <div class="w-100 d-flex justify-content-between align-items-center mt-3">
+            <button style="padding: 2rem 4rem;" id="back-to-name-btn" data-target-stage="name" data-action="newsite#handleToggleStage" class="mb-3 btn btn-secondary" type="button">
+              Back
+            </button>
+            <button data-action="click->newsite#createNewSite" data-bs-toggle="modal" data-bs-target="#newSiteLoading" style="padding: 2rem 4rem;" class="btn btn-primary mb-3" id="create-site-button" type="button">
+              <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Create my site!
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-  </div>
 </div>
-
 <div class="modal fade" id="newSiteLoading" data-bs-backdrop="static" tabindex="-1" aria-labelledby="newSiteLoadingLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -108,7 +107,7 @@
       <div class="modal-body">
         <%= turbo_frame_tag "create-site-errors" do %>
           <div class="text-center">
-          <p>Putting some things together for your site</p>
+            <p>Putting some things together for your site</p>
             <div class="spinner-border" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>

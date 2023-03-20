@@ -13,12 +13,12 @@
                 <%= render partial: "devise/shared/error_messages", resource: resource %>
                 <!-- Email input -->
                 <div class="form-outline mb-4">
-                  <input type="email" id="signupFormEmail" <% if request.query_parameters["guest"] %>value="guest@gmail.com"<% end %> placeholder="john.smith@gmail.com" name="account[email]" class="form-control" />
+                  <input type="email" id="signupFormEmail" <% if request.query_parameters["guest"] %>value="guest@gmail.com"<% end %> placeholder="john.smith@gmail.com" name="account[email]" class="form-control" >
                   <label class="form-label" for="signupFormEmail">Email address</label>
                 </div>
                 <!-- Password input -->
                 <div class="form-outline mb-4">
-                  <input type="password" id="signupFormPass" <% if request.query_parameters["guest"] %>value="password123"<% end %> name="account[password]" class="form-control" />
+                  <input type="password" id="signupFormPass" <% if request.query_parameters["guest"] %>value="password123"<% end %> name="account[password]" class="form-control" >
                   <label class="form-label" for="signupFormPass">Password</label>
                 </div>
                 <!-- Submit button -->
