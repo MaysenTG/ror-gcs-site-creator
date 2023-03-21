@@ -1,36 +1,16 @@
 Rails.application.routes.draw do
-  # get 'files/create'
-  # get 'files/edit'
-  # get 'files/show'
-  # get 'files/delete'
-  # get 'files/rename'
-  # get 'sites/index'
-  # get 'sites/show'
-  # get 'sites/new'
-  # get 'sites/delete'
-  # get 'sites/create'
-  # get 'file/create'
-  # get 'file/edit'
-  # get 'file/show'
-  # get 'file/rename'
-  # get 'file/set_main'
-  # get 'file/set_404'
+  get 'accounts/get_plans'
+  post 'checkout/create_checkout_session'
+  get 'checkout/success'
+  get 'checkout/cancel'
+  post 'checkout/handle_checkout_session_complete'
+
   
   
   # Working on this
   #get 'pricing' => 'home#pricing'
   
-  #devise_for :accounts
-  
-  
   devise_for :accounts, controllers: { registrations: 'registrations' }
-  
-  
-  get '/test_response', to: 'home#test_response'
-  #get 'emails'
-  #get 'emails/new'
-  resources :emails
-  resources :posts
   
   namespace :admin do
     get '/test_path/show' => 'sites#test_show'
