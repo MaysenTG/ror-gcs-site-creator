@@ -27,8 +27,8 @@ class CheckoutController < ApplicationController
           quantity: 1,
         }],
         mode: 'subscription',
-        success_url: 'http://127.0.0.1:3000/checkout/success',
-        cancel_url: 'http://127.0.0.1:3000/checkout/cancel',
+        success_url: 'https://static.maysengreenwood.com/checkout/success',
+        cancel_url: 'https://static.maysengreenwood.com/checkout/cancel',
       })
       
       session["stripe_session_id"] = session.id
