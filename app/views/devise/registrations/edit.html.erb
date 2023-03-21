@@ -1,4 +1,10 @@
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+<% if notice %>
+  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <%= notice %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% end %>
 <h1 style="margin-top: 4rem;" class="mb-3 text-center">Account details</h1>
 <div class="container">
   <div class="row flex-lg-nowrap">
@@ -25,7 +31,6 @@
                 <div class="col d-flex flex-column flex-sm-row justify-content-between mb-3">
                   <div class="d-flex flex-column">
                     <% account_plan = Plan.where(plan_handle: current_account.plan_handle).first %>
-                  
                     <div>
                       <h4><strong>Plan name:</strong> <%= account_plan.name %></h4>
                     </div>
@@ -136,5 +141,11 @@
       </div>
     </div>
     <div class="col-2"></div>
+  </div>
+  <div class="container py-3 mt-3">
+    <h3>Plans</h3>
+    <%= turbo_frame_tag "all_plans", src: "/accounts/get_plans" do %>
+      <h2>Loading..</h2>
+    <% end %>
   </div>
 </div>

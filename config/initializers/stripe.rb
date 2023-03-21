@@ -1,0 +1,1 @@
+ENDPOINT_SECRET = Rails.application.credentials.stripe.webhook[:development]

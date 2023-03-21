@@ -1,0 +1,29 @@
+<%= turbo_frame_tag "all_plans" do %>
+  <div class="row row-cols-1 row-cols-md-2 mb-3 text-center">
+    <% @plans.each do |plan| %>
+      <div class="col">
+        <div class="card mb-4 rounded-3 shadow-sm">
+          <div class="card-header py-3">
+            <h4 class="my-0 fw-normal"><%= plan.name %></h4>
+          </div>
+          <div class="card-body">
+            <h1 class="card-title pricing-card-title">$<%= plan.price %> NZD<small class="text-muted fw-light">/mo</small></h1>
+            <ul class="list-unstyled mt-3 mb-4">
+              <li>Maximum of <%= plan.max_sites %></li>
+              <li><%= plan.max_site_size %> MB of storage per site</li>
+              <li>Email support</li>
+              <% if plan.max_site_size <= Plan.where(plan_handle: current_account.plan_handle ).first.max_site_size %>
+                <li class="alert-warning p-3">Warning: If you change to this plan, you will need to reduce the size of your sites to be under <%= plan.max_site_size %>MB. Any changes to your sites will require the total site size to be under <%= plan.max_site_size %>MB</li>
+              <% end %>
+            </ul>
+            <form action="/checkout/create_checkout_session" data-turbo="false" method="POST">
+              <input name="plan_handle" value="<%= plan.plan_handle %>" type="hidden">
+              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>" autocomplete="off">
+              <button type="submit" class="w-100 btn btn-lg btn-outline-primary">Purchase plan</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -77,3 +77,5 @@ gem 'bootstrap', '~> 5.1.3'
 gem "htmlbeautifier"
 gem 'pagy', '~> 6.0', '>= 6.0.2'
 gem 'erb_lint', require: false
+
+gem "stripe", "~> 8.3"
