@@ -2,6 +2,8 @@ require 'stripe'
 
 Stripe.api_key = Rails.application.credentials.stripe.account[:development]
 
+ENDPOINT_SECRET ||= Rails.application.credentials.stripe.webhook[:development]
+
 class CheckoutController < ApplicationController
   # Disable CSRF protection for the checkout session creation
   skip_before_action :verify_authenticity_token, only: [:handle_checkout_session_complete]
