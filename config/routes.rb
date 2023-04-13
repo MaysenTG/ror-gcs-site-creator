@@ -40,18 +40,6 @@ Rails.application.routes.draw do
   end
   
   namespace :internal do
-    # get 'plans' => 'plans#index'
-    # get 'plans/edit'
-    # get 'plans/new'
-    # get 'plans/create'
-    # get 'plans/update'
-    # get 'plans/destroy'
-    # get 'plan/index'
-    # get 'plan/edit'
-    # get 'plan/new'
-    # get 'plan/create'
-    # get 'plan/update'
-    # get 'plan/destroy'
     resources :plans
     get 'accounts/search'
     get 'accounts/new'
@@ -66,9 +54,7 @@ Rails.application.routes.draw do
       post 'sites/:id/create_bucket' => 'sites#create_bucket'
     end
   end
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Defines the root path route ("/")
+  
   root 'home#show'
   
   namespace :api do

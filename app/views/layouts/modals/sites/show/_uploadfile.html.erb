@@ -13,7 +13,7 @@
               <input type="hidden" name="site_name" value="<%= @site["name"] %>">
               <div data-controller="validation" class="mb-3">
                 <label for="formFile" class="form-label">Upload a file</label>
-                <input data-action="validation#fileHasBeenSelectedForUpload" class="form-control" type="file" accept=".html,.js,.css" name="file" id="formFile">
+                <input data-action="validation#fileHasBeenSelectedForUpload" class="form-control" type="file" accept=".html,.js,.css,.png,.jpeg,.svg,.gif,.jpg,.webp" name="file" id="formFile">
               </div>
             </form>
             <small><strong>Note: </strong>This file will overwrite any file with the same name</small>
@@ -23,7 +23,7 @@
       <div data-controller="file" class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="button" data-action="file#uploadFile" form="upload-file-form" disabled="" class="btn btn-primary">
-        <!--<button type="submit" form="upload-file-form" class="btn btn-primary">-->
+          <!--<button type="submit" form="upload-file-form" class="btn btn-primary">-->
           <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Upload file
         </button>
