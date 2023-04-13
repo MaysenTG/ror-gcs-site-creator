@@ -34,6 +34,8 @@
                     <i class="fs-4 bi bi-filetype-js"></i>
                   <% elsif item["name"].include?(".html") %>
                     <i class="fs-4 bi bi-filetype-html"></i>
+                  <% elsif item["name"].include?(".png") or item["name"].include?(".jpeg") or item["name"].include?(".gif") or item["name"].include?(".webp") %>
+                    <i class="fs-4 bi bi-file-image"></i>
                   <% else %>
                     <i class="fs-4 bi bi-file-code"></i>
                   <% end %>

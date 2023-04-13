@@ -23,6 +23,7 @@ class Admin::FilesController < ApplicationController
     
     bucket = storage.bucket bucket_name, skip_lookup: true
     
+    # Create new file and set GCS cache control to "no-store" (this doesn't affect the apps cache of the file)
     file = bucket.create_file StringIO.new(""), file_name, cache_control: "no-store"
     
     
@@ -53,29 +54,35 @@ class Admin::FilesController < ApplicationController
     
     file = bucket.file file_name
     
-    downloaded = file.download
+    cache_key = "editor:#{bucket_name}:#{file_name}"
+    contents = Rails.cache.read(cache_key)
     
-    # Workaround from downloaded.read due to UTF-8 encoding issues
-    contents = downloaded.read.force_encoding("ASCII-8BIT").encode('UTF-8', undef: :replace, replace: '')
-    
-    if bucket.website_main == file_name
-      is_main = true
-      is_404 = false
-    elsif bucket.website_404 == file_name
-      is_404 = true
-      is_main = false
+    # If cache miss, download file and cache
+    if contents.nil?
+      downloaded = file.download
+      # Workaround from downloaded.read due to UTF-8 encoding issues
+      contents = downloaded.read.force_encoding("ASCII-8BIT").encode('UTF-8', undef: :replace, replace: '')
+      
+      Rails.cache.write(cache_key, contents)
     else
-      is_404 = false
-      is_main = false
+      #puts "Cache hit"
     end
+    
     
     @site = site.as_json
     @file_contents = contents
     @file_name = file_name
     
+    @image_url = file.media_url
+    
     respond_to do |format|
-      format.turbo_stream { 
-        render turbo_stream: turbo_stream.update("editor", partial: "admin/files/editor", :locals => { :file_contents => @file_contents, :file_name => @file_name, :site => @site }) }
+      format.turbo_stream {
+        if file.content_type.include? "image"
+          render turbo_stream: turbo_stream.update("editor", partial: "admin/files/image", :locals => { :image_url => @image_url, :file_name => @file_name, :site => @site })
+        else
+          render turbo_stream: turbo_stream.update("editor", partial: "admin/files/editor", :locals => { :file_contents => @file_contents, :file_name => @file_name, :site => @site })
+        end
+      }
     end
   end
   
@@ -93,6 +100,9 @@ class Admin::FilesController < ApplicationController
     bucket_name = site.name + "." + DOMAIN_NAME
     
     bucket = storage.bucket bucket_name, skip_lookup: true
+    
+    cache_key = "editor:#{bucket_name}:#{@file_name}"
+    Rails.cache.delete(cache_key)
     
     # Get the difference between the original file size and the new file size
     file_contents_difference = @file_contents.bytesize - @original_file_contents.bytesize
@@ -115,7 +125,10 @@ class Admin::FilesController < ApplicationController
       file = bucket.create_file StringIO.new(@file_contents), @file_name, cache_control: "no-store"
       
       set_main_or_404(@file_name, bucket)
-    
+      
+      # Write new file contents to cache
+      Rails.cache.write(cache_key, @file_contents)
+      
       render turbo_stream: turbo_stream.append("editor");
       return
     end
