@@ -1,21 +1,16 @@
-# Dockerfile development version
-FROM ruby:3.0.0
-
-#ENV PORT=$PORT
-ENV PORT=3000
-
-RUN apt-get update -qq && apt-get install -y default-libmysqlclient-dev && rm -rf /var/cache/apk/*
-#RUN gem install nokogiri --platform=ruby
-
-# Install gems
-WORKDIR /app
-COPY . /app/
-
-ENV BUNDLE_PATH /gems
-RUN bundle lock --add-platform x86_64-linux
+# syntax=docker/dockerfile:1
+FROM ruby:3.2.0
+RUN apt-get update -qq && apt-get install -y nodejs postgresql-client
+WORKDIR /staticsite
+COPY Gemfile /staticsite/Gemfile
+COPY Gemfile.lock /staticsite/Gemfile.lock
 RUN bundle install
 
+# Add a script to be executed every time the container starts.
+COPY entrypoint.sh /usr/bin/
+RUN chmod +x /usr/bin/entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]
+EXPOSE 3000
 
-ENTRYPOINT [ "bin/rails" ]
-CMD ["server", "-b", "0.0.0.0"]
-EXPOSE $PORT
+# Configure the main process to run when running the image
+CMD ["rails", "server", "-b", "0.0.0.0"]

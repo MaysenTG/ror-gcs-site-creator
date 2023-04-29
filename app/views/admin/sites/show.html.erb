@@ -21,12 +21,9 @@
 </style>
 <div data-controller="general" class="container">
   <div class="container mt-3">
-    <a href="/admin/sites" class="mb-3 btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to sites</a>
-    <div class="mb-3 d-flex justify-content-start">
-      &nbsp;
-      <div class="w-100 d-flex justify-content-between flex-wrap align-items-center">
-        <h1>Files</h1>
-      </div>
+    <div class="mb-3 d-flex justify-content-between">
+      <a href="/admin/sites" class="mb-3 btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to sites</a>
+      <a href="/admin/sites/<%= @site.name %>/domains" class="mb-3 btn btn-secondary">Settings</a>
     </div>
     <!-- Begin general -->
     <div class="mb-3 d-flex justify-content-start">

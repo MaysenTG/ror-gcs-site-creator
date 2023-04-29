@@ -1,3 +1,24 @@
+# default: &default
+#   adapter: postgresql
+#   encoding: unicode
+#   pool: 5
+
+# development:
+#   <<: *default
+#   #host: db
+#   username: postgres
+#   password: qd!/][Km92
+#   database: myapp_development
+
+# test:
+#   <<: *default
+#   database: myapp_test
+
+# production:
+#   <<: *default
+#   database: w3schools_spaces_poc_prod
+
+
 development:
   adapter: postgresql
   encoding: unicode
