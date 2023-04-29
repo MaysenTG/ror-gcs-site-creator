@@ -8,8 +8,8 @@ class Admin::DomainsController < ApplicationController
     # Used for pointing the custom domain to the NGINX server
     @a_record_ip = "170.64.162.111"
     
-    @domains = Domain.all
     @site = Site.find_by(name: params[:site_name])
+    @domains = @site.domains
   end
 
   # GET /domains/1 or /domains/1.json
