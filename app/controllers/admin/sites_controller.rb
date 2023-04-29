@@ -268,10 +268,11 @@ class Admin::SitesController < ApplicationController
     domain = params[:name]
     
     # if domain has "https://" or "http://" in it, then remove it
-    domain = domain.gsub("https://", "").gsub("http://", "")
-    
-    # remove any trailing slashes and any content after the domain
-    domain = domain.split("/")[0]
+    if domain
+      domain = domain.gsub("https://", "").gsub("http://", "")
+      # remove any trailing slashes and any content after the domain
+      domain = domain.split("/")[0]
+    end
     
     @domain = Domain.where(domain: domain).first
     @site = Site.where(name: domain.split(".")[0]).first
