@@ -262,21 +262,39 @@ class Admin::SitesController < ApplicationController
     end
   end
   
+  # TODO: Make this work with custom domains
   # Look up the site by the site name for the NGINX proxy pass (for custom domains)
   def get_custom_domain
-    @site = Site.where(name: params[:site_name]).first
+    domain = params[:name]
     
-    if @site.nil?
-      render plain: "Site not found"
+    # if domain has "https://" or "http://" in it, then remove it
+    domain = domain.gsub("https://", "").gsub("http://", "")
+    
+    # remove any trailing slashes and any content after the domain
+    domain = domain.split("/")[0]
+    
+    @domain = Domain.where(domain: domain).first
+    @site = Site.where(name: domain.split(".")[0]).first
+    
+    if @domain.nil? && @site.nil?
+      render plain: "Site or domain not found"
       return
     end
     
-    @domains = @site.domains
+    
+    puts "Domain: #{@domain}"
+    puts "Site: #{@site}"
     
     # Set a custom header to let NGINX know what the custom domain is
-    response.headers["X-Custom-Domain"] = (@domains&.first&.domain || "#{@site.name}.maysengreenwood.com")
+    response.headers["X-Proxy-Domain"] = (@domain&.domain || "#{@site&.name}.maysengreenwood.com")
     
-    render plain: (@domains&.first&.domain || "#{@site.name}.maysengreenwood.com")
+    if params[:debug] == "true"
+      render plain: (@domain&.domain || "#{@site.name}.maysengreenwood.com")
+      return
+    else
+      redirect_to "http://#{(@domain&.domain || "#{@site&.name}.maysengreenwood.com")}", allow_other_host: true
+      return
+    end
   end
   
   private
