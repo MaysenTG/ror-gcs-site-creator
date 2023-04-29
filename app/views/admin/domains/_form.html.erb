@@ -1,0 +1,20 @@
+<%= form_with(model: [:admin, @domain]) do |form| %>
+  <%# Reder form errors if they exist %>
+  <% if @domain.errors.any? %>
+    <div id="error_explanation" class="alert alert-danger">
+      <h2><%= pluralize(@domain.errors.count, "error") %> prohibited this domain from being saved:</h2>
+      <ul>
+        <% @domain.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <div class="mb-3">
+    <%= form.label :domain, style: "display: block" %>
+    <%= form.text_field :domain, class: "form-control" %>
+  </div>
+  <div>
+    <button type="submit" class="btn btn-primary form-control">Add domain</button>
+  </div>
+<% end %>

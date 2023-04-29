@@ -8,8 +8,8 @@
           <h3 class="h3">Sign in</h3>
           <div class="card">
             <div class="card-body py-5 px-md-5">
-              <form action="/accounts/sign_in" accept-charset="UTF-8" method="post">
-                <!-- 2 column grid layout with text inputs for the first and last names -->
+              <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+                <!-- Using the CSRF token helper, render a authenticity token input -->
                 <%= render partial: "devise/shared/error_messages", resource: resource %>
                 <!-- Email input -->
                 <div class="form-outline mb-4">
@@ -27,7 +27,7 @@
                 </button>
                 <span class="w-100 d-flex justify-content-center align-items-center">Or</span>
                 <a href="/accounts/sign_up" class="d-flex justify-content-center align-items-center btn-block w-100 mt-4">Create an account</a>
-              </form>
+              <% end %>
             </div>
           </div>
         </div>

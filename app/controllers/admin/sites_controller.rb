@@ -3,7 +3,7 @@ ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.j
 
 class Admin::SitesController < ApplicationController
   before_action :restrict_num_sites, only: [:new]
-  before_action :authenticate_account!
+  before_action :authenticate_account!, except: [:get_custom_domain]
   
   before_action :set_storage_client, only: [:all_sites, :show, :delete, :create]
   before_action :get_site_name, only: [:show, :delete, :create]
@@ -260,6 +260,23 @@ class Admin::SitesController < ApplicationController
       render turbo_stream: turbo_stream.replace("create-site-errors", full_error_message.html_safe)
       return
     end
+  end
+  
+  # Look up the site by the site name for the NGINX proxy pass (for custom domains)
+  def get_custom_domain
+    @site = Site.where(name: params[:site_name]).first
+    
+    if @site.nil?
+      render plain: "Site not found"
+      return
+    end
+    
+    @domains = @site.domains
+    
+    # Set a custom header to let NGINX know what the custom domain is
+    response.headers["X-Custom-Domain"] = (@domains&.first&.domain || "#{@site.name}.maysengreenwood.com")
+    
+    render plain: (@domains&.first&.domain || "#{@site.name}.maysengreenwood.com")
   end
   
   private

@@ -33,10 +33,13 @@ Rails.application.routes.draw do
     patch 'sites/:site_name/files/rename' => 'files#rename'
     
     post 'sites/:site_name/folders/new' => 'files#create_folder'
-    # resources :sites do 
-    #   resources :files
-    # end
-    #get 'sites/:site_id/files/:file_name' => 'sites#show_file'
+    
+    scope 'sites/:site_name' do
+      resources :domains
+    end
+    
+    get '/proxy/site/:site_name' => 'sites#get_custom_domain'
+    
   end
   
   namespace :internal do
@@ -79,4 +82,5 @@ Rails.application.routes.draw do
       post 'sites/files/new/upload' => 'files#upload'
     end
   end
+  
 end
