@@ -38,7 +38,7 @@ Rails.application.routes.draw do
       resources :domains
     end
     
-    get '/proxy/site/:site_name' => 'sites#get_custom_domain'
+    get '/proxy/site/lookup' => 'sites#get_custom_domain'
     
   end
   
