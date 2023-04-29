@@ -2,6 +2,8 @@ require "google/cloud/storage"
 ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.json"
 
 class Admin::SitesController < ApplicationController
+  layout "custom_domain", only: [:get_custom_domain]
+  
   before_action :restrict_num_sites, only: [:new]
   before_action :authenticate_account!, except: [:get_custom_domain]
   
@@ -265,12 +267,7 @@ class Admin::SitesController < ApplicationController
   # TODO: Make this work with custom domains
   # Look up the site by the site name for the NGINX proxy pass (for custom domains)
   def get_custom_domain
-    domain = params[:name]
-    
-    if domain.nil?
-      render plain: "Domain not found"
-      return
-    end
+    domain = params[:name] || request.host
     
     # if domain has "https://" or "http://" in it, then remove it
     if domain
@@ -280,16 +277,16 @@ class Admin::SitesController < ApplicationController
     end
     
     @domain = Domain.where(domain: domain).first
-    @site = Site.where(name: domain.split(".")[0]).first
+    @site = @domain&.site
     
-    if @domain.nil? && @site.nil?
+    if @domain.nil? || @site.nil?
       render plain: "Site or domain not found"
       return
     end
     
-    
-    puts "Domain: #{@domain}"
-    puts "Site: #{@site}"
+    if @domain&.domain
+      @url = "https://#{@site.name}.maysengreenwood.com"
+    end
     
     # Set a custom header to let NGINX know what the custom domain is
     response.headers["X-Proxy-Domain"] = (@domain&.domain || "#{@site&.name}.maysengreenwood.com")
@@ -298,8 +295,9 @@ class Admin::SitesController < ApplicationController
       render plain: (@domain&.domain || "#{@site.name}.maysengreenwood.com")
       return
     else
-      redirect_to "http://#{(@domain&.domain || "#{@site&.name}.maysengreenwood.com")}", allow_other_host: true
-      return
+      respond_to do |format|
+        format.html
+      end
     end
   end
   
