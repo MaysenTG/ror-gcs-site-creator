@@ -267,6 +267,11 @@ class Admin::SitesController < ApplicationController
   def get_custom_domain
     domain = params[:name]
     
+    if domain.nil?
+      render plain: "Domain not found"
+      return
+    end
+    
     # if domain has "https://" or "http://" in it, then remove it
     if domain
       domain = domain.gsub("https://", "").gsub("http://", "")
