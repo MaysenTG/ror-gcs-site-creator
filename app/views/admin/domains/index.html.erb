@@ -16,7 +16,7 @@
               To use this domain, you must add the following DNS records on your domain's DNS settings page:
               <ul>
                 <li><strong>Type: </strong>A Record</li>
-                <li><strong>Name: </strong><%= domain.domain %></li>
+                <li><strong>Name: </strong><% if domain.domain.split(".").length == 3 %><%= domain.domain.split(".")[0] %><% else %><%= domain.domain %> (some DNS registrars use <code>@</code>)<% end %></li>
                 <li><strong>Value: </strong><%= @a_record_ip %></li>
               </ul>
               It may take up to 24 hours for the DNS records to update.
