@@ -9,8 +9,8 @@
     <% @domains.each_with_index do |domain, index| %>
       <div class="card mb-3">
         <div class="card-body">
-          <h5 class="card-title"><%= domain.domain %></h5>
-          <%= button_to "Destroy this domain", admin_domain_url(@site.name, domain), method: :delete, class: "btn btn-danger" %>
+          <h5 class="card-title"><a target="_blank" href="https://<%= domain.domain %>"><%= domain.domain %></a></h5>
+          <%= button_to "Delete this domain", admin_domain_url(@site.name, domain), method: :delete, class: "btn btn-danger" %>
           <% if index == 0 %>
             <div class="alert alert-info mt-3" role="alert">
               To use this domain, you must add the following DNS records on your domain's DNS settings page:
@@ -20,6 +20,8 @@
                 <li><strong>Value: </strong><%= @a_record_ip %></li>
               </ul>
               It may take up to 24 hours for the DNS records to update.
+              <br/>
+              If you use <strong>Cloudflare</strong>, you must set the domain's SSL/TLS encryption mode to <strong>Flexible</strong>.
             </div>
           <% end %>
         </div>
