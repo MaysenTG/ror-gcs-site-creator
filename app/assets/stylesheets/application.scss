@@ -222,3 +222,25 @@ a.btn:hover {
   background-position: center center;
   background-size: cover;
 }
+
+@media (min-width: 1700px) {
+  .container-xxl, .container-xl, .container-lg, .container-md, .container-sm, .container {
+      max-width: 95%;
+  }
+}
+
+.card.mb-3:hover {
+  background: #eeeeee;
+  transition: all 0.2s ease-in-out;
+}
+
+svg.bi.bi-plus-square-dotted:hover {
+  color: #0066ff;
+  transition: all 0.2s ease-in-out;
+}
+
+
+.new-domain-wrapper {
+  width: fit-content;
+  margin: auto;
+}
