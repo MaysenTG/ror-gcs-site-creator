@@ -1,6 +1,8 @@
-<a class="btn btn-secondary my-3 mx-5" href="/admin/sites/<%= @site_name || @site.name %>/domains">Back to domains</a>
 <div class="container">
-  <h2 class="mb-3">Add a new domain</h2>
+  <div class="d-flex align-items-center mb-3">
+    <a class="btn btn-secondary" href="/admin/sites/<%= @site_name || @site.name %>/domains">Back to domains</a>
+  </div>
+  <h2 class="mb-3 m-auto mr-3">Add a new domain</h2>
   <%= render "form", domain: @domain %>
 </div>
 <br>
