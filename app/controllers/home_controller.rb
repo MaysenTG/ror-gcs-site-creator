@@ -14,6 +14,19 @@ class HomeController < ApplicationController
   def pricing
   end
   
+  def test_websocket
+    channel_name = "sites_channel"
+    ActionCable.server.broadcast(
+      channel_name,
+      {
+        click_count: 2,
+      }
+    )
+    
+    # Respond with JSON
+    render json: { message: "This is a test message" }
+  end
+  
   def test_response
     
     # bucket_name_with_site = "maysen.maysengreenwood.com"

@@ -35,12 +35,26 @@ class Admin::SitesController < ApplicationController
     @size_per_site = {}
     
     # Loop over each site, get it's total size from the bucket, and make a new hash with the site name and size
+    all_sites = @sites.to_a
+    @sites = @sites.to_a
+    
     @sites.each do |site|
       bucket_name = construct_site_name(site.name)
       bucket = @storage.bucket bucket_name, skip_lookup: true
       
+      if bucket.nil?
+        all_sites.delete(site)
+        next
+      end
+      
       @size_per_site[site.name] = bucket.files.inject(0) { |sum, file| sum + file.size }
+      
+      # Only show the sites that have a bucket
+      rescue Google::Cloud::NotFoundError
+        all_sites.delete(site)
     end
+    
+    @sites = all_sites
     
     @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - @sites.size
   end
@@ -212,46 +226,50 @@ class Admin::SitesController < ApplicationController
     @new_site.account_id = current_account.id
     
     if @new_site.save
-      bucket  = @storage.create_bucket cloud_friendly_name,
-                                    location:      "US",
-                                    storage_class: "STANDARD"
+      # Run the background job to create the bucket
+      CreateSiteJob.perform_later(cloud_friendly_name, params[:theme_type])
+      
+      redirect_to "/admin/sites", notice: "Your site is being created. This should only take a few seconds."
+      # bucket  = @storage.create_bucket cloud_friendly_name,
+      #                               location:      "US",
+      #                               storage_class: "STANDARD"
 
-      bucket.policy do |p|
-        p.add "roles/storage.objectViewer", "allUsers"
-      end
+      # bucket.policy do |p|
+      #   p.add "roles/storage.objectViewer", "allUsers"
+      # end
       
-      destination_bucket = @storage.bucket cloud_friendly_name
-      theme_preview_bucket  = @storage.bucket "theme_previews", skip_lookup: true
+      # destination_bucket = @storage.bucket cloud_friendly_name
+      # theme_preview_bucket  = @storage.bucket "theme_previews", skip_lookup: true
       
-      # If the theme type is portfolio, then copy the portfolio theme files to the bucket
-      if params[:theme_type] == "portfolio"
-        # Copy the portfolio theme files to the bucket
-        file_name_target = "portfolio"
-      elsif params[:theme_type] == "skeleton_react"
-        file_name_target = "skeleton_react"
-      else
-        file_name_target = "blank"
-      end
+      # # If the theme type is portfolio, then copy the portfolio theme files to the bucket
+      # if params[:theme_type] == "portfolio"
+      #   # Copy the portfolio theme files to the bucket
+      #   file_name_target = "portfolio"
+      # elsif params[:theme_type] == "skeleton_react"
+      #   file_name_target = "skeleton_react"
+      # else
+      #   file_name_target = "blank"
+      # end
       
-      theme_preview_bucket.files.each do |file|
-        # If the file name includes a slash, and that slash is not the last character, then it is a file within a folder
-        if file.name.include?("/") && file.name[-1] != "/" && file.name.include?(file_name_target)
-          # Add cache control to the file          
-          destination_file = file.copy destination_bucket.name, file.name.split("/")[1]
-          destination_file.cache_control = "no-store"
-        end
-      end
+      # theme_preview_bucket.files.each do |file|
+      #   # If the file name includes a slash, and that slash is not the last character, then it is a file within a folder
+      #   if file.name.include?("/") && file.name[-1] != "/" && file.name.include?(file_name_target)
+      #     # Add cache control to the file          
+      #     destination_file = file.copy destination_bucket.name, file.name.split("/")[1]
+      #     destination_file.cache_control = "no-store"
+      #   end
+      # end
       
-      main_index = "index.html"
-      main_404 = "404.html"
+      # main_index = "index.html"
+      # main_404 = "404.html"
       
-      destination_bucket.update do |b|
-        b.website_main = main_index
-        b.website_404 = main_404
-      end
+      # destination_bucket.update do |b|
+      #   b.website_main = main_index
+      #   b.website_404 = main_404
+      # end
       
-      redirect_to "/admin/sites/#{@site_name}?filename=index.html", notice: "Welcome to your new site"
-      return
+      # redirect_to "/admin/sites/#{@site_name}?filename=index.html", notice: "Welcome to your new site"
+      # return
       
       #render json: { status: "success", site_id: @new_site.id }
     else

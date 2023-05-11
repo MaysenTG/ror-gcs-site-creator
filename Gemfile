@@ -79,3 +79,7 @@ gem 'pagy', '~> 6.0', '>= 6.0.2'
 gem 'erb_lint', require: false
 
 gem "stripe", "~> 8.3"
+
+gem "rspec-rails"
+gem "sidekiq", "~> 7.1"
+gem "sidekiq-cron"

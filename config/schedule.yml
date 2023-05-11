@@ -1,0 +1,4 @@
+cleanup_sites:
+  cron: "*/30 * * * *"
+  class: "SitesCleanupJob"
+  queue: default
