@@ -26,6 +26,14 @@ development:
   pool: 5
   username: postgres
   password: qd!/][Km92
+  
+test:
+  adapter: postgresql
+  encoding: unicode
+  database: w3schools_spaces_poc_test
+  pool: 5
+  username: postgres
+  password: qd!/][Km92
 
 production:
   adapter: postgresql
