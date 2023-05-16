@@ -45,12 +45,12 @@ class CreateSiteJob < ApplicationJob
       b.website_404 = main_404
     end
     
-    channel_name = "sites_channel"
-    ActionCable.server.broadcast(
-      channel_name,
-      {
-        site_name: cloud_friendly_name,
-      }
-    )
+    # channel_name = "sites_channel"
+    # ActionCable.server.broadcast(
+    #   channel_name,
+    #   {
+    #     site_name: cloud_friendly_name,
+    #   }
+    # )
   end
 end
