@@ -24,7 +24,7 @@ development:
   encoding: unicode
   database: w3schools_spaces_poc_dev
   pool: 5
-  username: postgres
+  username: maysengreenwood
   password: qd!/][Km92
   
 test:
@@ -32,7 +32,7 @@ test:
   encoding: unicode
   database: w3schools_spaces_poc_test
   pool: 5
-  username: postgres
+  username: maysengreenwood
   password: qd!/][Km92
 
 production:
