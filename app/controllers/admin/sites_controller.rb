@@ -57,7 +57,7 @@ class Admin::SitesController < ApplicationController
 
 
 
-    
+
 
     @sites = all_sites
     
@@ -131,7 +131,6 @@ class Admin::SitesController < ApplicationController
             unless file_without_folder.nil?
               folder[:files].push({type: "file", name: file_without_folder, size: file["size"], last_updated: file["last_updated"], is_main: false, is_404: false})
             end
-            #folder[:files].push(file_without_folder)  
           elsif !file["name"].include?("/")
           end
         end
