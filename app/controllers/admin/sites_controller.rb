@@ -24,7 +24,7 @@ class Admin::SitesController < ApplicationController
   def index
     all_sites_for_user = Site.where(account_id: current_account.id)
     
-    @num_sites_left =  Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - all_sites_for_user.size
+    @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - all_sites_for_user.size
   end
   
   # Used to lazy load the sites using Turbo Frames on the index page
@@ -53,6 +53,8 @@ class Admin::SitesController < ApplicationController
       rescue Google::Cloud::NotFoundError
         all_sites.delete(site)
     end
+    
+
     
     @sites = all_sites
     
