@@ -55,7 +55,10 @@ class Admin::SitesController < ApplicationController
     end
     
 
+
+
     
+
     @sites = all_sites
     
     @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - @sites.size
