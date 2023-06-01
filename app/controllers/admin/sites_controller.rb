@@ -147,7 +147,6 @@ class Admin::SitesController < ApplicationController
       
     rescue
       @error = "Site not found"
-      #render json: { status: "error", message: "Site not found" }
       redirect_to "/admin/sites", notice: "Oops, the site '#{params[:site_name]}' doesn't exist on your account"
     end
   end
