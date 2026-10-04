@@ -4,7 +4,7 @@ class CloneSiteJob < ApplicationJob
   def perform(source_site_id, destination_site_id)
     source = Site.find(source_site_id)
     destination = Site.find(destination_site_id)
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
 
     storage.create_bucket(destination.storage_prefix)
     source_bucket = storage.bucket(source.storage_prefix, skip_lookup: true)

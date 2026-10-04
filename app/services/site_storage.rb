@@ -36,7 +36,7 @@ class SiteStorage
       storage.client.delete_object(bucket: SiteStorage::BUCKET, key: full_key)
     end
 
-    # GCS-compatible: copy("new-key") or copy("other-prefix-name", "new-key")
+    # copy("new-key") or copy("other-prefix-name", "new-key")
     def copy(destination_prefix_or_key, destination_key = nil)
       if destination_key
         dest_prefix = storage.normalize_prefix(destination_prefix_or_key)
@@ -297,12 +297,23 @@ class SiteStorage
     end
   end
 
+  def self.instance
+    @instance ||= new
+  end
+
+  def self.reset_instance!
+    @instance = nil
+  end
+
   def initialize
     @client = Aws::S3::Client.new(
       access_key_id: ENV.fetch("R2_ACCESS_KEY_ID"),
       secret_access_key: ENV.fetch("R2_SECRET_ACCESS_KEY"),
       endpoint: endpoint,
-      region: ENV.fetch("R2_REGION", "auto")
+      region: ENV.fetch("R2_REGION", "auto"),
+      http_open_timeout: 5,
+      http_read_timeout: 15,
+      retry_limit: 2
     )
   end
 

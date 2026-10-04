@@ -5,7 +5,7 @@ class Api::V1::FilesController < ApplicationController
   end
 
   def create
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     all_sites = Site.where(account_id: current_account.id, name: params[:site_name])
     site = all_sites.first
 
@@ -33,7 +33,7 @@ class Api::V1::FilesController < ApplicationController
   end
 
   def create_folder
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     all_sites = Site.where(account_id: current_account.id, name: params[:site_name])
     site = all_sites.first
 
@@ -48,7 +48,7 @@ class Api::V1::FilesController < ApplicationController
   end
 
   def edit
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     all_sites = Site.where(account_id: current_account.id, name: params[:site_name])
     site = all_sites.first
 
@@ -62,7 +62,7 @@ class Api::V1::FilesController < ApplicationController
   end
 
   def upload
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     site_name = params[:site_name]
     all_sites = Site.where(account_id: current_account.id, name: site_name)
     site = all_sites.first
@@ -85,7 +85,7 @@ class Api::V1::FilesController < ApplicationController
 
   def show
     begin
-      storage = SiteStorage.new
+      storage = SiteStorage.instance
       all_sites = Site.where(account_id: current_account.id, name: params[:site_name])
       site = all_sites.first
 
@@ -115,7 +115,7 @@ class Api::V1::FilesController < ApplicationController
   end
 
   def delete
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     site_name = params[:site_name]
     all_sites = Site.where(account_id: current_account.id, name: site_name)
     site = all_sites.first
@@ -141,7 +141,7 @@ class Api::V1::FilesController < ApplicationController
   end
 
   def rename
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     site_name = params[:site_name]
     all_sites = Site.where(account_id: current_account.id, name: site_name)
     site = all_sites.first
@@ -168,7 +168,7 @@ class Api::V1::FilesController < ApplicationController
 
   def set_site_details
     params.require(:file).permit(:site_id, :site_name, :file_name, :file_type, :format, :file_contents)
-    @storage = SiteStorage.new
+    @storage = SiteStorage.instance
     @bucket = @storage.bucket @bucket_name, skip_lookup: true
   end
 end

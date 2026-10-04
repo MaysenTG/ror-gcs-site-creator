@@ -9,7 +9,7 @@ class Admin::AnalyticsController < ApplicationController
       site: @site,
       query: query_params,
       global_filters: global_filter_params,
-      storage: SiteStorage.new
+      storage: SiteStorage.instance
     ).run
 
     status = result["ok"] ? :ok : :unprocessable_entity

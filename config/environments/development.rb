@@ -69,16 +69,18 @@ Rails.application.configure do
   # config.action_cable.disable_request_forgery_protection = true
   
   config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-    address: "smtp.gmail.com",
-    port: 587,
-    domain: "example.com",
-    user_name: "greenwood.maysen@gmail.com",
-    password: "tudkqhpbyehtwhme",
-    authentication: "plain",
-    enable_starttls_auto: true
-  }
-  config.action_mailer.default_url_options = { host: 'localhost:3000' }
+  if ENV["SMTP_USERNAME"].present?
+    config.action_mailer.smtp_settings = {
+      address: ENV.fetch("SMTP_ADDRESS", "smtp.gmail.com"),
+      port: ENV.fetch("SMTP_PORT", 587).to_i,
+      domain: ENV.fetch("SMTP_DOMAIN", "localhost"),
+      user_name: ENV["SMTP_USERNAME"],
+      password: ENV["SMTP_PASSWORD"],
+      authentication: "plain",
+      enable_starttls_auto: true
+    }
+  end
+  config.action_mailer.default_url_options = { host: "localhost:3000" }
 
   # Allow *.localhost / *.lvh.me site previews (Rails host authorization).
   config.hosts << /.*\.localhost/

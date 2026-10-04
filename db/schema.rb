@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_10_03_140000) do
+ActiveRecord::Schema[7.0].define(version: 2026_10_04_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -28,6 +28,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_10_03_140000) do
     t.string "plan_handle", default: "free"
     t.boolean "admin", default: false
     t.index ["email"], name: "index_accounts_on_email", unique: true
+    t.index ["plan_handle"], name: "index_accounts_on_plan_handle"
     t.index ["reset_password_token"], name: "index_accounts_on_reset_password_token", unique: true
   end
 
@@ -131,11 +132,11 @@ ActiveRecord::Schema[7.0].define(version: 2026_10_03_140000) do
     t.string "name", null: false
     t.jsonb "dashboard_widgets"
     t.boolean "gate_enabled", default: false, null: false
-    t.string "visitor_password"
     t.string "seo_title"
     t.text "seo_description"
     t.string "seo_og_image"
     t.boolean "robots_index", default: true, null: false
+    t.string "visitor_password"
     t.index ["account_id"], name: "index_sites_on_account_id"
     t.index ["name"], name: "index_sites_on_name", unique: true
   end

@@ -69,7 +69,7 @@ class PublishedSitesController < ApplicationController
       return serve_seo_document(site, key)
     end
 
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     bucket = storage.bucket(SiteStorage.bucket_name_for(site_name), skip_lookup: true)
     object = bucket.file(key)
 
@@ -137,14 +137,17 @@ class PublishedSitesController < ApplicationController
 
   def gated_password_page_html(site)
     site.ensure_password_page!
-    storage = SiteStorage.new
-    object = storage.bucket(site.storage_prefix, skip_lookup: true).file(SiteStorage::PASSWORD_PAGE)
-    return nil unless object
+    html = Rails.cache.fetch(site.object_cache_key(SiteStorage::PASSWORD_PAGE), expires_in: 2.minutes) do
+      object = SiteStorage.instance.bucket(site.storage_prefix, skip_lookup: true).file(SiteStorage::PASSWORD_PAGE)
+      if object
+        downloaded = object.download
+        body = downloaded.read.force_encoding("UTF-8")
+        body.encode("UTF-8", invalid: :replace, undef: :replace, replace: "").gsub(/<base\s[^>]*>\s*/i, "")
+      end
+    end
+    return nil if html.blank?
 
-    downloaded = object.download
-    html = downloaded.read.force_encoding("UTF-8")
-    html = html.encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
-    html = html.gsub(/<base\s[^>]*>\s*/i, "")
+    html = html.dup
     html = html.gsub("__GATE_ACTION__", ERB::Util.html_escape(@gate_action))
     html = html.gsub("__RETURN_TO__", ERB::Util.html_escape(@return_to.to_s))
     html = html.gsub("__CSRF__", ERB::Util.html_escape(form_authenticity_token))
@@ -219,26 +222,27 @@ class PublishedSitesController < ApplicationController
   end
 
   def sitemap_xml_for(site)
-    storage = SiteStorage.new
-    bucket = storage.bucket(site.storage_prefix, skip_lookup: true)
     origin = published_origin(site)
-    urls = bucket.files.filter_map do |file|
-      name = file.name.to_s
-      next if name.end_with?("/")
-      next unless name.downcase.end_with?(".html", ".htm")
-      next if SiteStorage::SYSTEM_FILES.include?(name) && name != SiteStorage::MAIN_PAGE
+    Rails.cache.fetch("sitemap:#{site.id}:#{site.updated_at.to_i}:#{origin}", expires_in: 5.minutes) do
+      bucket = SiteStorage.instance.bucket(site.storage_prefix, skip_lookup: true)
+      urls = bucket.files.filter_map do |file|
+        name = file.name.to_s
+        next if name.end_with?("/")
+        next unless name.downcase.end_with?(".html", ".htm")
+        next if SiteStorage::SYSTEM_FILES.include?(name) && name != SiteStorage::MAIN_PAGE
 
-      loc = name == SiteStorage::MAIN_PAGE ? "#{origin}/" : "#{origin}/#{name}"
-      lastmod = file.updated_at&.utc&.iso8601
-      { loc: loc, lastmod: lastmod }
+        loc = name == SiteStorage::MAIN_PAGE ? "#{origin}/" : "#{origin}/#{name}"
+        lastmod = file.updated_at&.utc&.iso8601
+        { loc: loc, lastmod: lastmod }
+      end
+
+      entries = urls.map do |row|
+        lastmod = row[:lastmod] ? "<lastmod>#{row[:lastmod]}</lastmod>" : ""
+        "<url><loc>#{ERB::Util.html_escape(row[:loc])}</loc>#{lastmod}</url>"
+      end.join
+
+      %(<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">#{entries}</urlset>)
     end
-
-    entries = urls.map do |row|
-      lastmod = row[:lastmod] ? "<lastmod>#{row[:lastmod]}</lastmod>" : ""
-      "<url><loc>#{ERB::Util.html_escape(row[:loc])}</loc>#{lastmod}</url>"
-    end.join
-
-    %(<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">#{entries}</urlset>)
   end
 
   def published_origin(site)
@@ -328,10 +332,18 @@ class PublishedSitesController < ApplicationController
   end
 
   def send_site_object(object, site:, status: :ok, object_key: nil)
-    body = object.download.read
-    body = body.force_encoding("UTF-8") if body.respond_to?(:force_encoding) && body.encoding == Encoding::ASCII_8BIT
-    content_type = object.content_type.presence || Marcel::MimeType.for(name: object.name) || "application/octet-stream"
     key = object_key || object.name
+    content_type = object.content_type.presence || Marcel::MimeType.for(name: object.name) || "application/octet-stream"
+    raw =
+      if object.size.to_i > 1.megabyte
+        object.download.read
+      else
+        Rails.cache.fetch(site.object_cache_key(key), expires_in: 45.seconds) do
+          object.download.read
+        end
+      end
+    body = raw.duplicable? ? raw.dup : raw
+    body = body.force_encoding("UTF-8") if body.respond_to?(:force_encoding) && body.encoding == Encoding::ASCII_8BIT
 
     if html_response?(object, key, content_type)
       body = rewrite_html_for_preview(body, site.name)
@@ -343,7 +355,12 @@ class PublishedSitesController < ApplicationController
     status_code = Rack::Utils.status_code(status)
     record_traffic(site, path: key, status: status_code, bytes: body.bytesize, content_type: content_type)
 
-    response.set_header("Cache-Control", "no-store")
+    # Short browser cache for static assets; HTML stays private/no-store because of owner bar / gate.
+    if html_response?(object, key, content_type)
+      response.set_header("Cache-Control", "private, no-store")
+    else
+      response.set_header("Cache-Control", "public, max-age=60")
+    end
     send_data body,
               type: content_type,
               disposition: "inline",

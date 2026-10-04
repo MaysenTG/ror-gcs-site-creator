@@ -63,13 +63,35 @@ class Site < ApplicationRecord
     site_dashboards.find_by(is_default: true) || site_dashboards.ordered.first
   end
 
-  def ensure_password_page!(storage: SiteStorage.new)
-    bucket = storage.bucket(storage_prefix, skip_lookup: true)
-    return if bucket.file("password.html")
+  def file_tree_cache_key
+    "site_tree:#{id}:#{updated_at.to_i}"
+  end
 
-    template = Rails.root.join("public/theme_previews/blank/password.html")
-    html = File.read(template).gsub(/<base\s[^>]*>\s*/i, "")
-    bucket.create_file StringIO.new(html), "password.html", cache_control: "no-store", content_type: "text/html; charset=utf-8"
+  def size_cache_key
+    "site_size:#{id}:#{updated_at.to_i}"
+  end
+
+  def object_cache_key(path)
+    "r2obj:#{storage_prefix}:#{path}"
+  end
+
+  def bust_object_cache!(path)
+    Rails.cache.delete(object_cache_key(path))
+  end
+
+  def ensure_password_page!(storage: SiteStorage.instance)
+    cache_key = "password_page:#{id}"
+    return if Rails.cache.read(cache_key)
+
+    bucket = storage.bucket(storage_prefix, skip_lookup: true)
+    unless bucket.file("password.html")
+      template = Rails.root.join("public/theme_previews/blank/password.html")
+      html = File.read(template).gsub(/<base\s[^>]*>\s*/i, "")
+      bucket.create_file StringIO.new(html), "password.html", cache_control: "no-store", content_type: "text/html; charset=utf-8"
+      touch
+    end
+
+    Rails.cache.write(cache_key, true, expires_in: 12.hours)
   rescue StandardError => e
     Rails.logger.warn("[site] ensure_password_page failed: #{e.message}")
   end

@@ -2,7 +2,7 @@ class CreateSiteJob < ApplicationJob
   queue_as :default
 
   def perform(cloud_friendly_name, theme_type)
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
 
     bucket = storage.create_bucket cloud_friendly_name
     bucket.policy do |p|

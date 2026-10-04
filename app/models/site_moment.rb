@@ -13,7 +13,7 @@ class SiteMoment < ApplicationRecord
 
   scope :recent_first, -> { order(created_at: :desc, id: :desc) }
 
-  def self.capture!(site:, name:, note: nil, storage: SiteStorage.new)
+  def self.capture!(site:, name:, note: nil, storage: SiteStorage.instance)
     bucket = storage.bucket(site.storage_prefix, skip_lookup: true)
     raise ActiveRecord::RecordNotFound, "Site storage missing" if bucket.nil?
 
@@ -48,7 +48,7 @@ class SiteMoment < ApplicationRecord
     site.site_moments.where(id: stale_ids).destroy_all if stale_ids.any?
   end
 
-  def restore!(storage: SiteStorage.new)
+  def restore!(storage: SiteStorage.instance)
     bucket = storage.bucket(site.storage_prefix, skip_lookup: true)
     raise ActiveRecord::RecordNotFound, "Site storage missing" if bucket.nil?
 
@@ -65,7 +65,7 @@ class SiteMoment < ApplicationRecord
     site.touch
   end
 
-  def diff_against_live(storage: SiteStorage.new)
+  def diff_against_live(storage: SiteStorage.instance)
     bucket = storage.bucket(site.storage_prefix, skip_lookup: true)
     return [] if bucket.nil?
 

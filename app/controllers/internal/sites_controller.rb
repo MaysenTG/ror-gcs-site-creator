@@ -9,7 +9,7 @@ class Internal::SitesController < ApplicationController
     end
 
     begin
-      storage = SiteStorage.new
+      storage = SiteStorage.instance
       bucket_name = @site.name + ".maysengreenwood.com"
       bucket = storage.bucket bucket_name
 
@@ -33,7 +33,7 @@ class Internal::SitesController < ApplicationController
   def create_bucket
     site_name = params[:site_name]
     bucket_name = site_name + ".maysengreenwood.com"
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
 
     bucket = storage.create_bucket bucket_name
     bucket.policy do |p|

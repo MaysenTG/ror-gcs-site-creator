@@ -2,7 +2,7 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: maysen
+  username: <%= ENV.fetch("DATABASE_USERNAME", "maysen") %>
 
 development:
   <<: *default
@@ -14,4 +14,6 @@ test:
 
 production:
   <<: *default
+  # Fly.io / managed Postgres provides DATABASE_URL.
+  url: <%= ENV["DATABASE_URL"] %>
   database: ror_site_creator_production

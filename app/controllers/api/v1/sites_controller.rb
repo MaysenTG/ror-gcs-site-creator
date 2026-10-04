@@ -3,7 +3,7 @@ class Api::V1::SitesController < ApplicationController
 
   def all
     all_sites_for_user = Site.where(account_id: current_account.id)
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     sites_as_json = []
 
     all_sites_for_user.each do |site|
@@ -23,7 +23,7 @@ class Api::V1::SitesController < ApplicationController
     cloud_friendly_name = siteName + ".maysengreenwood.com"
     @new_site = Site.new(site_params)
     @new_site.account_id = current_account.id
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
 
     if @new_site.save
       bucket = storage.create_bucket cloud_friendly_name
@@ -52,7 +52,7 @@ class Api::V1::SitesController < ApplicationController
     site_name = site_by_id.name
     bucket_name_with_site = site_name + ".maysengreenwood.com"
 
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     bucket = storage.bucket bucket_name_with_site, skip_lookup: true
 
     begin
@@ -97,7 +97,7 @@ class Api::V1::SitesController < ApplicationController
       end
 
       bucket_name_with_site = site_by_id.name + ".maysengreenwood.com"
-      storage = SiteStorage.new
+      storage = SiteStorage.instance
       bucket = storage.bucket bucket_name_with_site
       all_files = []
 

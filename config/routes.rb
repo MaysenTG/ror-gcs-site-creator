@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   mount ActionCable.server => "/cable"
 
+  # Fly.io / load-balancer health check
+  get "/up", to: ->(_env) { [200, { "Content-Type" => "text/plain" }, ["OK"]] }
+
   # Published site URLs:
   #   Path style (always works):     http://localhost:3000/s/my-site/
   #   Local subdomain:               http://my-site.localhost:3000/

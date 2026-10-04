@@ -8,7 +8,7 @@ class Admin::FilesController < ApplicationController
   FILES_NOT_DELETABLE = SiteStorage::SYSTEM_FILES
 
   def create
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
 
     all_sites = Site.where(account_id: current_account.id, name: params[:site_name])
     site = all_sites.first
@@ -39,7 +39,7 @@ class Admin::FilesController < ApplicationController
   end
 
   def show
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     site_name = params[:site_name]
 
     all_sites = Site.where(account_id: current_account.id, name: site_name)
@@ -92,7 +92,7 @@ class Admin::FilesController < ApplicationController
     @file_name = params[:file_name]
     site_name = params[:site_name]
 
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     site = Site.where(account_id: current_account.id, name: site_name).first
     @site = site.as_json
 
@@ -119,7 +119,7 @@ class Admin::FilesController < ApplicationController
     bucket.create_file StringIO.new(@file_contents), @file_name, cache_control: "no-store"
     set_main_or_404(@file_name, bucket)
     Rails.cache.write(cache_key, @file_contents)
-    touch_site!(site)
+    touch_site!(site, path: @file_name)
     render turbo_stream: turbo_stream.append("editor")
   end
 
@@ -149,7 +149,7 @@ class Admin::FilesController < ApplicationController
     version = site.site_file_versions.for_path(path).find_by(id: params[:version_id])
     return render(json: { status: "error", error: "Version not found" }, status: :not_found) unless version
 
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     bucket_name = site.name + "." + DOMAIN_NAME
     bucket = storage.bucket(bucket_name, skip_lookup: true)
     cache_key = "editor:#{bucket_name}:#{path}"
@@ -167,13 +167,13 @@ class Admin::FilesController < ApplicationController
     bucket.create_file StringIO.new(version.content), path, cache_control: "no-store"
     set_main_or_404(path, bucket)
     Rails.cache.write(cache_key, version.content)
-    touch_site!(site)
+    touch_site!(site, path: path)
 
     render json: { status: "success", contents: version.content, file_name: path }
   end
 
   def upload
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     site_name = params[:site_name]
     site = Site.where(account_id: current_account.id, name: site_name).first
 
@@ -202,7 +202,7 @@ class Admin::FilesController < ApplicationController
 
   def delete
     file_name = params[:file_name].to_s
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     site_name = params[:site_name]
 
     all_sites = Site.where(account_id: current_account.id, name: site_name)
@@ -230,7 +230,7 @@ class Admin::FilesController < ApplicationController
   end
 
   def rename
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     site_name = params[:site_name]
     all_sites = Site.where(account_id: current_account.id, name: site_name)
     site = all_sites.first
@@ -269,7 +269,7 @@ class Admin::FilesController < ApplicationController
   end
 
   def create_folder
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
     all_sites = Site.where(account_id: current_account.id, name: params[:site_name])
     site = all_sites.first
 
@@ -284,8 +284,12 @@ class Admin::FilesController < ApplicationController
 
   private
 
-  def touch_site!(site)
-    site&.touch
+  def touch_site!(site, path: nil)
+    return unless site
+
+    site.bust_object_cache!(path) if path.present?
+    Rails.cache.delete("password_page:#{site.id}") if path.to_s == SiteStorage::PASSWORD_PAGE
+    site.touch
   rescue StandardError
     nil
   end

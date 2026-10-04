@@ -3,7 +3,7 @@ class SitesCleanupJob < ApplicationJob
 
   def perform(*_args)
     # Delete DB sites whose R2 bucket no longer exists
-    storage = SiteStorage.new
+    storage = SiteStorage.instance
 
     Site.find_each do |site|
       bucket = storage.bucket SiteStorage.bucket_name_for(site.name)

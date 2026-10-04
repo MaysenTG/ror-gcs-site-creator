@@ -3,7 +3,24 @@ class Plan < ApplicationRecord
 
   validates :plan_handle, presence: true, uniqueness: true
 
+  after_commit :bust_plan_cache
+
   def self.for_handle(handle)
-    find_by(plan_handle: handle.to_s) || find_by(plan_handle: "free")
+    key = handle.to_s.presence || "free"
+    plan_cache[key] ||= find_by(plan_handle: key) || find_by(plan_handle: "free")
+  end
+
+  def self.clear_plan_cache!
+    @plan_cache = {}
+  end
+
+  def self.plan_cache
+    @plan_cache ||= {}
+  end
+
+  private
+
+  def bust_plan_cache
+    self.class.clear_plan_cache!
   end
 end

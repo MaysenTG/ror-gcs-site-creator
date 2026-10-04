@@ -18,30 +18,32 @@ class Admin::SitesController < ApplicationController
     bucket.files.sum(&:size)
   end
 
+  def self.cached_site_size(site, storage: SiteStorage.instance)
+    bucket = storage.bucket(site.storage_prefix, skip_lookup: true)
+    Rails.cache.fetch(site.size_cache_key, expires_in: 5.minutes) do
+      get_total_bucket_size(bucket)
+    end
+  rescue SiteStorage::NotFoundError, Aws::S3::Errors::NotFound, Aws::S3::Errors::NoSuchBucket
+    0
+  end
+
   def index
     @num_sites_left = current_account.sites_remaining
   end
 
   def all_sites
     @sites = current_account.sites.order(created_at: :asc).to_a
+    @account_plan = current_account.current_plan
     @size_per_site = {}
     kept = []
 
     @sites.each do |site|
-      bucket = @storage.bucket(site.storage_prefix, skip_lookup: true)
-      next if bucket.nil?
-
-      @size_per_site[site.name] = Rails.cache.fetch("site_size:#{site.id}:#{site.updated_at.to_i}", expires_in: 5.minutes) do
-        self.class.get_total_bucket_size(bucket)
-      end
+      @size_per_site[site.name] = self.class.cached_site_size(site, storage: @storage)
       kept << site
-    rescue SiteStorage::NotFoundError, Aws::S3::Errors::NotFound, Aws::S3::Errors::NoSuchBucket
-      next
     end
 
     @sites = kept
-    @num_sites_left = current_account.current_plan.max_sites.to_i - @sites.size
-    @account_plan = current_account.current_plan
+    @num_sites_left = @account_plan.max_sites.to_i - @sites.size
   end
 
   def new
@@ -49,45 +51,11 @@ class Admin::SitesController < ApplicationController
 
   def show
     @site = current_account.sites.find_by!(name: @site_name)
-    @site.ensure_password_page!
     bucket = @storage.bucket(@site.storage_prefix)
     raise ActiveRecord::RecordNotFound if bucket.nil?
 
-    listed = bucket.files
-    root_files = []
-    folders = Hash.new { |h, k| h[k] = { type: "folder", name: k, files: [], size: 0 } }
-
-    listed.each do |file|
-      entry = {
-        type: "file",
-        name: file.name,
-        size: file.size,
-        last_updated: file.updated_at,
-        is_main: file.name == bucket.website_main,
-        is_404: file.name == bucket.website_404
-      }
-
-      if file.name.include?("/") || file.name.end_with?("/")
-        folder_name, *rest = file.name.split("/")
-        next if folder_name.blank?
-
-        folders[folder_name] # ensure empty folders appear in the tree
-        next if file.name.end_with?("/") || rest.empty?
-
-        folders[folder_name][:files] << entry.merge(name: rest.join("/"), is_main: false, is_404: false)
-      else
-        root_files << entry
-      end
-    end
-
-    @folders_with_files = folders.values
-    @site_files_and_folders = (root_files + @folders_with_files).sort_by do |file|
-      [
-        Site::SYSTEM_FILES.include?(file[:name]) ? Site::SYSTEM_FILES.index(file[:name]) : 99,
-        file[:type] == "file" ? 0 : 1,
-        file[:name].to_s
-      ]
-    end.as_json
+    @site_files_and_folders = SiteListing.fetch_cached(@site, bucket)
+    @folders_with_files = @site_files_and_folders.select { |entry| entry["type"] == "folder" || entry[:type] == "folder" }
 
     load_open_editor_file!(bucket)
   rescue ActiveRecord::RecordNotFound, SiteStorage::NotFoundError
@@ -122,13 +90,12 @@ class Admin::SitesController < ApplicationController
     site.destroy
 
     @sites = current_account.sites.order(created_at: :asc).to_a
+    @account_plan = current_account.current_plan
     @size_per_site = {}
     @sites.each do |remaining|
-      site_bucket = @storage.bucket(remaining.storage_prefix, skip_lookup: true)
-      @size_per_site[remaining.name] = self.class.get_total_bucket_size(site_bucket)
+      @size_per_site[remaining.name] = self.class.cached_site_size(remaining, storage: @storage)
     end
-    @num_sites_left = current_account.current_plan.max_sites.to_i - @sites.size
-    @account_plan = current_account.current_plan
+    @num_sites_left = @account_plan.max_sites.to_i - @sites.size
 
     respond_to do |format|
       format.turbo_stream do
@@ -270,7 +237,7 @@ class Admin::SitesController < ApplicationController
   end
 
   def set_storage_client
-    @storage = SiteStorage.new
+    @storage = SiteStorage.instance
   end
 
   def construct_site_name(site_name)

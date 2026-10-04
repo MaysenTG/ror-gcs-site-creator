@@ -39,6 +39,12 @@
 .env.*
 !.env.example
 
+# Never commit cloud credentials / service-account JSON
+/config/secrets/*
+!/config/secrets/.keep
+*.pem
+*.p12
+
 /public/packs
 /public/packs-test
 /node_modules

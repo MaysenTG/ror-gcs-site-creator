@@ -4,7 +4,7 @@ class ShipCheck
 
   Check = Struct.new(:id, :severity, :status, :detail, keyword_init: true)
 
-  def initialize(site:, storage: SiteStorage.new)
+  def initialize(site:, storage: SiteStorage.instance)
     @site = site
     @storage = storage
   end

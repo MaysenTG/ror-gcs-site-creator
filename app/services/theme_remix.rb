@@ -51,7 +51,7 @@ class ThemeRemix
     }
   }.freeze
 
-  def initialize(site:, storage: SiteStorage.new)
+  def initialize(site:, storage: SiteStorage.instance)
     @site = site
     @storage = storage
   end

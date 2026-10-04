@@ -152,7 +152,7 @@ class AnalyticsQuery
   def storage_stats
     cache_key = "site_storage_stats:#{@site.id}:#{@site.updated_at.to_i}"
     Rails.cache.fetch(cache_key, expires_in: 5.minutes) do
-      client = @storage || SiteStorage.new
+      client = @storage || SiteStorage.instance
       bucket = client.bucket(@site.storage_prefix)
       raise Error, "Site storage not found" if bucket.nil?
 
