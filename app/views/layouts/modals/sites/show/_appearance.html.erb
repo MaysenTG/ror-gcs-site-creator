@@ -1,0 +1,59 @@
+<div class="modal fade" id="appearanceModal" tabindex="-1" aria-labelledby="appearanceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="appearanceModalLabel">Appearance</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body appearance-modal">
+        <section class="appearance-modal__section">
+          <h2>Color look</h2>
+          <p>
+            Updates CSS variables (<code>--ink</code>, <code>--accent</code>, …) and the body font in
+            <code>style.css</code>. Your HTML and other files stay as they are.
+          </p>
+          <div class="appearance-modal__palettes">
+            <% ThemeRemix::PALETTES.each do |id, palette| %>
+              <%= form_with url: admin_palette_remix_path(@site.name), method: :post, local: true, class: "appearance-modal__palette-form" do %>
+                <input type="hidden" name="palette" value="<%= id %>">
+                <button type="submit" class="appearance-modal__palette">
+                  <span class="appearance-modal__swatches" aria-hidden="true">
+                    <% %w[paper ink accent muted].each do |key| %>
+                      <i style="background: <%= palette[:vars][key] %>"></i>
+                    <% end %>
+                  </span>
+                  <span class="appearance-modal__palette-copy">
+                    <strong><%= palette[:label] %></strong>
+                    <span>Apply to style.css</span>
+                  </span>
+                </button>
+              <% end %>
+            <% end %>
+          </div>
+        </section>
+
+        <details class="appearance-modal__advanced">
+          <summary>Reset starter theme files</summary>
+          <p>
+            Overwrites <code>index.html</code>, <code>404.html</code>, <code>style.css</code>, and
+            <code>script.js</code> with a starter pack. Use only if you want a clean slate.
+          </p>
+          <div class="appearance-modal__themes">
+            <% %w[blank portfolio skeleton_react].each do |theme| %>
+              <%= button_to theme.tr("_", " ").titleize,
+                    admin_theme_remix_path(@site.name),
+                    method: :post,
+                    params: { theme: theme },
+                    class: "btn btn-ghost btn-sm",
+                    form: {
+                      data: {
+                        turbo_confirm: "Replace starter files with the #{theme.tr('_', ' ')} theme? Custom edits in those files will be lost."
+                      }
+                    } %>
+            <% end %>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>

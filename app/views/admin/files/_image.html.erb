@@ -1,28 +1,61 @@
-<div class="container">
-  <div id="code-editor-bar" class="mb-3 d-flex justify-content-start">
-    <div class="w-100 d-flex justify-content-between">
-      <div class="d-flex justify-content-start align-items-center">
-        <h3 class="text-primary"><%= @file_name %></h3>
-        &nbsp;
-        <% if @file_name.include?("/") %>
-          <% folder_name,file_name = @file_name.split("/") %>
-        <% else %>
-          <% file_name = @file_name %>
-        <% end %>
-        <% if folder_name.nil? %>
-          <% a_href = "https://"+@site["name"]+".maysengreenwood.com/" + file_name %>
-        <% else %>
-          <% a_href = "https://"+@site["name"]+".maysengreenwood.com/"+folder_name + "/" + file_name %>
-        <% end %>
-        <a target="_blank" href="<%= a_href %>">
-          <i class="fs-3 bi bi-eye"></i>
-        </a>
-      </div>
+<div class="image-pane is-booting">
+  <div class="image-pane__bar">
+    <div class="image-pane__title">
+      <h3 class="image-pane__name"><%= @file_name %></h3>
+      <% a_href = site_preview_url(@site["name"], path: @file_name) %>
+      <a target="_blank" href="<%= a_href %>" class="btn btn-ghost btn-sm" aria-label="Preview image">
+        <i class="bi bi-eye"></i> Preview
+      </a>
     </div>
   </div>
-  <img src='<%= @image_url %>' class="img-fluid">
+
+  <div class="image-pane__stage">
+    <div class="image-pane__boot" data-image-boot>
+      <%= render partial: "layouts/snippets/image_loading", locals: { filename: @file_name } %>
+    </div>
+    <img
+      src="<%= @image_url %>"
+      alt="<%= @file_name %>"
+      class="image-pane__img"
+      data-image-live
+      decoding="async"
+    >
+  </div>
 </div>
 <script>
-  // Add the filename to the URL
-  window.history.pushState({}, "", "?filename=<%= @file_name %>");
+  (function () {
+    const path = <%= raw @file_name.to_json %>;
+    const url = new URL(window.location.href);
+    url.searchParams.set("filename", path);
+    window.history.replaceState({}, "", url);
+
+    const pane = document.querySelector(".image-pane.is-booting");
+    const img = pane?.querySelector("[data-image-live]");
+    if (!pane || !img) return;
+
+    const reveal = () => {
+      pane.classList.remove("is-booting");
+      pane.querySelector("[data-image-boot]")?.remove();
+      img.classList.add("is-ready");
+    };
+
+    if (img.complete && img.naturalWidth > 0) {
+      reveal();
+    } else {
+      img.addEventListener("load", reveal, { once: true });
+      img.addEventListener("error", reveal, { once: true });
+    }
+
+    const tree = document.querySelector("[data-controller~='filetree']");
+    const controller = tree && window.Stimulus
+      ? window.Stimulus.getControllerForElementAndIdentifier(tree, "filetree")
+      : null;
+    if (controller?.setActiveFile) {
+      controller.setActiveFile(path);
+    } else {
+      document.querySelectorAll(".filetree__row[data-file-row]").forEach((row) => {
+        row.classList.toggle("accordion-active", row.dataset.filename === path);
+      });
+    }
+  })();
 </script>

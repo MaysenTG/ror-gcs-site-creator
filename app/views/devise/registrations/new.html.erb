@@ -1,59 +1,37 @@
-<!-- Section: Design Block -->
-<section class="">
-  <!-- Jumbotron -->
-  <div class="px-4 py-5 px-md-5 text-center text-lg-start" style="background-color: hsl(0, 0%, 96%)">
-    <div class="container">
-      <div class="row gx-lg-5 align-items-top">
-        <div class="col-lg-6 mb-5 mb-lg-0">
-          <h1 class="my-5 display-4 fw-bold ls-tight">
-            Register an account to <br />
-            <span class="text-primary">create custom static websites</span>
-          </h1>
-          <p style="color: hsl(217, 10%, 50.8%)">
-            With a registered account, you can create, edit, and delete static websites hosted on Google's global delivery service.
-          </p>
-        </div>
-        <div class="col-lg-6 mb-5 mb-lg-0">
-          <div class="card">
-            <div class="card-body py-5 px-md-5">
-              <%= form_for(resource, as: resource_name, url: registration_path(resource_name), data: { turbo: "false" }) do |f| %>
-                <!-- 2 column grid layout with text inputs for the first and last names -->
-                <%= render partial: "devise/shared/error_messages", resource: resource %>
-                <div class="row">
-                  <div class="col-md-12 mb-4">
-                    <div class="form-outline">
-                      <input type="text" id="signupFormFirstName" placeholder="John Smith" name="account[name]" class="form-control" />
-                      <label class="form-label" for="signupFormFirstName">Full name</label>
-                    </div>
-                  </div>
-                </div>
-                <!-- Email input -->
-                <div class="form-outline mb-4">
-                  <input type="email" id="signupFormEmail" placeholder="john.smith@gmail.com" name="account[email]" class="form-control" />
-                  <label class="form-label" for="signupFormEmail">Email address</label>
-                </div>
-                <!-- Password input -->
-                <div class="form-outline mb-4">
-                  <input type="password" id="signupFormPass" name="account[password]" class="form-control" />
-                  <label class="form-label" for="signupFormPass">Password</label>
-                </div>
-                <div class="form-outline mb-4">
-                  <input type="password" id="signupFormPassConf" name="account[password_confirmation]" class="form-control" />
-                  <label class="form-label" for="signupFormPassConf">Password confirmation</label>
-                </div>
-                <!-- Submit button -->
-                <button type="submit" class="btn btn-primary btn-block w-100 mb-4">
-                  Sign up
-                </button>
-                <span class="w-100 d-flex justify-content-center align-items-center">Or</span>
-                <a href="/accounts/sign_in" class="d-flex justify-content-center align-items-center btn-block w-100 mt-4">Sign in</a>
-              <% end %>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="auth-shell">
+  <div class="auth-shell__copy">
+    <h1>Create with Gusto Cloud</h1>
+    <p>Register once, then create static sites, edit them in the browser, and publish instantly.</p>
+    <ul class="auth-shell__perks">
+      <li>Free plan to start</li>
+      <li>In-browser code editor</li>
+      <li>Live preview URLs for every site</li>
+    </ul>
   </div>
-  <!-- Jumbotron -->
-</section>
-<!-- Section: Design Block -->
+  <div class="auth-panel">
+    <h2 class="h3 mb-1">Create account</h2>
+    <p class="text-muted mb-4">Takes about a minute. No credit card required.</p>
+    <%= form_for(resource, as: resource_name, url: registration_path(resource_name), data: { turbo: "false" }) do |f| %>
+      <%= render partial: "devise/shared/error_messages", resource: resource %>
+      <div class="mb-3">
+        <label class="form-label" for="signupFormFirstName">Full name</label>
+        <input type="text" id="signupFormFirstName" placeholder="Ada Lovelace" name="account[name]" class="form-control" autocomplete="name" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="signupFormEmail">Email</label>
+        <input type="email" id="signupFormEmail" placeholder="you@example.com" name="account[email]" class="form-control" autocomplete="email" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="signupFormPass">Password</label>
+        <input type="password" id="signupFormPass" name="account[password]" class="form-control" autocomplete="new-password" required minlength="6">
+        <div class="form-text">At least 6 characters.</div>
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="signupFormPassConf">Confirm password</label>
+        <input type="password" id="signupFormPassConf" name="account[password_confirmation]" class="form-control" autocomplete="new-password" required minlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Create account</button>
+      <a href="/accounts/sign_in" class="auth-switch">Already registered? Sign in</a>
+    <% end %>
+  </div>
+</div>

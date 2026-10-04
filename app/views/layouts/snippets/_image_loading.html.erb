@@ -1,0 +1,15 @@
+<% display_name = local_assigns[:filename].presence || "__FILENAME__" %>
+<div class="image-skel" aria-busy="true" aria-label="Loading image">
+  <div class="image-skel__bar">
+    <span class="image-skel__name"><%= display_name %></span>
+    <span class="btn btn-ghost disabled" aria-hidden="true">
+      <i class="bi bi-eye"></i> Preview
+    </span>
+  </div>
+  <div class="image-skel__frame">
+    <div class="image-skel__shimmer" aria-hidden="true"></div>
+    <div class="image-skel__icon" aria-hidden="true">
+      <i class="bi bi-image"></i>
+    </div>
+  </div>
+</div>

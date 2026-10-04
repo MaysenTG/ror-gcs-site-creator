@@ -1,0 +1,86 @@
+<div
+  class="page-shell page-shell--wide dash-hub"
+  data-controller="dashboard-hub"
+>
+  <div class="page-header">
+    <div>
+      <h1>Dashboards</h1>
+      <p>All analytics dashboards across your sites. Filter, then open one to edit widgets.</p>
+    </div>
+    <a href="/admin/sites" class="btn btn-ghost">Your sites</a>
+  </div>
+
+  <%= form_with url: admin_dashboard_hub_path, method: :get, local: true, html: {
+        class: "dash-hub__filters surface-panel",
+        data: { dashboard_hub_target: "form" }
+      } do %>
+    <label>
+      <span>Search</span>
+      <input
+        type="search"
+        name="q"
+        value="<%= @q %>"
+        placeholder="Site or dashboard name"
+        data-dashboard-hub-target="query"
+        data-action="keydown.enter->dashboard-hub#submit"
+      >
+    </label>
+    <label>
+      <span>Site</span>
+      <select name="site" data-dashboard-hub-target="site" data-action="change->dashboard-hub#submit">
+        <option value="">All sites</option>
+        <% @sites.each do |site| %>
+          <option value="<%= site.name %>" <%= "selected" if @site_filter == site.name %>><%= site.name %></option>
+        <% end %>
+      </select>
+    </label>
+    <div class="dash-hub__filter-actions">
+      <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+      <% if @q.present? || @site_filter.present? %>
+        <button type="button" class="btn btn-ghost btn-sm" data-action="dashboard-hub#clear">Clear</button>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @dashboards.blank? %>
+    <div class="empty-state surface-panel">
+      <h2>No dashboards match</h2>
+      <p>
+        <% if @sites.blank? %>
+          Create a site first, then open its analytics dashboard.
+        <% else %>
+          Try a different search, or open a site and create a dashboard there.
+        <% end %>
+      </p>
+      <a href="/admin/sites" class="btn btn-primary">Your sites</a>
+    </div>
+  <% else %>
+    <div class="dash-hub__groups">
+      <% @dashboards_by_site.each do |site, dashboards| %>
+        <section class="dash-hub__group surface-panel">
+          <header class="dash-hub__group-header">
+            <div>
+              <h2><%= site.name %></h2>
+              <a href="<%= site_preview_url(site) %>" target="_blank" rel="noopener"><%= site_preview_label(site) %></a>
+            </div>
+            <a href="/admin/sites/<%= site.name %>" class="btn btn-ghost btn-sm">Editor</a>
+          </header>
+          <ul class="dash-hub__list">
+            <% dashboards.each do |dashboard| %>
+              <li>
+                <div>
+                  <strong><%= dashboard.name %></strong>
+                  <span>
+                    <%= dashboard.is_default? ? "Default" : "Custom" %>
+                    · <%= pluralize(Array(dashboard.layout).size, "widget") %>
+                  </span>
+                </div>
+                <a href="<%= admin_dashboard_path(site.name, dashboard) %>" class="btn btn-primary btn-sm">Open</a>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+    </div>
+  <% end %>
+</div>

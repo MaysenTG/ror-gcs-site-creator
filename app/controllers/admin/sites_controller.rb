@@ -1,343 +1,313 @@
-require "google/cloud/storage"
-ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.json"
-
 class Admin::SitesController < ApplicationController
   layout "custom_domain", only: [:get_custom_domain]
-  
-  before_action :restrict_num_sites, only: [:new]
+
+  before_action :restrict_num_sites, only: [:new, :create, :clone]
   before_action :authenticate_account!, except: [:get_custom_domain]
-  
-  before_action :set_storage_client, only: [:all_sites, :show, :delete, :create]
-  before_action :get_site_name, only: [:show, :delete, :create]
-  
-  RESERVED_NAMES = [
-    "cdn", "cv", "portfolio", "new", "files", "file", "static", "store", "linkinbio"
-  ]
-  
-  DOMAIN_NAME = "maysengreenwood.com"
+
+  before_action :set_storage_client, only: [:all_sites, :show, :delete, :create, :clone]
+  before_action :get_site_name, only: [:show, :dashboard, :delete, :create, :clone, :update_settings]
+
+  RESERVED_NAMES = %w[
+    cdn cv portfolio new files file static store linkinbio admin s accounts
+    theme_previews pricing home
+  ].freeze
+
+  DOMAIN_NAME = SiteStorage::DOMAIN_NAME
 
   def self.get_total_bucket_size(bucket)
-    bucket.files.inject(0) { |sum, file| sum + file.size }
+    bucket.files.sum(&:size)
   end
-  
-  # Route: /admin/sites
+
   def index
-    all_sites_for_user = Site.where(account_id: current_account.id)
-    
-    @num_sites_left =  Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - all_sites_for_user.size
+    @num_sites_left = current_account.sites_remaining
   end
-  
-  # Used to lazy load the sites using Turbo Frames on the index page
+
   def all_sites
-    #@pagy, @sites = pagy(Site.where(account_id: current_account.id), request_path: '/admin/sites')
-    @sites = Site.where(account_id: current_account.id).order(created_at: :asc)
-    
+    @sites = current_account.sites.order(created_at: :asc).to_a
     @size_per_site = {}
-    
-    # Loop over each site, get it's total size from the bucket, and make a new hash with the site name and size
-    all_sites = @sites.to_a
-    @sites = @sites.to_a
-    
+    kept = []
+
     @sites.each do |site|
-      bucket_name = construct_site_name(site.name)
-      bucket = @storage.bucket bucket_name, skip_lookup: true
-      
-      if bucket.nil?
-        all_sites.delete(site)
-        next
+      bucket = @storage.bucket(site.storage_prefix, skip_lookup: true)
+      next if bucket.nil?
+
+      @size_per_site[site.name] = Rails.cache.fetch("site_size:#{site.id}:#{site.updated_at.to_i}", expires_in: 5.minutes) do
+        self.class.get_total_bucket_size(bucket)
       end
-      
-      @size_per_site[site.name] = bucket.files.inject(0) { |sum, file| sum + file.size }
-      
-      # Only show the sites that have a bucket
-      rescue Google::Cloud::NotFoundError
-        all_sites.delete(site)
+      kept << site
+    rescue SiteStorage::NotFoundError, Aws::S3::Errors::NotFound, Aws::S3::Errors::NoSuchBucket
+      next
     end
-    
-    @sites = all_sites
-    
-    @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - @sites.size
+
+    @sites = kept
+    @num_sites_left = current_account.current_plan.max_sites.to_i - @sites.size
+    @account_plan = current_account.current_plan
   end
-  
-  # Route: /admin/sites/new
+
   def new
   end
-  
-  # Route: /admin/sites/:site_name
+
   def show
-    all_user_sites = Site.where(account_id: current_account.id, name: @site_name)
-    
-    begin
-      site_by_name = all_user_sites.first
+    @site = current_account.sites.find_by!(name: @site_name)
+    @site.ensure_password_page!
+    bucket = @storage.bucket(@site.storage_prefix)
+    raise ActiveRecord::RecordNotFound if bucket.nil?
 
-      bucket_name_with_site = construct_site_name(site_by_name.name)
-      
-      bucket  = @storage.bucket bucket_name_with_site
+    listed = bucket.files
+    root_files = []
+    folders = Hash.new { |h, k| h[k] = { type: "folder", name: k, files: [], size: 0 } }
 
-      all_files = []
+    listed.each do |file|
+      entry = {
+        type: "file",
+        name: file.name,
+        size: file.size,
+        last_updated: file.updated_at,
+        is_main: file.name == bucket.website_main,
+        is_404: file.name == bucket.website_404
+      }
 
-      unless bucket.files.nil?
-        bucket.files.each do |file|
-          if bucket.website_main == file.name
-            all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: true, is_404: false})
-          elsif bucket.website_404 == file.name
-            all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: false, is_404: true})
-          else
-            all_files.push({type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: false, is_404: false})
-          end
-        end
+      if file.name.include?("/") || file.name.end_with?("/")
+        folder_name, *rest = file.name.split("/")
+        next if folder_name.blank?
+
+        folders[folder_name] # ensure empty folders appear in the tree
+        next if file.name.end_with?("/") || rest.empty?
+
+        folders[folder_name][:files] << entry.merge(name: rest.join("/"), is_main: false, is_404: false)
+      else
+        root_files << entry
       end
-      
-      # Loop through all the files, and find the main folders
-      main_folders = []
-      all_files.each do |file|
-        if file[:name].include? "/"
-          main_folders.push(file[:name].split("/")[0])
-        end
-      end
-      
-      
-      @site = site_by_name
-      site_files = all_files.as_json
-      
-      all_folders = []
-      
-      files = []
-      
-      all_files.each do |file|
-        if file[:name].include? "/"
-          # This is a folder
-          folder_name = file[:name].split("/")[0]
-          all_folders.push({type: "folder", name: folder_name, files: [], size: 0})
-        else
-          # This is a file
-          files.push(file)
-        end
-      end
-      
-      # Remove duplicates
-      all_folders.uniq!
-      
-      all_folders.each do |folder|
-        site_files.each do |file|
-          if file["name"].include? folder[:name] and !file["name"].ends_with?("/")
-            file_without_folder = file["name"].split("/")[1]
-            
-            unless file_without_folder.nil?
-              folder[:files].push({type: "file", name: file_without_folder, size: file["size"], last_updated: file["last_updated"], is_main: false, is_404: false})
-            end
-            #folder[:files].push(file_without_folder)  
-          elsif !file["name"].include?("/")
-          end
-        end
-      end
-      
-      @site_files_and_folders = files + all_folders
-      
-      @folders_with_files = all_folders
-      
-      # Sort the files and folders
-      @site_files_and_folders.sort_by! { |file| [file[:name]=="index.html" ? 0 : 1, file[:name]=="404.html" ? 0 : 1, file[:type]=="file" ? 0 : 1, file[:type]=="folder" ? 0 : 1] }
-      
-      @site_files_and_folders = @site_files_and_folders.as_json
-      
-    rescue
-      @error = "Site not found"
-      #render json: { status: "error", message: "Site not found" }
-      redirect_to "/admin/sites", notice: "Oops, the site '#{params[:site_name]}' doesn't exist on your account"
     end
+
+    @folders_with_files = folders.values
+    @site_files_and_folders = (root_files + @folders_with_files).sort_by do |file|
+      [
+        Site::SYSTEM_FILES.include?(file[:name]) ? Site::SYSTEM_FILES.index(file[:name]) : 99,
+        file[:type] == "file" ? 0 : 1,
+        file[:name].to_s
+      ]
+    end.as_json
+
+    load_open_editor_file!(bucket)
+  rescue ActiveRecord::RecordNotFound, SiteStorage::NotFoundError
+    redirect_to "/admin/sites", notice: "Oops, the site '#{params[:site_name]}' doesn't exist on your account"
   end
-  
-  # Validates the site name to make sure it is not taken
+
+  def dashboard
+    @site = current_account.sites.find_by!(name: @site_name)
+    @site.ensure_default_dashboard!
+    redirect_to admin_dashboard_path(@site.name, @site.default_dashboard)
+  rescue ActiveRecord::RecordNotFound
+    redirect_to "/admin/sites", notice: "Oops, the site '#{params[:site_name]}' doesn't exist on your account"
+  end
+
   def validate_site_name
-    sent_site_name = params[:site_name]
-    
-    all_sites = Site.all
-    
-    all_site_names = Site.pluck(:name)
-    
-    
-    
-    name_taken = false
-    
-    all_sites.each do |site|
-      if site.name == sent_site_name or RESERVED_NAMES.include? sent_site_name
-        name_taken = true
-        break
-      end
-    end
-    
+    sent_site_name = params[:site_name].to_s.downcase.strip
+    name_taken = RESERVED_NAMES.include?(sent_site_name) || Site.exists?(name: sent_site_name)
     render json: { status: "success", name_taken: name_taken }
   end
-  
+
   def delete
-    site = Site.where(name: @site_name, account_id: current_account.id).first
-    
-    bucket_name_with_site = construct_site_name(@site_name)
-    
-    bucket  = @storage.bucket bucket_name_with_site, skip_lookup: true
-    
-    # Can only delete a bucket through the API if it is empty
+    site = current_account.sites.find_by!(name: @site_name)
+    bucket = @storage.bucket(site.storage_prefix, skip_lookup: true)
+
     begin
       bucket.delete
-    rescue Google::Cloud::AlreadyExistsError
+    rescue SiteStorage::AlreadyExistsError
       bucket.files.each(&:delete)
       bucket.delete
     end
-    
+
     site.destroy
-    
-    @sites = Site.where(account_id: current_account.id).order(created_at: :asc)
-    
+
+    @sites = current_account.sites.order(created_at: :asc).to_a
     @size_per_site = {}
-    
-    # Loop over each site, get it's total size from the bucket, and make a new hash with the site name and size
-    @sites.each do |site|
-      bucket_name = construct_site_name(site.name)
-      bucket = @storage.bucket bucket_name, skip_lookup: true
-      
-      @size_per_site[site.name] = bucket.files.inject(0) { |sum, file| sum + file.size }
+    @sites.each do |remaining|
+      site_bucket = @storage.bucket(remaining.storage_prefix, skip_lookup: true)
+      @size_per_site[remaining.name] = self.class.get_total_bucket_size(site_bucket)
     end
-    
-    @num_sites_left = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i - @sites.size
+    @num_sites_left = current_account.current_plan.max_sites.to_i - @sites.size
+    @account_plan = current_account.current_plan
 
-    # Respond as a turbo stream with the all_sites file
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.update("site_files", partial: "admin/sites/all_sites", locals: { sites: @sites, num_sites_left: @num_sites_left, size_per_site: @size_per_site }) }
-    end
-  end
-  
-  def create
-    
-    # If the site name already exists, then return an error
-    if Site.where(name: params[:site_name]).exists?
-      error_message = "<strong>Oops, that site name already exists. <a href='/admin/sites/new'>Click here to try again</a>.</strong>"
-      
-      full_error_message = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">#{error_message}</div>"
-      
-      render turbo_stream: turbo_stream.replace("create-site-errors", full_error_message.html_safe)
-      return
-    end
-    
-    cloud_friendly_name = construct_site_name(@site_name)
-    
-    @new_site = Site.new(name: @site_name)
-    
-    @new_site.account_id = current_account.id
-    
-    if @new_site.save
-      # Run the background job to create the bucket
-      CreateSiteJob.perform_later(cloud_friendly_name, params[:theme_type])
-      
-      redirect_to "/admin/sites", notice: "Your site is being created. This should only take a few seconds."
-      # bucket  = @storage.create_bucket cloud_friendly_name,
-      #                               location:      "US",
-      #                               storage_class: "STANDARD"
-
-      # bucket.policy do |p|
-      #   p.add "roles/storage.objectViewer", "allUsers"
-      # end
-      
-      # destination_bucket = @storage.bucket cloud_friendly_name
-      # theme_preview_bucket  = @storage.bucket "theme_previews", skip_lookup: true
-      
-      # # If the theme type is portfolio, then copy the portfolio theme files to the bucket
-      # if params[:theme_type] == "portfolio"
-      #   # Copy the portfolio theme files to the bucket
-      #   file_name_target = "portfolio"
-      # elsif params[:theme_type] == "skeleton_react"
-      #   file_name_target = "skeleton_react"
-      # else
-      #   file_name_target = "blank"
-      # end
-      
-      # theme_preview_bucket.files.each do |file|
-      #   # If the file name includes a slash, and that slash is not the last character, then it is a file within a folder
-      #   if file.name.include?("/") && file.name[-1] != "/" && file.name.include?(file_name_target)
-      #     # Add cache control to the file          
-      #     destination_file = file.copy destination_bucket.name, file.name.split("/")[1]
-      #     destination_file.cache_control = "no-store"
-      #   end
-      # end
-      
-      # main_index = "index.html"
-      # main_404 = "404.html"
-      
-      # destination_bucket.update do |b|
-      #   b.website_main = main_index
-      #   b.website_404 = main_404
-      # end
-      
-      # redirect_to "/admin/sites/#{@site_name}?filename=index.html", notice: "Welcome to your new site"
-      # return
-      
-      #render json: { status: "success", site_id: @new_site.id }
-    else
-      error_message = "<strong>Oops, there was an error creating your site. <a href='/admin/sites/new'>Click here to try again</a>.</strong>"
-      
-      full_error_message = "<div class=\"alert alert-danger alert-dismissible fade show\" role=\"alert\">#{error_message}</div>"
-      
-      render turbo_stream: turbo_stream.replace("create-site-errors", full_error_message.html_safe)
-      return
-    end
-  end
-  
-  # TODO: Make this work with custom domains
-  # Look up the site by the site name for the NGINX proxy pass (for custom domains)
-  def get_custom_domain
-    domain = params[:name] || request.host
-    
-    # if domain has "https://" or "http://" in it, then remove it
-    if domain
-      domain = domain.gsub("https://", "").gsub("http://", "")
-      # remove any trailing slashes and any content after the domain
-      domain = domain.split("/")[0]
-    end
-    
-    @domain = Domain.where(domain: domain).first
-    @site = @domain&.site
-    
-    if @domain.nil? || @site.nil?
-      render plain: "Site or domain not found"
-      return
-    end
-    
-    if @domain&.domain
-      @url = "https://#{@site.name}.maysengreenwood.com"
-    end
-    
-    # Set a custom header to let NGINX know what the custom domain is
-    response.headers["X-Proxy-Domain"] = (@domain&.domain || "#{@site&.name}.maysengreenwood.com")
-    
-    if params[:debug] == "true"
-      render plain: (@domain&.domain || "#{@site.name}.maysengreenwood.com")
-      return
-    else
-      respond_to do |format|
-        format.html
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.update(
+          "site_files",
+          partial: "admin/sites/all_sites",
+          locals: { sites: @sites, num_sites_left: @num_sites_left, size_per_site: @size_per_site }
+        )
       end
     end
+  rescue ActiveRecord::RecordNotFound
+    head :not_found
   end
-  
-  private
-  def restrict_num_sites
-    max_sites_for_account = Plan.where(plan_handle: current_account.plan_handle).first.max_sites.to_i
-    
-    if current_account.sites.count >= max_sites_for_account
-      redirect_to admin_sites_path, notice: "You have reached the maximum number of sites you can create (#{max_sites_for_account})."
+
+  def create
+    if Site.exists?(name: params[:site_name].to_s.downcase.strip)
+      error_message = "<strong>Oops, that site name already exists. <a href='/admin/sites/new'>Click here to try again</a>.</strong>"
+      return render turbo_stream: turbo_stream.replace(
+        "create-site-errors",
+        "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">#{error_message}</div>".html_safe
+      )
+    end
+
+    @new_site = current_account.sites.new(name: @site_name)
+
+    if @new_site.save
+      CreateSiteJob.perform_later(@new_site.storage_prefix, params[:theme_type])
+      redirect_to "/admin/sites", notice: "Your site is being created. Preview it at #{SiteStorage.site_preview_url(@new_site.name, origin: request.base_url)} in a few seconds."
+    else
+      error_message = "<strong>Oops, there was an error creating your site. <a href='/admin/sites/new'>Click here to try again</a>.</strong>"
+      render turbo_stream: turbo_stream.replace(
+        "create-site-errors",
+        "<div class=\"alert alert-danger alert-dismissible fade show\" role=\"alert\">#{error_message}</div>".html_safe
+      )
     end
   end
-  
-  
+
+  def clone
+    source = current_account.sites.find_by!(name: @site_name)
+    new_name = params[:new_site_name].to_s.downcase.strip
+
+    if RESERVED_NAMES.include?(new_name) || Site.exists?(name: new_name)
+      return redirect_to "/admin/sites", alert: "That site name is unavailable."
+    end
+
+    clone = current_account.sites.new(
+      name: new_name,
+      seo_title: source.seo_title,
+      seo_description: source.seo_description,
+      seo_og_image: source.seo_og_image,
+      robots_index: source.robots_index
+    )
+
+    unless clone.save
+      return redirect_to "/admin/sites", alert: clone.errors.full_messages.to_sentence.presence || "Couldn't clone site."
+    end
+
+    CloneSiteJob.perform_later(source.id, clone.id)
+    redirect_to "/admin/sites", notice: "Cloning #{source.name} → #{clone.name}. It will appear in a few seconds."
+  rescue ActiveRecord::RecordNotFound
+    redirect_to "/admin/sites", alert: "Site not found."
+  end
+
+  def update_settings
+    site = current_account.sites.find_by!(name: @site_name)
+    Site.reset_column_information unless Site.column_names.include?("visitor_password")
+
+    p = settings_params
+    clear_password = ActiveModel::Type::Boolean.new.cast(p[:clear_password])
+
+    site.gate_enabled = ActiveModel::Type::Boolean.new.cast(p[:gate_enabled])
+    site.robots_index = ActiveModel::Type::Boolean.new.cast(p[:robots_index])
+    site.seo_title = p[:seo_title]
+    site.seo_description = p[:seo_description]
+    site.seo_og_image = p[:seo_og_image]
+
+    if clear_password
+      site.visitor_password = nil
+      site.gate_enabled = false
+    else
+      site.visitor_password = p[:visitor_password].to_s.presence
+    end
+
+    if site.save
+      site.ensure_password_page! if site.gated?
+      respond_to do |format|
+        format.json do
+          render json: {
+            ok: true,
+            gate_enabled: site.gate_enabled?,
+            visitor_password: site.visitor_password,
+            gated: site.gated?
+          }
+        end
+        format.html { redirect_to "/admin/sites/#{site.name}", notice: "Site settings saved." }
+      end
+    else
+      message = site.errors.full_messages.to_sentence.presence || "Couldn't save settings"
+      respond_to do |format|
+        format.json { render json: { ok: false, error: message }, status: :unprocessable_entity }
+        format.html { redirect_to "/admin/sites/#{site.name}", alert: message }
+      end
+    end
+  rescue ActiveRecord::RecordNotFound
+    respond_to do |format|
+      format.json { render json: { ok: false, error: "Site not found" }, status: :not_found }
+      format.html { redirect_to "/admin/sites", alert: "Site not found." }
+    end
+  end
+
+  def get_custom_domain
+    domain = params[:name] || request.host
+    domain = domain.to_s.sub(%r{\Ahttps?://}, "").split("/").first
+
+    @domain = Domain.includes(:site).find_by(domain: domain)
+    @site = @domain&.site
+
+    if @domain.nil? || @site.nil?
+      return render plain: "Site or domain not found"
+    end
+
+    @url = SiteStorage.site_preview_url(@site)
+    response.headers["X-Proxy-Domain"] = @domain.domain
+
+    if params[:debug] == "true"
+      render plain: @domain.domain
+    else
+      respond_to { |format| format.html }
+    end
+  end
+
+  private
+
+  def restrict_num_sites
+    unless current_account.can_create_site?
+      max = current_account.current_plan.max_sites.to_i
+      redirect_to admin_sites_path, notice: "You have reached the maximum number of sites you can create (#{max})."
+    end
+  end
+
   def set_storage_client
-    @storage = Google::Cloud::Storage.new
+    @storage = SiteStorage.new
   end
-  
+
   def construct_site_name(site_name)
-    site_name + "." + DOMAIN_NAME
+    SiteStorage.bucket_name_for(site_name)
   end
-  
+
   def get_site_name
-    @site_name = params[:site_name]
+    @site_name = params[:site_name].to_s.downcase.strip
+  end
+
+  def settings_params
+    params.require(:site).permit(
+      :gate_enabled, :visitor_password, :clear_password,
+      :seo_title, :seo_description, :seo_og_image, :robots_index
+    )
+  end
+
+  def load_open_editor_file!(bucket)
+    filename = params[:filename].to_s.strip
+    return if filename.blank?
+
+    file = bucket.file(filename)
+    return unless file
+
+    @file_name = filename
+    if file.content_type.to_s.include?("image") || filename.match?(/\.(png|jpe?g|gif|webp|svg)\z/i)
+      @open_image = true
+      @image_url = file.media_url
+    else
+      @open_image = false
+      downloaded = file.download
+      @file_contents = downloaded.read.force_encoding("ASCII-8BIT").encode("UTF-8", undef: :replace, replace: "")
+    end
+  rescue StandardError => e
+    Rails.logger.warn("Failed to preload editor file #{filename}: #{e.class}: #{e.message}")
+    @file_name = nil
+    @file_contents = nil
+    @open_image = nil
   end
 end

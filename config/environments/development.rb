@@ -79,6 +79,11 @@ Rails.application.configure do
     enable_starttls_auto: true
   }
   config.action_mailer.default_url_options = { host: 'localhost:3000' }
-  
-  config.active_job.queue_adapter = :sidekiq
+
+  # Allow *.localhost / *.lvh.me site previews (Rails host authorization).
+  config.hosts << /.*\.localhost/
+  config.hosts << /.*\.lvh\.me/
+
+  # Async jobs in-process so site creation works without running Sidekiq locally.
+  config.active_job.queue_adapter = :async
 end

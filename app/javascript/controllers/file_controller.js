@@ -98,9 +98,10 @@ export default class extends Controller {
     let site_name = document.querySelector("#site_name").value;
     let csrf_token = document.querySelector("#csrf_token").value;
 
-    let create_file_button = event.target;
+    let create_file_button = event.target.closest("button") || event.target;
     create_file_button.disabled = true;
-    create_file_button.querySelector("span").classList.remove("d-none");
+    create_file_button.classList.add("is-loading");
+    create_file_button.querySelector("span")?.classList.remove("d-none");
 
     var myModalEl = document.getElementById("createFileModal");
     //var modal = bootstrap.Modal.getInstance(myModalEl);
@@ -116,9 +117,12 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
+        create_file_button.disabled = false;
+        create_file_button.classList.remove("is-loading");
+        create_file_button.querySelector("span")?.classList.add("d-none");
+
         if (data.status == "success") {
-          create_file_button.disabled = false;
-          create_file_button.querySelector("span").classList.add("d-none");
+          window.AppToast?.show(`Created ${data.file_name}`, { type: "success" });
 
           //modal.hide();
           // Append the new file to the table
@@ -146,8 +150,14 @@ export default class extends Controller {
           ).innerHTML = `<a href="/admin/sites/${site_name}/files/edit?file_name=${data.file_name}">${data.file_name}</a>`;
           copy.querySelector("td:nth-child(2)").innerHTML = "0 b";
         } else {
-          console.log("Error");
+          window.AppToast?.show("Couldn't create file", { type: "error" });
         }
+      })
+      .catch(() => {
+        create_file_button.disabled = false;
+        create_file_button.classList.remove("is-loading");
+        create_file_button.querySelector("span")?.classList.add("d-none");
+        window.AppToast?.show("Couldn't create file", { type: "error" });
       });
   }
 
@@ -159,9 +169,10 @@ export default class extends Controller {
     let site_name = document.querySelector("#site_name").value;
     let csrf_token = document.querySelector("#csrf_token").value;
 
-    let delete_file_button = event.target;
+    let delete_file_button = event.target.closest("button") || event.target;
     delete_file_button.disabled = true;
-    delete_file_button.querySelector("span").classList.remove("d-none");
+    delete_file_button.classList.add("is-loading");
+    delete_file_button.querySelector("span")?.classList.remove("d-none");
 
     var myModalEl = document.getElementById("deleteFileModal");
     //var modal = bootstrap.Modal.getInstance(myModalEl);
@@ -177,9 +188,12 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
+        delete_file_button.disabled = false;
+        delete_file_button.classList.remove("is-loading");
+        delete_file_button.querySelector("span")?.classList.add("d-none");
+
         if (data.status == "success") {
-          delete_file_button.disabled = false;
-          delete_file_button.querySelector("span").classList.add("d-none");
+          window.AppToast?.show(`Deleted ${data.file_name}`, { type: "success" });
 
           // Remove the file from the table
           // If the filename ends with "/" then it is a folder
@@ -197,8 +211,14 @@ export default class extends Controller {
 
           //modal.hide();
         } else {
-          console.log("Error");
+          window.AppToast?.show("Couldn't delete file", { type: "error" });
         }
+      })
+      .catch(() => {
+        delete_file_button.disabled = false;
+        delete_file_button.classList.remove("is-loading");
+        delete_file_button.querySelector("span")?.classList.add("d-none");
+        window.AppToast?.show("Couldn't delete file", { type: "error" });
       });
   }
 
@@ -210,9 +230,10 @@ export default class extends Controller {
     let site_name = document.querySelector("#site_name").value;
     let csrf_token = document.querySelector("#csrf_token").value;
 
-    let rename_file_button = event.target;
+    let rename_file_button = event.target.closest("button") || event.target;
     rename_file_button.disabled = true;
-    rename_file_button.querySelector("span").classList.remove("d-none");
+    rename_file_button.classList.add("is-loading");
+    rename_file_button.querySelector("span")?.classList.remove("d-none");
 
     var myModalEl = document.getElementById("renameFileModal");
     //var modal = bootstrap.Modal.getInstance(myModalEl);
@@ -228,16 +249,24 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        if (data.status == "success") {
-          rename_file_button.disabled = false;
-          rename_file_button.querySelector("span").classList.add("d-none");
+        rename_file_button.disabled = false;
+        rename_file_button.classList.remove("is-loading");
+        rename_file_button.querySelector("span")?.classList.add("d-none");
 
+        if (data.status == "success") {
+          window.AppToast?.show("File renamed", { type: "success" });
           //modal.hide();
           // Update the file name in the table
           window.location.reload(true);
         } else {
-          console.log("Error");
+          window.AppToast?.show("Couldn't rename file", { type: "error" });
         }
+      })
+      .catch(() => {
+        rename_file_button.disabled = false;
+        rename_file_button.classList.remove("is-loading");
+        rename_file_button.querySelector("span")?.classList.add("d-none");
+        window.AppToast?.show("Couldn't rename file", { type: "error" });
       });
   }
 

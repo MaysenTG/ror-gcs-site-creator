@@ -1,24 +1,13 @@
-require "google/cloud/storage"
-ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "config/secrets/custom-website-creator.json"
-
 class SitesCleanupJob < ApplicationJob
   queue_as :default
 
-  def perform(*args)
-    # Delete all sites that have a name of 'Untitled'
-    
-    # If a site has no Google Cloud Storage bucket, email the user and tell them that their site has been deleted
-    
-    storage = Google::Cloud::Storage.new
-    
-    # Get all of the buckets
-    Site.all.each do |site|
-      # If a bucket does not exist for the site, then delete the site
-      bucket = storage.bucket "#{site.name}.maysengreenwood.com", skip_lookup: true
-      
-      if bucket.nil?
-        site.destroy
-      end
+  def perform(*_args)
+    # Delete DB sites whose R2 bucket no longer exists
+    storage = SiteStorage.new
+
+    Site.find_each do |site|
+      bucket = storage.bucket SiteStorage.bucket_name_for(site.name)
+      site.destroy if bucket.nil?
     end
   end
 end

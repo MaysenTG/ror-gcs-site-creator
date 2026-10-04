@@ -2,3 +2,8 @@ cleanup_sites:
   cron: "*/30 * * * *"
   class: "SitesCleanupJob"
   queue: default
+
+prune_file_versions:
+  cron: "15 * * * *"
+  class: "PruneFileVersionsJob"
+  queue: default

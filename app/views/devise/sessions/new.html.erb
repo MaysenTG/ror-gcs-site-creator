@@ -1,38 +1,22 @@
-<section class="">
-  <!-- Jumbotron -->
-  <div class="px-4 py-5 px-md-5 text-center text-lg-start" style="background-color: hsl(0, 0%, 96%)">
-    <div class="container">
-      <div class="row gx-lg-5 align-items-center">
-        <div class="col-lg-3"></div>
-        <div class="col-lg-6 mb-5 mb-lg-0">
-          <h3 class="h3">Sign in</h3>
-          <div class="card">
-            <div class="card-body py-5 px-md-5">
-              <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
-                <!-- Using the CSRF token helper, render a authenticity token input -->
-                <%= render partial: "devise/shared/error_messages", resource: resource %>
-                <!-- Email input -->
-                <div class="form-outline mb-4">
-                  <input type="email" id="signupFormEmail" <% if request.query_parameters["guest"] %>value="guest@gmail.com"<% end %> placeholder="john.smith@gmail.com" name="account[email]" class="form-control" >
-                  <label class="form-label" for="signupFormEmail">Email address</label>
-                </div>
-                <!-- Password input -->
-                <div class="form-outline mb-4">
-                  <input type="password" id="signupFormPass" <% if request.query_parameters["guest"] %>value="password123"<% end %> name="account[password]" class="form-control" >
-                  <label class="form-label" for="signupFormPass">Password</label>
-                </div>
-                <!-- Submit button -->
-                <button type="submit" class="btn btn-primary btn-block w-100 mb-4">
-                  Sign in
-                </button>
-                <span class="w-100 d-flex justify-content-center align-items-center">Or</span>
-                <a href="/accounts/sign_up" class="d-flex justify-content-center align-items-center btn-block w-100 mt-4">Create an account</a>
-              <% end %>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3"></div>
-      </div>
-    </div>
+<div class="auth-shell">
+  <div class="auth-shell__copy">
+    <h1>Welcome back</h1>
+    <p>Sign in to open your sites, edit files, and publish updates to Cloudflare R2.</p>
   </div>
-</section>
+  <div class="auth-panel">
+    <h2 class="h3 mb-4">Sign in</h2>
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+      <%= render partial: "devise/shared/error_messages", resource: resource %>
+      <div class="mb-3">
+        <label class="form-label" for="signupFormEmail">Email</label>
+        <input type="email" id="signupFormEmail" <% if request.query_parameters["guest"] %>value="guest@gmail.com"<% end %> placeholder="you@example.com" name="account[email]" class="form-control" autocomplete="email">
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="signupFormPass">Password</label>
+        <input type="password" id="signupFormPass" <% if request.query_parameters["guest"] %>value="password123"<% end %> name="account[password]" class="form-control" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Sign in</button>
+      <a href="/accounts/sign_up" class="auth-switch">Need an account? Create one</a>
+    <% end %>
+  </div>
+</div>

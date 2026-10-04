@@ -1,95 +1,177 @@
-<!-- Redesigned new site creation flow -->
-<div class="container w-75">
-  <h1 class="h1 mb-3 mt-3">Create a new site</h1>
-  <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+<% preview_origin = request.base_url %>
+
+<div class="page-shell page-shell--wide create-site">
+  <div class="page-header">
+    <div>
+      <a href="/admin/sites" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> All sites</a>
+      <h1>Create a new site</h1>
+      <p>Choose a name, pick a starter theme, and we will seed your files.</p>
+    </div>
+  </div>
+
+  <ol class="create-site__steps" aria-label="Create site steps">
+    <li class="create-site__step is-active" data-step="name">
+      <span class="create-site__step-num">1</span>
+      <span>Name</span>
+    </li>
+    <li class="create-site__step-rule" aria-hidden="true"></li>
+    <li class="create-site__step" data-step="theme" id="create-step-theme">
+      <span class="create-site__step-num">2</span>
+      <span>Theme</span>
+    </li>
+  </ol>
+
+  <ul class="nav nav-pills d-none" id="pills-tab" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="pills-name-tab" data-bs-toggle="pill" data-bs-target="#pills-name" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Name</button>
+      <button class="nav-link active" id="pills-name-tab" data-bs-toggle="pill" data-bs-target="#pills-name" type="button" role="tab" aria-controls="pills-name" aria-selected="true">Name</button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link disabled" disabled id="pills-theme-tab" data-bs-toggle="pill" data-bs-target="#pills-theme" type="button" role="tab" aria-controls="pills-theme" aria-selected="false">Theme</button>
     </li>
   </ul>
-  <hr>
-</div>
-<div class="tab-content" id="pills-tabContent">
-  <div class="tab-pane fade show active" id="pills-name" role="tabpanel" aria-labelledby="pills-name-tab">
-    <div class="stage-container" data-controller="newsite" id="stage-name">
-      <div class="container w-75">
-        <nav aria-label="breadcrumb" class="mb-3">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item active" aria-current="page">Name</li>
-          </ol>
-        </nav>
+
+  <div class="tab-content" id="pills-tabContent">
+    <div class="tab-pane fade show active" id="pills-name" role="tabpanel" aria-labelledby="pills-name-tab">
+      <div
+        class="surface-panel create-site__panel"
+        data-controller="newsite"
+        data-newsite-preview-via-app-value="<%= SiteStorage.preview_via_app? %>"
+        data-newsite-domain-value="<%= SiteStorage::DOMAIN_NAME %>"
+        id="stage-name"
+      >
+        <div class="create-site__panel-copy">
+          <h2>Pick a site name</h2>
+          <p>Lowercase letters and hyphens only. This becomes your public URL.</p>
+        </div>
+
         <div id="new-site-name-error-wrapper" class="d-none alert alert-danger alert-dismissible fade show" role="alert">
-          Error: Site name is already taken or invalid.
+          <span id="new-site-name-error-text">That name is taken or invalid.</span>
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        <div class="input-group mb-3">
-          <label for="basic-url" class="form-label">Your site URL</label>
-          <div class="input-group mb-3">
-            <input placeholder="Enter a subdomain for your website" type="text" class="form-control" data-action="input->newsite#validateSiteName" id="basic-url" name="name" aria-describedby="basic-addon3" value="">
-            <span class="input-group-text" id="basic-addon3">.maysengreenwood.com</span>
-          </div>
+
+        <label for="basic-url" class="form-label fw-semibold">Site name</label>
+        <div class="create-site__url-field input-group mb-2">
+          <% if SiteStorage.preview_via_app? %>
+            <span class="input-group-text"><%= preview_origin %>/s/</span>
+            <input
+              placeholder="your-site"
+              type="text"
+              class="form-control"
+              data-action="input->newsite#validateSiteName"
+              id="basic-url"
+              name="name"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="20"
+            >
+            <span class="input-group-text">/</span>
+          <% else %>
+            <input
+              placeholder="your-site"
+              type="text"
+              class="form-control"
+              data-action="input->newsite#validateSiteName"
+              id="basic-url"
+              name="name"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="20"
+            >
+            <span class="input-group-text">.<%= SiteStorage::DOMAIN_NAME %></span>
+          <% end %>
         </div>
-        <button class="btn btn-primary w-25 py-2.5 px-5" data-target-stage="theme" data-action="newsite#handleToggleStage" data-next-stage="true" type="button" id="next-stage-new-site" disabled="" data-goal-step="theme" style="float: right; padding: 15px; margin-bottom: 5rem;">
-          <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Next
-        </button>
+
+        <p class="create-site__hint mb-1">
+          Live preview will be
+          <code class="new-site-preview-path"><%= SiteStorage.preview_via_app? ? "#{preview_origin}/s/…/" : "https://….#{SiteStorage::DOMAIN_NAME}/" %></code>
+        </p>
+        <p class="create-site__rules text-muted mb-4">3–20 characters · lowercase a–z and hyphens · no spaces</p>
+
+        <div class="d-flex justify-content-between align-items-center">
+          <a href="/admin/sites" class="btn btn-ghost">Cancel</a>
+          <button
+            class="btn btn-primary px-4"
+            data-target-stage="theme"
+            data-action="newsite#handleToggleStage"
+            data-next-stage="true"
+            type="button"
+            id="next-stage-new-site"
+            disabled
+            data-goal-step="theme"
+          >
+            <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Continue to theme
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="tab-pane fade" id="pills-theme" role="tabpanel" aria-labelledby="pills-theme-tab">
-    <div class="stage-container" data-controller="newsite" id="stage-theme">
-      <div class="container w-75">
+
+    <div class="tab-pane fade" id="pills-theme" role="tabpanel" aria-labelledby="pills-theme-tab">
+      <div
+        class="create-site__theme theme-stage"
+        data-controller="newsite"
+        data-newsite-preview-via-app-value="<%= SiteStorage.preview_via_app? %>"
+        data-newsite-domain-value="<%= SiteStorage::DOMAIN_NAME %>"
+        data-theme-public-base-url="<%= SiteStorage.theme_public_base_url %>"
+        id="stage-theme"
+      >
         <form id="new-site-form" action="/admin/sites/create_new_site" data-turbo="true" method="post">
           <input type="hidden" name="site_name">
           <input type="hidden" name="theme_type" value="blank">
-          <div class="row">
-            <div class="col-4">
-              <div class="input-group mb-3">
-                <label for="basic-url" class="form-label h4">Choose a theme for <a href="#"><span class="new-site-name"></span>.maysengreenwood.com</a></label>
-                <div class="list-group">
-                  <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action active" aria-current="true" data-theme="blank">
-                    <div class="d-flex w-100 justify-content-between">
-                      <h5 class="mb-1">Blank</h5>
-                    </div>
-                    <small>A blank theme with no content or styling. You will be given an index.html, style.css, and script.js file which are prelinked together.</small>
-                  </button>
-                  <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action" data-theme="portfolio">
-                    <div class="d-flex w-100 justify-content-between">
-                      <h5 class="mb-1">Portfolio website</h5>
-                    </div>
-                    <small>A portfolio website to show off you development skills. This theme includes a header, footer, and sections for your projects.</small>
-                  </button>
-                  <button data-action="newsite#changeActiveTheme" type="button" class="list-group-item list-group-item-action" data-theme="skeleton_react">
-                    <div class="d-flex w-100 justify-content-between">
-                      <h5 class="mb-1">Skeleton React</h5>
-                    </div>
-                    <small>A starter template for using React.js.</small>
-                  </button>
-                </div>
+
+          <div class="create-site__theme-grid">
+            <aside class="surface-panel create-site__theme-list">
+              <h2 class="h4 mb-1">Theme for <span class="new-site-name">your-site</span></h2>
+              <p class="create-site__hint mb-3">
+                Preview at
+                <code class="new-site-preview-path"><%= SiteStorage.preview_via_app? ? "#{preview_origin}/s/…/" : "https://….#{SiteStorage::DOMAIN_NAME}/" %></code>
+              </p>
+
+              <div class="list-group create-site__themes">
+                <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action active" aria-current="true" data-theme="blank">
+                  <strong>Blank</strong>
+                  <small>Minimal HTML, CSS, and JS starter files linked together.</small>
+                </button>
+                <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action" data-theme="portfolio">
+                  <strong>Portfolio</strong>
+                  <small>Header, footer, and project sections ready to customize.</small>
+                </button>
+                <button type="button" data-action="newsite#changeActiveTheme" class="list-group-item list-group-item-action" data-theme="skeleton_react">
+                  <strong>Skeleton React</strong>
+                  <small>A lightweight React.js starter template.</small>
+                </button>
               </div>
-            </div>
-            <div class="col-1"></div>
-            <div class="col-7">
-              <label class="form-label h3">Theme type: <span id="theme-type-label">blank</span></label><br>
-              <div class="card">
-                <div class="card-body" style="background-color: rgb(240, 240, 240);">
-                  <h5 class="card-title">Theme Preview</h5>
-                  <iframe id="storage-bucket-iframe" src="https://storage.googleapis.com/theme_previews/blank/index.html" title="Theme Preview" width="100%" height="600px" style="border: 1px solid black;"></iframe>
-                </div>
+            </aside>
+
+            <section class="surface-panel create-site__preview">
+              <div class="create-site__preview-bar">
+                <span>Theme preview</span>
+                <strong id="theme-type-label">blank</strong>
               </div>
-            </div>
-            <br>
+              <div class="create-site__preview-frame">
+                <iframe
+                  id="storage-bucket-iframe"
+                  src="<%= SiteStorage.theme_public_base_url %>/blank/index.html"
+                  title="Theme Preview"
+                ></iframe>
+              </div>
+            </section>
           </div>
-          <br>
-          <div class="w-100 d-flex justify-content-between align-items-center mt-3">
-            <button style="padding: 2rem 4rem;" id="back-to-name-btn" data-target-stage="name" data-action="newsite#handleToggleStage" class="mb-3 btn btn-secondary" type="button">
+
+          <div class="create-site__actions">
+            <button id="back-to-name-btn" data-target-stage="name" data-action="newsite#handleToggleStage" class="btn btn-ghost" type="button">
               Back
             </button>
-            <button data-action="click->newsite#createNewSite" data-bs-toggle="modal" data-bs-target="#newSiteLoading" style="padding: 2rem 4rem;" class="btn btn-primary mb-3" id="create-site-button" type="button">
+            <button
+              data-action="click->newsite#createNewSite"
+              data-bs-toggle="modal"
+              data-bs-target="#newSiteLoading"
+              class="btn btn-primary"
+              id="create-site-button"
+              type="button"
+            >
               <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              Create my site!
+              Create site
             </button>
           </div>
         </form>
@@ -97,24 +179,23 @@
     </div>
   </div>
 </div>
+
 <div class="modal fade" id="newSiteLoading" data-bs-backdrop="static" tabindex="-1" aria-labelledby="newSiteLoadingLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="newSiteLoadingLabel">Creating site</h5>
-        <button type="button" disabled class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="newSiteLoadingLabel">Creating your site</h5>
       </div>
       <div class="modal-body">
         <%= turbo_frame_tag "create-site-errors" do %>
-          <div class="text-center">
-            <p>Putting some things together for your site</p>
-            <div class="spinner-border" role="status">
+          <div class="create-site__loading text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
+            <p class="mb-1">Seeding files and preparing your preview…</p>
+            <p class="text-muted small mb-0">This usually takes a few seconds.</p>
           </div>
         <% end %>
-      </div>
-      <div class="modal-footer">
       </div>
     </div>
   </div>

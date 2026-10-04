@@ -92,4 +92,10 @@ Rails.application.configure do
   config.active_record.dump_schema_after_migration = false
   
   #config.hosts << "ror-gcs-site-creator-mwtivkdwyq-ts.a.run.app"
+
+  # Allow apex + wildcard site subdomains.
+  config.hosts << "maysengreenwood.com"
+  config.hosts << /.*\.maysengreenwood\.com/
+  # Also allow the Cloud Run / custom app host if set.
+  config.hosts << ENV["APP_HOST"] if ENV["APP_HOST"].present?
 end

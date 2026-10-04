@@ -1,31 +1,58 @@
-<div class="modal fade" id="uploadFileModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="uploadFileModal" tabindex="-1" aria-labelledby="uploadFileLabel" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content">
+    <div class="modal-content" data-controller="asset-studio">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Upload a new file </h1>
+        <h1 class="modal-title fs-5" id="uploadFileLabel">Asset studio</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="container">
-          <div class="mb-3">
-            <form id="upload-file-form" action="/admin/sites/<%= @site["name"] %>/files/upload" method="post" data-turbo="true" enctype="multipart/form-data">
-              <input type="hidden" name="site_id" value="<%= @site["id"] %>">
-              <input type="hidden" name="site_name" value="<%= @site["name"] %>">
-              <div data-controller="validation" class="mb-3">
-                <label for="formFile" class="form-label">Upload a file</label>
-                <input data-action="validation#fileHasBeenSelectedForUpload" class="form-control" type="file" accept=".html,.js,.css,.png,.jpeg,.svg,.gif,.jpg,.webp" name="file" id="formFile">
-              </div>
-            </form>
-            <small><strong>Note: </strong>This file will overwrite any file with the same name</small>
+        <form
+          id="upload-file-form"
+          action="/admin/sites/<%= @site.name %>/files/upload"
+          method="post"
+          data-turbo="true"
+          enctype="multipart/form-data"
+          data-action="submit->asset-studio#beforeSubmit"
+        >
+          <input type="hidden" name="site_id" value="<%= @site.id %>">
+          <input type="hidden" name="site_name" value="<%= @site.name %>">
+          <div data-controller="validation" class="mb-3">
+            <label for="formFile" class="form-label">Upload a file</label>
+            <input
+              data-action="validation#fileHasBeenSelectedForUpload change->asset-studio#prepare"
+              data-asset-studio-target="input"
+              class="form-control"
+              type="file"
+              accept=".html,.js,.css,.png,.jpeg,.svg,.gif,.jpg,.webp"
+              name="file"
+              id="formFile"
+            >
           </div>
-        </div>
+          <div class="asset-studio__options mb-3">
+            <label>
+              <span>Max image width</span>
+              <select data-asset-studio-target="maxWidth" data-action="change->asset-studio#prepare">
+                <option value="1200">1200px</option>
+                <option value="1600" selected>1600px</option>
+                <option value="2000">2000px</option>
+                <option value="4000">No resize</option>
+              </select>
+            </label>
+            <label class="asset-studio__check">
+              <input type="checkbox" data-asset-studio-target="webp" data-action="change->asset-studio#prepare" checked>
+              <span>Convert images to WebP</span>
+            </label>
+          </div>
+          <img data-asset-studio-target="preview" class="asset-studio__preview d-none" alt="Upload preview">
+          <p class="asset-studio__status mb-0" data-asset-studio-target="status"></p>
+          <small class="d-block mt-2"><strong>Note:</strong> Same-name files are overwritten. HTML/CSS URLs are not auto-rewritten.</small>
+        </form>
       </div>
       <div data-controller="file" class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" data-action="file#uploadFile" form="upload-file-form" disabled="" class="btn btn-primary">
-          <!--<button type="submit" form="upload-file-form" class="btn btn-primary">-->
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" data-action="file#uploadFile" form="upload-file-form" disabled class="btn btn-primary">
           <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Upload file
+          Upload
         </button>
       </div>
     </div>

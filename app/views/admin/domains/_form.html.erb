@@ -1,20 +1,23 @@
 <%= form_with(model: [:admin, @domain]) do |form| %>
-  <%# Reder form errors if they exist %>
   <% if @domain.errors.any? %>
     <div id="error_explanation" class="alert alert-danger">
-      <h2><%= pluralize(@domain.errors.count, "error") %> prohibited this domain from being saved:</h2>
-      <ul>
+      <strong><%= pluralize(@domain.errors.count, "error") %> prohibited this domain from being saved:</strong>
+      <ul class="mb-0 mt-2">
         <% @domain.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
       </ul>
     </div>
   <% end %>
+
   <div class="mb-3">
-    <%= form.label :domain, style: "display: block" %>
-    <%= form.text_field :domain, class: "form-control" %>
+    <%= form.label :domain, "Domain name", class: "form-label fw-semibold" %>
+    <%= form.text_field :domain, class: "form-control", placeholder: "www.example.com", autocomplete: "off" %>
+    <div class="form-text">Use a bare domain or subdomain, like <code>example.com</code> or <code>www.example.com</code>.</div>
   </div>
-  <div>
-    <button type="submit" class="btn btn-primary form-control">Add domain</button>
+
+  <div class="d-flex justify-content-between gap-2">
+    <a href="/admin/sites/<%= @site.name %>/domains" class="btn btn-ghost">Cancel</a>
+    <button type="submit" class="btn btn-primary">Add domain</button>
   </div>
 <% end %>

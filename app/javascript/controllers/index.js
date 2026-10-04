@@ -12,15 +12,11 @@ eagerLoadControllersFrom("controllers", application);
 
 
 document.addEventListener("turbo:load", () => {
-  const dropdownElementsList = document.querySelectorAll(
-    '.dropdown-toggle, [data-bs-toggle="dropdown"]'
-  );
-
-  // if (dropdownElementsList) {
-  //   dropdownElementsList.forEach((dropdownElement) => {
-  //     dropdownElement.addEventListener("click", toggleBootstrapDropdown);
-  //   });
-  // }
+  document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach((el) => {
+    if (window.bootstrap?.Dropdown) {
+      window.bootstrap.Dropdown.getOrCreateInstance(el);
+    }
+  });
 
   // Do the same thing as above, but for modals
   const modalElementsList = document.querySelectorAll(

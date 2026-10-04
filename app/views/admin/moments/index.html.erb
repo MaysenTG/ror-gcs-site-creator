@@ -1,0 +1,48 @@
+<div class="page-shell">
+  <div class="page-header">
+    <div>
+      <a href="/admin/sites/<%= @site.name %>" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> Editor</a>
+      <h1>Deploy moments</h1>
+      <p>Named snapshots of text files for <%= @site.name %>. Restore anytime; max <%= SiteMoment::MAX_PER_SITE %> kept.</p>
+    </div>
+  </div>
+
+  <div class="surface-panel mb-3">
+    <%= form_with url: admin_moments_path(@site.name), method: :post, local: true, data: { controller: "form-guard", action: "submit->form-guard#submit" } do %>
+      <div class="d-flex flex-wrap gap-2 align-items-end">
+        <label class="flex-grow-1">
+          <span class="form-label">Name</span>
+          <input type="text" name="name" class="form-control" maxlength="80" placeholder="Before launch" required>
+        </label>
+        <label class="flex-grow-1">
+          <span class="form-label">Note (optional)</span>
+          <input type="text" name="note" class="form-control" maxlength="160" placeholder="Ready for domain cutover">
+        </label>
+        <button type="submit" class="btn btn-primary">Save moment</button>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @moments.blank? %>
+    <div class="empty-state surface-panel">
+      <h2>No moments yet</h2>
+      <p>Capture the current text files before a big change.</p>
+    </div>
+  <% else %>
+    <ul class="moments-list">
+      <% @moments.each do |moment| %>
+        <li class="surface-panel">
+          <div>
+            <strong><%= moment.name %></strong>
+            <span><%= moment.created_at.strftime("%b %d, %Y %I:%M %p") %> · <%= pluralize(moment.file_count, "file") %></span>
+            <% if moment.note.present? %><p class="mb-0 mt-1"><%= moment.note %></p><% end %>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="<%= admin_moment_path(@site.name, moment) %>" class="btn btn-ghost btn-sm">Diff</a>
+            <%= button_to "Restore", restore_admin_moment_path(@site.name, moment), method: :post, class: "btn btn-outline-primary btn-sm", form: { data: { turbo_confirm: "Restore this moment over live text files?" } } %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

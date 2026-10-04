@@ -1,0 +1,29 @@
+<div class="page-shell">
+  <div class="page-header">
+    <div>
+      <a href="<%= admin_moments_path(@site.name) %>" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> Moments</a>
+      <h1><%= @moment.name %></h1>
+      <p>
+        Captured <%= @moment.created_at.strftime("%b %d, %Y %I:%M %p") %>
+        · <%= pluralize(@moment.file_count, "file") %>
+      </p>
+    </div>
+    <%= button_to "Restore moment", restore_admin_moment_path(@site.name, @moment), method: :post, class: "btn btn-primary", form: { data: { turbo_confirm: "Restore this moment over live text files?" } } %>
+  </div>
+
+  <div class="surface-panel">
+    <h2 class="h5 mb-3">Changes since this moment</h2>
+    <% if @diff.blank? %>
+      <p class="mb-0 text-muted">Live text files match this moment.</p>
+    <% else %>
+      <ul class="moments-diff">
+        <% @diff.each do |row| %>
+          <li>
+            <span class="moments-diff__status moments-diff__status--<%= row[:status] %>"><%= row[:status].tr("_", " ") %></span>
+            <code><%= row[:path] %></code>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+</div>

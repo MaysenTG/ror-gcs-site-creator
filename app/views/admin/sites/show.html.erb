@@ -1,277 +1,680 @@
-<style>
-  .accordion-body:not(.accordion-active):hover {
-    background-color: #f7f7f7;
-  }
+<% content_for :head do %>
+  <%= render partial: "layouts/codemirror_styles" %>
+<% end %>
+<%
+  palette_files = []
+  Array(@site_files_and_folders).each do |entry|
+    if entry["type"] == "file"
+      palette_files << entry["name"]
+    elsif entry["type"] == "folder"
+      Array(entry["files"]).each { |child| palette_files << "#{entry["name"]}/#{child["name"]}" }
+    end
+  end
+%>
 
-  .accordion-body.add-new-file:hover {
-    background-color: #f7f7f7;
-  }
-
-  .accordion-active.accordion-body {
-    background: #e6e6e6;
-  }
-
-  .files-icons-container {
-    display: block;
-  }
-
-  .accordion-body:not(.accordion-active) .file-icons-container {
-    display: none !important;
-  }
-</style>
-<div data-controller="general" class="container">
-  <div class="container mt-3">
-    <div class="mb-3 d-flex justify-content-between">
-      <a href="/admin/sites" class="mb-3 btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to sites</a>
-      <a href="/admin/sites/<%= @site.name %>/domains" class="mb-3 btn btn-secondary">Domains</a>
+<div
+  class="page-shell page-shell--wide editor-shell"
+  data-controller="general site-studio command-palette"
+  data-site-studio-site-name-value="<%= @site.name %>"
+  data-site-studio-ship-check-url-value="<%= admin_ship_check_path(@site.name) %>"
+  data-site-studio-moments-url-value="<%= admin_moments_path(@site.name) %>"
+  data-command-palette-site-name-value="<%= @site.name %>"
+  data-command-palette-preview-url-value="<%= site_preview_url(@site) %>"
+  data-command-palette-files-value="<%= ERB::Util.html_escape(palette_files.to_json) %>"
+>
+  <div class="page-header editor-shell__header">
+    <div class="editor-shell__title">
+      <a href="/admin/sites" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> All sites</a>
+      <h1><%= @site.name %></h1>
+      <p class="mb-0 editor-shell__url">
+        <a href="<%= site_preview_url(@site) %>" target="_blank" rel="noopener"><%= site_preview_label(@site) %></a>
+        <span class="editor-shell__hint">
+          ·
+          <button type="button" class="editor-shell__cmd-hint" data-action="command-palette#open" title="Open command palette">
+            <i class="bi bi-command" aria-hidden="true"></i><span>K</span>
+          </button>
+        </span>
+      </p>
     </div>
-    <!-- Begin general -->
-    <div class="mb-3 d-flex justify-content-start">
-      &nbsp;
-      <div class="w-100 d-flex justify-content-between flex-wrap">
-        <div class="row d-flex align-items-center">
-          <div class="col-2">
-            <svg width="54" height="54" class="space-icon-window OPEN" viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M26.25 2.75H3.75C2.71447 2.75 1.875 3.58947 1.875 4.625V8.375H28.125V4.625C28.125 3.58947 27.2855 2.75 26.25 2.75ZM1.875 23.375V10.25H28.125V19.0015C28.7904 19.0179 29.4235 19.1642 30 19.416V4.625C30 2.55393 28.3211 0.875 26.25 0.875H3.75C1.67893 0.875 0 2.55393 0 4.625V23.375C0 25.4461 1.67893 27.125 3.75 27.125H24.0966C23.6609 26.5815 23.3364 25.945 23.1575 25.25H3.75C2.71447 25.25 1.875 24.4105 1.875 23.375ZM4.6875 6.5C5.20527 6.5 5.625 6.08027 5.625 5.5625C5.625 5.04473 5.20527 4.625 4.6875 4.625C4.16973 4.625 3.75 5.04473 3.75 5.5625C3.75 6.08027 4.16973 6.5 4.6875 6.5ZM8.4375 5.5625C8.4375 6.08027 8.01777 6.5 7.5 6.5C6.98223 6.5 6.5625 6.08027 6.5625 5.5625C6.5625 5.04473 6.98223 4.625 7.5 4.625C8.01777 4.625 8.4375 5.04473 8.4375 5.5625ZM10.3125 6.5C10.8303 6.5 11.25 6.08027 11.25 5.5625C11.25 5.04473 10.8303 4.625 10.3125 4.625C9.79473 4.625 9.375 5.04473 9.375 5.5625C9.375 6.08027 9.79473 6.5 10.3125 6.5Z" fill="#282A35"></path>
-              <circle class="dot" cx="28" cy="24" r="4"></circle>
-              <defs>
-                <clipPath id="clip0">
-                  <rect width="8.75" height="10" fill="white" transform="translate(11 12)"></rect>
-                </clipPath>
-              </defs>
-            </svg>
-          </div>
-          <div class="col-10">
-            <h3 class="h3 mb-0"><%= @site.name %></h3>
-            <a target="_blank" href="https://<%= @site.name %>.maysengreenwood.com">
-              <%= @site.name %>.maysengreenwood.com
-            </a>
-          </div>
-        </div>
-        <div class="dropdown">
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFileModal">Upload a file</button>
-        </div>
-      </div>
-    </div>
-    <div class="row">
-      <!-- Add the warning alert here -->
-      <%= turbo_frame_tag "file_delete_error" do %>
-      <% end %>
-      <div class="col-12 col-lg-3 col-md-12 col-sm-12" style="margin: 5rem 0;">
-        <turbo-frame id="filepicker">
-          <%= render partial: "admin/files/filepicker", @site => @site, @site_files_and_folders => @site_files_and_folders %>
-        </turbo-frame>
-      </div>
-      <div class="col-12 col-9 col-lg-9 col-md-12 col-sm-12">
-        <!-- Create a turbo frame tag for the editor partial -->
-        <%= turbo_frame_tag "editor" do %>
-        <% end %>
-      </div>
-    </div>
-    <br>
-    <div class="modal fade" id="createFileModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="exampleModalLabel">Create a new file </h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="container">
-              <div class="mb-3">
-                <form action="/admin/sites/<%= @site["name"] %>/files/new" method="post" data-turbo="true" id="create-file-form">
-                  <input type="hidden" name="site_id" value="1">
-                  <input type="hidden" name="site_name" id="site_name" value="<%= @site["name"] %>">
-                  <input type="hidden" name="folder_name" id="folder_name" value="">
-                  <div data-controller="file validation" class="mb-3">
-                    <label for="name" class="form-label">File name</label>
-                    <input data-action="validation#validate file#setFullFileName" type="text" class="form-control" id="visual_filename" >
-                    <input type="hidden" name="file_name" >
-                  </div>
-                  <div class="mb-3">
-                    <label for="name" class="form-label">File type</label>
-                    <select class="form-select" aria-label="Default select example" name="file_type" id="file_type">
-                      <option value="html" selected="">HTML</option>
-                      <option value="js">JS</option>
-                      <option value="css">CSS</option>
-                    </select>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-          <div data-controller="file" class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" form="create-file-form" disabled="" class="btn btn-primary">
-              <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              Create file
+    <div class="editor-shell__actions">
+      <a href="<%= site_preview_url(@site) %>" target="_blank" rel="noopener" class="btn btn-outline-primary">Open site</a>
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFileModal">Upload</button>
+      <div class="dropdown">
+        <button
+          type="button"
+          class="btn btn-ghost dropdown-toggle"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          id="editorMoreMenu"
+        >
+          More
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="editorMoreMenu">
+          <li><a class="dropdown-item" href="/admin/sites/<%= @site.name %>/dashboards">Dashboard</a></li>
+          <li><a class="dropdown-item" href="/admin/sites/<%= @site.name %>/domains">Domains</a></li>
+          <li><a class="dropdown-item" href="<%= admin_moments_path(@site.name) %>">Deploy moments</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#siteSettingsModal">
+              Password &amp; SEO
             </button>
-          </div>
-        </div>
+          </li>
+          <li>
+            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#cloneSiteModal">
+              Clone site
+            </button>
+          </li>
+          <li>
+            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#appearanceModal">
+              Appearance
+            </button>
+          </li>
+          <li>
+            <button type="button" class="dropdown-item" data-action="site-studio#runShipCheck">
+              Ship check
+            </button>
+          </li>
+          <li>
+            <button type="button" class="dropdown-item" data-action="command-palette#open">
+              Commands <span class="editor-shell__menu-shortcut"><i class="bi bi-command" aria-hidden="true"></i>K</span>
+            </button>
+          </li>
+        </ul>
       </div>
     </div>
-    <%= render :partial => "layouts/modals/sites/show/createfolder", :locals => { :site => @site } %>
-    <%= render :partial => "layouts/modals/sites/show/renamefile", :locals => { :site => @site } %>
-    <%= render :partial => "layouts/modals/sites/show/uploadfile", :locals => { :site => @site } %>
-    <%= render :partial => "layouts/modals/sites/show/deletefile", :locals => { :site => @site } %>
-    <%= render :partial => "layouts/modals/sites/show/mainor404", :locals => { :site => @site } %>
+  </div>
+
+  <div class="ship-check surface-panel mb-3 d-none" data-site-studio-target="shipPanel">
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+      <strong>Ship check</strong>
+      <button type="button" class="btn btn-ghost btn-sm" data-action="site-studio#hideShipCheck">Close</button>
+    </div>
+    <div data-site-studio-target="shipBody"></div>
+  </div>
+
+  <%= turbo_frame_tag "file_delete_error" %>
+
+  <div class="editor-layout">
+    <aside class="editor-sidebar surface-panel">
+      <turbo-frame id="filepicker">
+        <%= render partial: "admin/files/filepicker" %>
+      </turbo-frame>
+    </aside>
+    <section class="editor-main surface-panel">
+      <%= turbo_frame_tag "editor" do %>
+        <% if @file_name.present? && @open_image %>
+          <%= render partial: "admin/files/image" %>
+        <% elsif @file_name.present? && !@open_image && !@file_contents.nil? %>
+          <%= render partial: "admin/files/editor" %>
+        <% elsif params[:filename].present? %>
+          <div class="empty-state empty-state--compact">
+            <h2>File not found</h2>
+            <p>That file isn’t in this site. Pick another from the sidebar.</p>
+          </div>
+        <% else %>
+          <div class="empty-state empty-state--compact">
+            <h2>Pick a file</h2>
+            <p>Select a file from the sidebar to edit it here.</p>
+          </div>
+        <% end %>
+      <% end %>
+    </section>
+  </div>
+
+  <div class="cmdk d-none" data-command-palette-target="dialog" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="cmdk__backdrop" data-action="click->command-palette#close"></div>
+    <div class="cmdk__panel">
+      <input
+        type="search"
+        class="cmdk__input"
+        placeholder="Jump to a file or action…"
+        data-command-palette-target="input"
+        data-action="input->command-palette#filter"
+      >
+      <ul class="cmdk__list" data-command-palette-target="list"></ul>
+      <div class="cmdk__footer">
+        <span class="cmdk__footer-hint"><kbd>Esc</kbd></span>
+        <span class="cmdk__footer-shortcut" aria-label="Command K">
+          <i class="bi bi-command" aria-hidden="true"></i><span>K</span>
+        </span>
+      </div>
+    </div>
   </div>
 </div>
-<!-- Toast when saving file -->
-<div id="file_saved">File saved..</div>
-<div id="file_404">File doesn't exist..</div>
-<!-- Scroll to top button -->
-<button onclick="topFunction()" id="scrollToTop" title="Go to top">
+
+<%= render "layouts/modals/sites/show/appearance" %>
+<%= render "layouts/modals/sites/show/settings" %>
+<%= render "layouts/modals/sites/show/uploadfile" %>
+<%= render "layouts/modals/sites/show/createfolder" %>
+<%= render "layouts/modals/sites/show/deletefile" %>
+<%= render "layouts/modals/sites/show/renamefile" %>
+<%= render "layouts/modals/sites/show/mainor404" %>
+
+<div class="modal fade" id="cloneSiteModal" tabindex="-1" aria-labelledby="cloneSiteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="cloneSiteModalLabel">Clone site</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with url: admin_clone_site_path(@site.name), method: :post, local: true do %>
+        <div class="modal-body">
+          <p class="text-muted">Copies all files from <strong><%= @site.name %></strong> into a new site. SEO settings come along; visitor password does not.</p>
+          <label class="form-label" for="clone_new_site_name">New site name</label>
+          <input
+            type="text"
+            class="form-control"
+            id="clone_new_site_name"
+            name="new_site_name"
+            required
+            minlength="3"
+            maxlength="20"
+            pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+            placeholder="my-site-copy"
+          >
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Clone site</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<%# Keep create-file modal from the previous show page for Stimulus actions %>
+<div class="modal fade" id="createFileModal" tabindex="-1" aria-labelledby="createFileLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="createFileLabel">Create a new file</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="/admin/sites/<%= @site.name %>/files/new" method="post" data-turbo="true" id="create-file-form">
+          <input type="hidden" name="site_id" value="<%= @site.id %>">
+          <input type="hidden" name="site_name" id="site_name" value="<%= @site.name %>">
+          <input type="hidden" name="folder_name" id="folder_name" value="">
+          <div data-controller="file validation" class="mb-3">
+            <label for="visual_filename" class="form-label">File name</label>
+            <input data-action="validation#validate file#setFullFileName" type="text" class="form-control" id="visual_filename">
+            <input type="hidden" name="file_name">
+          </div>
+          <div class="mb-3">
+            <label for="file_type" class="form-label">File type</label>
+            <select class="form-select" name="file_type" id="file_type">
+              <option value="html" selected>HTML</option>
+              <option value="js">JS</option>
+              <option value="css">CSS</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" form="create-file-form" class="btn btn-primary">Create file</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button type="button" onclick="topFunction()" id="scrollToTop" title="Go to top">
   <i class="bi bi-arrow-up"></i>
 </button>
+<%= render partial: "layouts/codemirror_scripts" %>
 <script>
-  document.addEventListener("turbo:before-fetch-response", function(e) {
-    waitForElm('#file_content').then((elm) => {
-      let fileName = elm.dataset.filename;
-      let fileExtension = fileName.split('.').pop();
-      let mode = "htmlmixed";
-      if (fileExtension == "js") {
-        mode = "text/javascript";
-      } else if (fileExtension == "css") {
-        mode = "text/css";
+  (function bindSiteEditor() {
+    const codeSkeletons = {
+      html: `<%= j render partial: "layouts/snippets/code_loading", locals: { kind: "html", embedded: true } %>`,
+      css: `<%= j render partial: "layouts/snippets/code_loading", locals: { kind: "css", embedded: true } %>`,
+      js: `<%= j render partial: "layouts/snippets/code_loading", locals: { kind: "js", embedded: true } %>`
+    };
+    const imageSkeleton = `<%= j render partial: "layouts/snippets/image_loading", locals: { filename: "__FILENAME__" } %>`;
+
+    function fileMetaFromUrl(url) {
+      try {
+        const fileName = new URL(url).searchParams.get("file_name") || "";
+        const ext = fileName.split(".").pop()?.toLowerCase();
+        let kind = "html";
+        if (ext === "css") kind = "css";
+        else if (ext === "js" || ext === "mjs") kind = "js";
+        else if (["png", "jpg", "jpeg", "gif", "webp", "svg", "ico", "bmp", "avif"].includes(ext)) kind = "asset";
+        return { fileName, kind };
+      } catch (_e) {
+        return { fileName: "", kind: "html" };
+      }
+    }
+
+    function assetLoadingMarkup(fileName) {
+      return imageSkeleton.replaceAll("__FILENAME__", escapeHtml(fileName || "Loading image…"));
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function showToast(selector) {
+      const messages = {
+        file_saved: "File saved",
+        file_404: "File doesn't exist",
+        file_upload: "File uploaded",
+        file_deleted: "Deleted",
+        file_renamed: "File renamed",
+        file_too_big: "Site size limit reached",
+      };
+      const types = {
+        file_saved: "success",
+        file_404: "error",
+        file_upload: "success",
+        file_deleted: "success",
+        file_renamed: "success",
+        file_too_big: "error",
+      };
+      window.AppToast?.show(messages[selector] || selector, { type: types[selector] || "info" });
+    }
+
+    function waitForElm(selector) {
+      return new Promise((resolve) => {
+        if (document.querySelector(selector)) return resolve(document.querySelector(selector));
+        const observer = new MutationObserver(() => {
+          if (document.querySelector(selector)) {
+            resolve(document.querySelector(selector));
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      });
+    }
+
+    function addEventListenerToFileLinks() {
+      document.querySelectorAll(".filetree a[data-filename]").forEach((fileLink) => {
+        if (fileLink.dataset.bound === "1") return;
+        fileLink.dataset.bound = "1";
+        fileLink.addEventListener("click", () => {
+          document.querySelectorAll(".filetree__row").forEach((row) => {
+            row.classList.remove("accordion-active");
+          });
+          fileLink.closest(".filetree__row")?.classList.add("accordion-active");
+        });
+      });
+    }
+
+    function codeMirrorReady() {
+      return typeof window.CodeMirror === "function" && typeof window.CodeMirror.fromTextArea === "function";
+    }
+
+    function injectScript(src) {
+      return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[data-gc-cm-src="${src}"]`)) {
+          resolve();
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = false;
+        script.dataset.gcCmSrc = src;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Failed to load ${src}`));
+        document.head.appendChild(script);
+      });
+    }
+
+    function ensureCodeMirrorAssets() {
+      if (codeMirrorReady()) return Promise.resolve();
+      if (window.__gcCodeMirrorLoading) return window.__gcCodeMirrorLoading;
+
+      const base = "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16";
+      const scripts = [
+        `${base}/codemirror.min.js`,
+        `${base}/mode/xml/xml.min.js`,
+        `${base}/mode/javascript/javascript.min.js`,
+        `${base}/mode/css/css.min.js`,
+        `${base}/mode/htmlmixed/htmlmixed.min.js`,
+        `${base}/addon/edit/closetag.min.js`,
+        `${base}/addon/edit/closebrackets.min.js`,
+        `${base}/addon/edit/matchbrackets.min.js`,
+        `${base}/addon/selection/active-line.min.js`,
+        `${base}/addon/hint/show-hint.min.js`,
+        `${base}/addon/hint/xml-hint.min.js`,
+        `${base}/addon/hint/html-hint.min.js`,
+        `${base}/addon/hint/css-hint.min.js`,
+        `${base}/addon/hint/javascript-hint.min.js`,
+      ];
+
+      window.__gcCodeMirrorLoading = scripts
+        .reduce((chain, src) => chain.then(() => injectScript(src)), Promise.resolve())
+        .finally(() => {
+          window.__gcCodeMirrorLoading = null;
+        });
+
+      return window.__gcCodeMirrorLoading;
+    }
+
+    function waitForCodeMirror(timeoutMs = 8000) {
+      if (codeMirrorReady()) return Promise.resolve();
+
+      return ensureCodeMirrorAssets().then(
+        () =>
+          new Promise((resolve, reject) => {
+            const started = Date.now();
+            const tick = () => {
+              if (codeMirrorReady()) {
+                resolve();
+                return;
+              }
+              if (Date.now() - started > timeoutMs) {
+                reject(new Error("CodeMirror failed to load"));
+                return;
+              }
+              requestAnimationFrame(tick);
+            };
+            tick();
+          })
+      );
+    }
+
+    function editorPaneFor(root) {
+      return (
+        (root && root.closest?.(".editor-pane")) ||
+        document.getElementById("file_content")?.closest(".editor-pane") ||
+        document.querySelector(".editor-pane.is-booting")
+      );
+    }
+
+    function revealEditorPane(root) {
+      const pane = editorPaneFor(root);
+      if (!pane) return null;
+      pane.classList.remove("is-booting");
+      pane.querySelector("[data-editor-boot]")?.remove();
+      return pane;
+    }
+
+    async function mountCodeMirror(elm) {
+      const pane = editorPaneFor(elm);
+
+      try {
+        await waitForCodeMirror();
+      } catch (error) {
+        console.error("[editor]", error);
+        revealEditorPane(elm);
+        return;
       }
 
       const fileContentTextArea = document.getElementById("file_content");
-      let fileContentTextAreaHasCodemirror = fileContentTextArea.parentElement.querySelector(".CodeMirror")
+      if (!fileContentTextArea) return;
 
-      if (!fileContentTextAreaHasCodemirror) {
-        let editor = CodeMirror.fromTextArea(fileContentTextArea, {
-          mode: mode,
-          lineNumbers: true,
-          autoCloseTags: true,
-          autoCloseBrackets: true,
-          matchBrackets: true,
-          foldGutter: true,
-          //gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
-          styleActiveLine: true,
-          indentUnit: 2,
-          indentWithTabs: false,
-          tabSize: 2,
-          extraKeys: {
-            "Ctrl-Space": "autocomplete",
-            "Cmd-S": function (instance) {
-              document.querySelector("#save-file-btn").click();
-            },
+      if (fileContentTextArea.parentElement?.querySelector(".CodeMirror")) {
+        revealEditorPane(elm || fileContentTextArea);
+        fileContentTextArea.parentElement.querySelector(".CodeMirror")?.CodeMirror?.refresh();
+        return;
+      }
+
+      const fileName = (elm?.dataset?.filename || fileContentTextArea.dataset.filename || "").toString();
+      const fileExtension = fileName.split(".").pop();
+      let mode = "htmlmixed";
+      if (fileExtension === "js" || fileExtension === "mjs") mode = "text/javascript";
+      else if (fileExtension === "css") mode = "text/css";
+
+      const editor = window.CodeMirror.fromTextArea(fileContentTextArea, {
+        mode: mode,
+        lineNumbers: true,
+        autoCloseTags: true,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        styleActiveLine: true,
+        indentUnit: 2,
+        indentWithTabs: false,
+        tabSize: 2,
+        extraKeys: {
+          "Ctrl-Space": "autocomplete",
+          "Cmd-S": function () {
+            document.querySelector("#save-file-btn")?.click();
           },
+        },
+      });
+      editor.on("change", function (cm) {
+        const live = document.getElementById("file_content");
+        if (live) live.value = cm.getValue();
+        const saveBtn = document.querySelector("#save-file-btn");
+        if (saveBtn) saveBtn.disabled = false;
+      });
+
+      // Keep the boot skeleton up until CM has painted, then swap and refresh again
+      // now that the live pane is in normal document flow.
+      const stage = pane?.querySelector(".editor-pane__stage");
+      const bodyH = stage ? Math.round(stage.getBoundingClientRect().height) : null;
+      if (bodyH) editor.setSize(null, bodyH);
+
+      requestAnimationFrame(() => {
+        editor.refresh();
+        revealEditorPane(pane || fileContentTextArea);
+        requestAnimationFrame(() => {
+          if (bodyH) editor.setSize(null, bodyH);
+          editor.refresh();
+          setTimeout(() => editor.refresh(), 50);
         });
-        editor.on("change", function(cm, change) {
-          document.getElementById("file_content").value = cm.getValue();
-          // Enable save button
-          document.querySelector("#save-file-btn").disabled = false;
-        });
-      }
-
-      // Hide the loading spinner
-      document.querySelector("#save-file-btn").querySelector("span").classList.add("d-none");
-      document.querySelector("#save-file-btn").querySelector(".save-btn-text-loading").classList.add("d-none");
-      document.querySelector("#save-file-btn").querySelector(".save-btn-text").classList.remove("d-none");
-    });
-
-    const allModals = document.querySelectorAll(".modal");
-
-    allModals.forEach((modal) => {
-      let modalInstanceDismissBtn = modal.querySelector("[data-bs-dismiss]");
-      if (modalInstanceDismissBtn) {
-        modalInstanceDismissBtn.click();
-      }
-    });
-
-    if(e.detail.fetchResponse.response.url.includes("/files/update") && !e.detail.fetchResponse.response.headers.get("site-over-limit")) {
-      let fileTooBigError = document.querySelector(".file__too__big__error");
-      if(fileTooBigError) {
-        fileTooBigError.classList.add("d-none");
-      }
-      showToast("file_saved");
-      // Disable save button
-      let saveBtn = document.querySelector("#save-file-btn");
-      saveBtn && saveBtn.classList.add("disabled");
-    }
-
-    if(e.detail.fetchResponse.response.url.includes("/files/upload")) {
-      waitForElm(`a[data-filename="${e.detail.fetchResponse.response.headers.get("file-name")}"]`).then((elm) => {
-        elm.click();
       });
     }
 
-    if(e.detail.fetchResponse.response.headers.get("site-over-limit")) {
-      document.querySelector(".file__too__big__error").classList.remove("d-none");
-    }
+    function afterEditorPaint(callback) {
+      const editor = document.getElementById("editor");
+      if (!editor) return;
+      const previous = editor.querySelector("#file_content");
+      const previousKey = previous
+        ? `${previous.dataset.filename || ""}:${previous.value?.length || 0}`
+        : "";
 
-    try {
-      let eventType = event.detail.fetchResponse.response.headers.get("action-type")
-      if (eventType == "rename") {
-        // Click the file link to reload the file
-        waitForElm(`a[data-filename="${event.detail.fetchResponse.response.headers.get("new-file-name")}"]`).then((elm) => {
-          elm.click();
-        });
-      } else if(eventType == "delete") {
-        // remove the file from the URL
-        // and delete the inner contents of the editor tag
-        let url = new URL(window.location.href);
-        url.searchParams.delete("filename");
-        window.history.pushState({}, "", url);
-        document.getElementById("editor").innerHTML = "";
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  });
-</script>
-<script>
-  // When the CMD+S key is pressed, save the file
-  document.addEventListener("keydown", function(e) {
-    if (e.key == "s" && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
-      e.preventDefault();
-      document.querySelector("#save-file-btn").click();
-    }
-  });
+      const run = () => {
+        const elm = document.getElementById("file_content");
+        if (!elm) return false;
+        const key = `${elm.dataset.filename || ""}:${elm.value?.length || 0}`;
+        if (previous && elm === previous && key === previousKey) return false;
+        callback(elm);
+        return true;
+      };
 
-  document.addEventListener("turbo:before-fetch-request", function(e) {
-    if(!e.detail.url.href.includes("/files/update") && !e.detail.url.href.includes("/files/delete")) {
-      // Make the code editor appear like it's loading
-      waitForElm("#editor").then((elm) => {
-        elm.innerHTML = `<%= render :partial => "layouts/snippets/code_loading" %>`;
+      if (run()) return;
+
+      const observer = new MutationObserver(() => {
+        if (run()) observer.disconnect();
       });
-    } else {
-      document.querySelector("#save-file-btn").querySelector("span").classList.remove("d-none");
-      document.querySelector("#save-file-btn").querySelector(".save-btn-text-loading").classList.remove("d-none");
-      document.querySelector("#save-file-btn").querySelector(".save-btn-text").classList.add("d-none");
-
+      observer.observe(editor, { childList: true, subtree: true });
+      setTimeout(() => observer.disconnect(), 4000);
     }
-  })
 
-  document.addEventListener("turbo:load", function() {
-    addEventListenerToFileLinks();
+    function onBeforeFetchResponse(e) {
+      const response = e.detail?.fetchResponse?.response;
+      if (!response) return;
+      const url = response.url || "";
 
-    // Get the filename from the URL using the URLSearchParams API
-    const urlParams = new URLSearchParams(window.location.search);
-    const filename = urlParams.get("filename");
+      if (url.includes("/files/editor")) {
+        afterEditorPaint(async (elm) => {
+          await mountCodeMirror(elm);
+          syncOpenFileSelection(elm.dataset.filename);
+          const saveBtn = document.querySelector("#save-file-btn");
+          if (saveBtn) {
+            saveBtn.classList.remove("is-loading", "disabled");
+            saveBtn.disabled = true;
+            saveBtn.querySelector("span")?.classList.add("d-none");
+            saveBtn.querySelector(".save-btn-text-loading")?.classList.add("d-none");
+            saveBtn.querySelector(".save-btn-text")?.classList.remove("d-none");
+          }
+        });
+      }
 
-    if (filename) {
-      const fileLink = document.querySelector(`a[data-filename="${filename}"]`);
-      if(fileLink) {
-        fileLink.click();
-        fileLink.querySelector(".accordion-body").classList.add("accordion-active");
+      if (url.includes("/files/update")) {
+        if (response.headers.get("site-over-limit")) {
+          document.querySelector(".file__too__big__error")?.classList.remove("d-none");
+          showToast("file_too_big");
+        } else if (response.ok) {
+          document.querySelector(".file__too__big__error")?.classList.add("d-none");
+          showToast("file_saved");
+          const saveBtn = document.querySelector("#save-file-btn");
+          if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.classList.add("disabled");
+          }
+        } else {
+          window.AppToast?.show("Couldn't save file", { type: "error" });
+        }
+      }
+
+      if (url.includes("/files/upload")) {
+        if (response.headers.get("site-over-limit")) {
+          showToast("file_too_big");
+        } else if (response.ok) {
+          showToast("file_upload");
+          const fileName = response.headers.get("file-name");
+          if (fileName) {
+            waitForElm(`a[data-filename="${fileName}"]`).then((elm) => elm.click());
+          }
+          const uploadModal = document.getElementById("uploadFileModal");
+          if (uploadModal && window.bootstrap?.Modal) {
+            window.bootstrap.Modal.getOrCreateInstance(uploadModal)?.hide();
+          }
+        } else {
+          window.AppToast?.show("Couldn't upload file", { type: "error" });
+        }
+      }
+
+      if (response.headers.get("site-over-limit") && !url.includes("/files/update") && !url.includes("/files/upload")) {
+        document.querySelector(".file__too__big__error")?.classList.remove("d-none");
+        showToast("file_too_big");
+      }
+
+      const eventType = response.headers.get("action-type") || response.headers.get("ACTION-TYPE");
+      if (eventType === "rename") {
+        showToast("file_renamed");
+        const newName = response.headers.get("new-file-name");
+        if (newName) waitForElm(`a[data-filename="${newName}"]`).then((elm) => elm.click());
+      } else if (eventType === "delete") {
+        const deleted = response.headers.get("deleted-path") || "item";
+        window.AppToast?.show(`Deleted ${deleted.replace(/\/$/, "")}`, { type: "success" });
+        const deleteModal = document.getElementById("deleteFileModal");
+        if (deleteModal && window.bootstrap?.Modal) {
+          window.bootstrap.Modal.getOrCreateInstance(deleteModal)?.hide();
+        }
+        const current = new URL(window.location.href);
+        current.searchParams.delete("filename");
+        window.history.pushState({}, "", current);
+        const editor = document.getElementById("editor");
+        if (editor) editor.innerHTML = "";
+      } else if (eventType === "rename-blocked") {
+        window.AppToast?.show("Built-in pages can't be renamed", { type: "error" });
+      }
+    }
+
+    function showEditorLoadingSkeleton(href) {
+      const elm = document.getElementById("editor");
+      if (!elm) return;
+      const { fileName, kind } = fileMetaFromUrl(href);
+      if (kind === "asset") {
+        elm.innerHTML = assetLoadingMarkup(fileName);
+        return;
+      }
+      const template = codeSkeletons[kind] || codeSkeletons.html;
+      elm.innerHTML = template.replaceAll("__FILENAME__", escapeHtml(fileName || "Loading…"));
+    }
+
+    function onBeforeFetchRequest(e) {
+      const href = e.detail?.url?.href || "";
+      if (!href.includes("/admin/sites/")) return;
+
+      if (!href.includes("/files/update") && !href.includes("/files/delete") && href.includes("/files/")) {
+        // Paint skeleton synchronously so image/code placeholders aren't skipped
+        // when Turbo replaces the frame on a fast response.
+        if (document.getElementById("editor")) {
+          showEditorLoadingSkeleton(href);
+        } else {
+          waitForElm("#editor").then(() => showEditorLoadingSkeleton(href));
+        }
+      } else if (href.includes("/files/update") || href.includes("/files/delete")) {
+        const saveBtn = document.querySelector("#save-file-btn");
+        if (saveBtn) {
+          saveBtn.classList.add("is-loading");
+          saveBtn.querySelector("span")?.classList.remove("d-none");
+          saveBtn.querySelector(".save-btn-text-loading")?.classList.remove("d-none");
+          saveBtn.querySelector(".save-btn-text")?.classList.add("d-none");
+        }
+      }
+    }
+
+    function onKeydown(e) {
+      if (e.key === "s" && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
+        const saveBtn = document.querySelector("#save-file-btn");
+        if (!saveBtn || saveBtn.disabled) return;
+        e.preventDefault();
+        saveBtn.click();
+      }
+    }
+
+    function syncOpenFileSelection(filename) {
+      if (!filename) return;
+      const tree = document.querySelector("[data-controller~='filetree']");
+      const filetree = tree && window.Stimulus
+        ? window.Stimulus.getControllerForElementAndIdentifier(tree, "filetree")
+        : null;
+      if (filetree?.setActiveFile) {
+        filetree.setActiveFile(filename);
       } else {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("filename");
-        window.history.replaceState({}, document.title, url);
-        showToast("file_404");
+        document.querySelectorAll(".filetree__row[data-file-row]").forEach((row) => {
+          row.classList.toggle("accordion-active", row.dataset.filename === filename);
+        });
       }
     }
 
-    window.onscroll = function() {scrollFunction()};
-  })
-</script>
-<script>
-  // Whole bunch of functions
+    async function onTurboLoad() {
+      addEventListenerToFileLinks();
+      window.onscroll = scrollFunction;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const filename = urlParams.get("filename");
+      const editor = document.querySelector("#editor");
+      const fileContent = document.getElementById("file_content");
+
+      if (fileContent) {
+        await mountCodeMirror(fileContent);
+        syncOpenFileSelection(fileContent.dataset.filename || filename);
+        return;
+      }
+
+      if (filename) {
+        syncOpenFileSelection(filename);
+        if (editor && !editor.querySelector("img") && !editor.querySelector(".empty-state")) {
+          showToast("file_404");
+        }
+      }
+    }
+
+    const prev = window.__gcSiteEditor;
+    if (prev) {
+      document.removeEventListener("turbo:before-fetch-response", prev.response);
+      document.removeEventListener("turbo:before-fetch-request", prev.request);
+      document.removeEventListener("keydown", prev.keydown);
+      document.removeEventListener("turbo:load", prev.load);
+    }
+
+    window.__gcSiteEditor = {
+      response: onBeforeFetchResponse,
+      request: onBeforeFetchRequest,
+      keydown: onKeydown,
+      load: onTurboLoad,
+    };
+
+    document.addEventListener("turbo:before-fetch-response", onBeforeFetchResponse);
+    document.addEventListener("turbo:before-fetch-request", onBeforeFetchRequest);
+    document.addEventListener("keydown", onKeydown);
+    document.addEventListener("turbo:load", onTurboLoad);
+    onTurboLoad();
+  })();
+
   function scrollFunction() {
-    let mybutton = document.getElementById("scrollToTop");
+    const mybutton = document.getElementById("scrollToTop");
+    if (!mybutton) return;
     if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
       mybutton.style.display = "block";
     } else {
@@ -279,56 +682,8 @@
     }
   }
 
-  // When the user clicks on the button, scroll to the top of the document
   function topFunction() {
-    document.body.scrollTop = 0; // For Safari
-    document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
-  }
-
-  function showToast(selector) {
-    // Get the snackbar DIV
-    var x = document.getElementById(selector);
-
-    // Add the "show" class to DIV
-    x.className = "show";
-
-    // After 3 seconds, remove the show class from DIV
-    setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
-  }
-
-  function waitForElm(selector) {
-    return new Promise(resolve => {
-        if (document.querySelector(selector)) {
-            return resolve(document.querySelector(selector));
-        }
-
-        const observer = new MutationObserver(mutations => {
-            if (document.querySelector(selector)) {
-                resolve(document.querySelector(selector));
-                observer.disconnect();
-            }
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    });
-  }
-
-  function addEventListenerToFileLinks() {
-    const allFileLinks = document.querySelectorAll("a[data-filename]");
-
-    allFileLinks.forEach((fileLink) => {
-      fileLink.addEventListener("click", (event) => {
-        const allAccordionCollapse = document.querySelectorAll(".accordion-body");
-        allAccordionCollapse.forEach((accordionCollapse) => {
-          accordionCollapse.classList.remove("accordion-active");
-        });
-
-        const accordionCollapse = fileLink.querySelector(".accordion-body");
-        accordionCollapse.classList.add("accordion-active");
-      });
-    });
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
   }
 </script>

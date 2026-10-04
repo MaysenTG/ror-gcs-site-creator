@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_04_29_053347) do
+ActiveRecord::Schema[7.0].define(version: 2026_10_03_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -36,6 +36,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_04_29_053347) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "site_id"
+    t.index ["domain"], name: "index_domains_on_domain", unique: true
+    t.index ["site_id"], name: "index_domains_on_site_id"
   end
 
   create_table "plans", force: :cascade do |t|
@@ -46,6 +48,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_04_29_053347) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "price"
+    t.index ["plan_handle"], name: "index_plans_on_plan_handle", unique: true
   end
 
   create_table "posts", force: :cascade do |t|
@@ -56,13 +59,91 @@ ActiveRecord::Schema[7.0].define(version: 2023_04_29_053347) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "site_dashboards", force: :cascade do |t|
+    t.bigint "site_id", null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "is_default", default: false, null: false
+    t.jsonb "global_filters", default: {}, null: false
+    t.jsonb "layout", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["site_id", "is_default"], name: "index_site_dashboards_on_site_id_and_is_default"
+    t.index ["site_id", "slug"], name: "index_site_dashboards_on_site_id_and_slug", unique: true
+    t.index ["site_id"], name: "index_site_dashboards_on_site_id"
+  end
+
+  create_table "site_file_versions", force: :cascade do |t|
+    t.bigint "site_id", null: false
+    t.string "path", null: false
+    t.text "content", null: false
+    t.integer "byte_size", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.index ["created_at"], name: "index_site_file_versions_on_created_at"
+    t.index ["site_id", "path", "created_at"], name: "index_site_file_versions_on_site_path_created"
+    t.index ["site_id"], name: "index_site_file_versions_on_site_id"
+  end
+
+  create_table "site_moment_files", force: :cascade do |t|
+    t.bigint "site_moment_id", null: false
+    t.string "path", null: false
+    t.text "content", null: false
+    t.integer "byte_size", default: 0, null: false
+    t.index ["site_moment_id", "path"], name: "index_site_moment_files_on_site_moment_id_and_path", unique: true
+    t.index ["site_moment_id"], name: "index_site_moment_files_on_site_moment_id"
+  end
+
+  create_table "site_moments", force: :cascade do |t|
+    t.bigint "site_id", null: false
+    t.string "name", null: false
+    t.string "note"
+    t.integer "file_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.index ["site_id", "created_at"], name: "index_site_moments_on_site_id_and_created_at"
+    t.index ["site_id"], name: "index_site_moments_on_site_id"
+  end
+
+  create_table "site_page_views", force: :cascade do |t|
+    t.bigint "site_id", null: false
+    t.string "path", default: "index.html", null: false
+    t.integer "status", default: 200, null: false
+    t.integer "bytes_sent", default: 0, null: false
+    t.boolean "is_html", default: false, null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.string "country_code", limit: 2
+    t.string "country_name"
+    t.string "device_type"
+    t.string "browser"
+    t.string "os"
+    t.index ["site_id", "country_code"], name: "index_site_page_views_on_site_id_and_country_code"
+    t.index ["site_id", "created_at"], name: "index_site_page_views_on_site_id_and_created_at"
+    t.index ["site_id", "device_type"], name: "index_site_page_views_on_site_id_and_device_type"
+    t.index ["site_id", "is_html", "created_at"], name: "index_site_page_views_on_site_id_and_is_html_and_created_at"
+    t.index ["site_id", "path"], name: "index_site_page_views_on_site_id_and_path"
+    t.index ["site_id"], name: "index_site_page_views_on_site_id"
+  end
+
   create_table "sites", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "name", null: false
+    t.jsonb "dashboard_widgets"
+    t.boolean "gate_enabled", default: false, null: false
+    t.string "visitor_password"
+    t.string "seo_title"
+    t.text "seo_description"
+    t.string "seo_og_image"
+    t.boolean "robots_index", default: true, null: false
     t.index ["account_id"], name: "index_sites_on_account_id"
+    t.index ["name"], name: "index_sites_on_name", unique: true
   end
 
+  add_foreign_key "site_dashboards", "sites"
+  add_foreign_key "site_file_versions", "sites"
+  add_foreign_key "site_moment_files", "site_moments"
+  add_foreign_key "site_moments", "sites"
+  add_foreign_key "site_page_views", "sites", name: "site_page_views_site_id_fkey"
   add_foreign_key "sites", "accounts"
 end

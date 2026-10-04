@@ -2,16 +2,18 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Main website files</h1>
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Built-in site pages</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p>The <code>index.html</code> file is the main file for the site. When you visit <strong><%= @site.name %>.maysengreenwood.com</strong>, this file is served.</p>
+        <p><code>index.html</code> is the home page. Visiting <strong><%= site_public_host(@site) %></strong> serves this file.</p>
         <br>
-        <p>The <code>404.html</code> is the main 404 file for the site. When you visit a URL which has no matching file/directory, this file is served.</p>
+        <p><code>404.html</code> is shown when a URL has no matching file.</p>
+        <br>
+        <p><code>password.html</code> is the visitor lock screen when Password &amp; SEO has a gate enabled. You can restyle it, but it can’t be deleted or renamed.</p>
       </div>
       <div data-controller="file" class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>

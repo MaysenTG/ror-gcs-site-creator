@@ -1,0 +1,14 @@
+<div data-controller="toast" class="app-toast-host">
+  <div class="app-toast-region" data-toast-target="region" aria-live="polite" aria-atomic="true"></div>
+
+  <% flash.each do |type, message| %>
+    <% next if message.blank? %>
+    <% kind =
+         case type.to_s
+         when "alert", "error" then "error"
+         when "notice", "success" then "success"
+         else "info"
+         end %>
+    <div data-toast-flash data-toast-type="<%= kind %>" class="d-none"><%= message %></div>
+  <% end %>
+</div>

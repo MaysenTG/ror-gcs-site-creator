@@ -1,126 +1,151 @@
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
+  static values = {
+    previewViaApp: { type: Boolean, default: true },
+    domain: { type: String, default: "maysengreenwood.com" },
+  };
+
   connect() {
-    //this.element.textContent = "Hello World!"
+    this._validateTimer = null;
   }
 
   handleToggleStage(event) {
-    let stage = event.target.dataset.targetStage;
-    
-    let navtab_buttonTheme = document.querySelector(`#pills-theme-tab`);
-    
-    navtab_buttonTheme.removeAttribute("disabled");
-    navtab_buttonTheme.classList.remove("disabled");
+    const stage = event.currentTarget.dataset.targetStage;
+    const themeTab = document.querySelector("#pills-theme-tab");
+    const themeStep = document.querySelector("#create-step-theme");
 
-    let navtab_button = document.querySelector(`#pills-${stage}-tab`);
-    navtab_button.click();
+    if (stage === "theme") {
+      themeTab?.removeAttribute("disabled");
+      themeTab?.classList.remove("disabled");
+      themeStep?.classList.add("is-active");
+      document.querySelector('.create-site__step[data-step="name"]')?.classList.add("is-complete");
+    } else {
+      themeStep?.classList.remove("is-active");
+      document.querySelector('.create-site__step[data-step="name"]')?.classList.add("is-active");
+    }
+
+    document.querySelector(`#pills-${stage}-tab`)?.click();
   }
 
   validateSiteName(event) {
-    this.validateSiteNameInternal(event);
+    const siteName = event.target.value.trim().toLowerCase();
+    event.target.value = siteName;
+    this.updatePreviewPath(siteName);
+
+    const nextButton = document.querySelector("#next-stage-new-site");
+    nextButton.disabled = true;
+
+    clearTimeout(this._validateTimer);
+    this._validateTimer = setTimeout(() => {
+      this.validateSiteNameInternal(siteName, nextButton);
+    }, 280);
   }
 
-  validateSiteNameInternal(event) {
-    let site_name = event.target.value;
-    let csrf_token = document.querySelector("#csrf_token").value;
-    let site_name_input = event.target;
-    let next_button = document.querySelector("#next-stage-new-site");
+  validateSiteNameInternal(siteName, nextButton) {
+    const csrfToken = document.querySelector("#csrf_token")?.value;
+    const errorWrapper = document.querySelector("#new-site-name-error-wrapper");
+    const errorText = document.querySelector("#new-site-name-error-text");
+    const spinner = nextButton.querySelector("span");
 
-    next_button.disabled = true;
-    next_button.querySelector("span").classList.remove("d-none");
+    nextButton.classList.add("is-loading");
+    spinner?.classList.remove("d-none");
 
-    if (this.validateSiteNameInternalHelper(site_name)) {
-      next_button.disabled = true;
-      next_button.querySelector("span").classList.add("d-none");
-      document
-        .querySelector("#new-site-name-error-wrapper")
-        .classList.remove("d-none");
+    const formatError = this.formatErrorFor(siteName);
+    if (formatError) {
+      nextButton.classList.remove("is-loading");
+      spinner?.classList.add("d-none");
+      nextButton.disabled = true;
+      if (errorText) errorText.textContent = formatError;
+      errorWrapper?.classList.remove("d-none");
       return;
     }
 
-    // Post to the validate site name endpoint
-    fetch(`/admin/sites/validate_site_name?site_name=${site_name}`, {
+    fetch(`/admin/sites/validate_site_name?site_name=${encodeURIComponent(siteName)}`, {
       method: "POST",
       headers: {
-        "X-CSRF-Token": csrf_token,
+        "X-CSRF-Token": csrfToken,
         Accept: "application/json",
       },
     })
       .then((response) => response.json())
       .then((data) => {
-        if (data.status == "success") {
-          next_button.querySelector("span").classList.add("d-none");
+        nextButton.classList.remove("is-loading");
+        spinner?.classList.add("d-none");
 
-          if (data.name_taken) {
-            next_button.disabled = true;
-            document
-              .querySelector("#new-site-name-error-wrapper")
-              .classList.remove("d-none");
-            // Show some error message
-          } else {
-            next_button.disabled = false;
-            document
-              .querySelector("#new-site-name-error-wrapper")
-              .classList.add("d-none");
-            document.querySelectorAll(".new-site-name").forEach((element) => {
-              element.textContent = site_name;
-            });
-            
-            document.querySelector("input[name='site_name']").value = site_name;
-          }
+        if (data.status !== "success") {
+          nextButton.disabled = true;
+          return;
         }
+
+        if (data.name_taken) {
+          nextButton.disabled = true;
+          if (errorText) errorText.textContent = "That site name is already taken. Try another.";
+          errorWrapper?.classList.remove("d-none");
+          return;
+        }
+
+        nextButton.disabled = false;
+        errorWrapper?.classList.add("d-none");
+        document.querySelectorAll(".new-site-name").forEach((element) => {
+          element.textContent = siteName;
+        });
+        this.updatePreviewPath(siteName);
+
+        const hiddenName = document.querySelector("input[name='site_name']");
+        if (hiddenName) hiddenName.value = siteName;
+      })
+      .catch(() => {
+        nextButton.classList.remove("is-loading");
+        spinner?.classList.add("d-none");
+        nextButton.disabled = true;
       });
   }
 
-  validateSiteNameInternalHelper(site_name) {
-    let has_errors = false;
-    if (
-      site_name.length < 3 ||
-      site_name.length > 20 ||
-      !/^[a-z-]+$/.test(site_name)
-    ) {
-      has_errors = true;
-    } else {
-      has_errors = false;
+  formatErrorFor(siteName) {
+    if (!siteName) return "Enter a site name to continue.";
+    if (siteName.length < 3) return "Site names need at least 3 characters.";
+    if (siteName.length > 20) return "Site names can be at most 20 characters.";
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(siteName)) {
+      return "Use lowercase letters, numbers, and hyphens only.";
     }
-    return has_errors;
+    return null;
+  }
+
+  updatePreviewPath(siteName) {
+    const slug = siteName || "…";
+    const label = this.previewViaAppValue
+      ? `${window.location.origin}/s/${slug}/`
+      : `https://${slug}.${this.domainValue}/`;
+    document.querySelectorAll(".new-site-preview-path").forEach((element) => {
+      element.textContent = label;
+    });
   }
 
   changeActiveTheme(event) {
-    // Defaults to blank
-    let theme = "blank";
+    const button = event.target.closest("button[data-theme]");
+    if (!button) return;
 
-    // Check if event target is a button
-    if (event.target.tagName != "BUTTON") {
-      let button = event.target.closest("button");
-      theme = button.dataset.theme;
-    } else {
-      theme = event.target.dataset.theme;
-    }
-
-    let all_list_groups = document.querySelectorAll(".list-group-item");
-    all_list_groups.forEach((list_group) => {
-      list_group.classList.remove("active");
+    const theme = button.dataset.theme || "blank";
+    document.querySelectorAll(".create-site__themes .list-group-item").forEach((item) => {
+      item.classList.remove("active");
+      item.removeAttribute("aria-current");
     });
+    button.classList.add("active");
+    button.setAttribute("aria-current", "true");
 
-    if (event.target.tagName != "BUTTON") {
-      let button = event.target.closest("button");
-      button.classList.add("active");
-    } else {
-      event.target.classList.add("active");
-    }
+    const themeBase = this.element.dataset.themePublicBaseUrl || "/theme_previews";
+    const iframe = document.querySelector("#storage-bucket-iframe");
+    if (iframe) iframe.src = `${themeBase}/${theme}/index.html`;
 
-    let theme_bucket_url = `https://storage.googleapis.com/theme_previews/${theme}/index.html`;
+    const label = document.querySelector("#theme-type-label");
+    if (label) label.innerText = theme;
 
-    document.querySelector("#storage-bucket-iframe").src = theme_bucket_url;
-    document.querySelector("#theme-type-label").innerText = theme;
-    document.querySelector("input[name='theme_type']").value = theme;
+    const themeInput = document.querySelector("input[name='theme_type']");
+    if (themeInput) themeInput.value = theme;
   }
 
-  createNewSite(event) {
-    let newSiteForm = document.querySelector("#new-site-form");
-    
-    newSiteForm.requestSubmit();
+  createNewSite() {
+    document.querySelector("#new-site-form")?.requestSubmit();
   }
 }

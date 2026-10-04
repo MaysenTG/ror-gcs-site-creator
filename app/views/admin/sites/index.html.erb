@@ -1,112 +1,108 @@
-<div class="container">
-  <% if notice %>
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-      <%= notice %>
-      <button
-      type="button"
-      class="btn-close"
-      data-bs-dismiss="alert"
-      aria-label="Close"
-    ></button>
+<div class="page-shell">
+  <div class="page-header">
+    <div>
+      <h1>Your sites</h1>
+      <p>Open a site to edit files, or create a new one when you have room on your plan.</p>
     </div>
-  <% end %>
-  <div class="container mt-3">
-    <div class="d-flex justify-content-between mb-3 align-items-center">
-      <h1 class="font-medium leading-tight text-3xl mt-0 mb-2 text-black-600">
-        All sites
-      </h1>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="<%= admin_dashboard_hub_path %>" class="btn btn-ghost">All dashboards</a>
       <% if @num_sites_left > 0 %>
         <a href="/admin/sites/new" class="btn btn-primary">Create a new site</a>
       <% else %>
         <button
-        type="button"
-        class="site-limit-tooltip btn btn-primary"
-        data-bs-toggle="tooltip"
-        data-bs-placement="top"
-        title="You've reached your account's site limit"
-      >
-          Add new site
+          type="button"
+          class="site-limit-tooltip btn btn-outline-primary"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="You've reached your account's site limit"
+        >
+          Site limit reached
         </button>
       <% end %>
     </div>
-    <div class="overflow-x-auto">
-      <div class="min-w-screen font-sans overflow-hidden">
-        <div class="w-full">
-          <div class="bg-white shadow-md rounded my-6 table-responsive">
-            <%= turbo_frame_tag "site_files", src: "/admin/sites/all", target:
-            "_top" do %> <%= render partial: "admin/sites/all_sites_loading" %>
-            <% end %>
-          </div>
-        </div>
-      </div>
-    </div>
+  </div>
+
+  <div class="surface-panel">
+    <%= turbo_frame_tag "site_files", src: "/admin/sites/all", target: "_top" do %>
+      <%= render partial: "admin/sites/all_sites_loading" %>
+    <% end %>
   </div>
 </div>
-<div
-  class="modal fade"
-  id="deleteSiteModal"
-  tabindex="-1"
-  aria-labelledby="deleteSiteLabel"
-  aria-hidden="true"
->
+
+<div class="modal fade" id="deleteSiteModal" tabindex="-1" aria-labelledby="deleteSiteLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h1 class="modal-title fs-5" id="deleteSiteLabel">Delete site</h1>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form
-          id="delete-site-form"
-          action="/admin/sites/delete"
-          method="DELETE"
-          data-turbo="true"
-        >
+        <form id="delete-site-form" action="/admin/sites/delete" method="DELETE" data-turbo="true">
           Are you sure you want to delete
-          <strong
-            ><span id="deleting-site-name-for-modal"></span
-            >.maysengreenwood.com</strong
-          >?
-          <br />
-          <br />
-          This action is irreversible
-          <input type="hidden" value="" name="site_name" id="site_name" />
+          <strong><span id="deleting-site-name-for-modal"></span></strong>
+          (<%= SiteStorage.preview_via_app? ? "#{request.base_url}/s/…" : ".#{SiteStorage::DOMAIN_NAME}" %>)?
+          <br><br>
+          This action is irreversible.
+          <input type="hidden" value="" name="site_name" id="site_name">
         </form>
       </div>
       <div data-controller="site" class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          Cancel
-        </button>
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
         <button type="submit" form="delete-site-form" class="btn btn-danger">
-          <span
-            class="d-none spinner-border spinner-border-sm"
-            role="status"
-            aria-hidden="true"
-          ></span>
+          <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Delete site
         </button>
       </div>
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="cloneSiteModal" tabindex="-1" aria-labelledby="cloneSiteIndexLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="cloneSiteIndexLabel">Clone site</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="clone-site-form" method="post" action="#">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <div class="modal-body">
+          <p class="text-muted">Copy all files from <strong><span data-clone-source></span></strong> into a new site.</p>
+          <label class="form-label" for="clone_new_site_name_index">New site name</label>
+          <input
+            type="text"
+            class="form-control"
+            id="clone_new_site_name_index"
+            name="new_site_name"
+            required
+            minlength="3"
+            maxlength="20"
+            pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+            placeholder="my-site-copy"
+          >
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Clone site</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    $("button.site-limit-tooltip").tooltip();
+  document.addEventListener("turbo:load", function () {
+    document.querySelectorAll("button.site-limit-tooltip").forEach((button) => {
+      if (window.bootstrap?.Tooltip) {
+        window.bootstrap.Tooltip.getOrCreateInstance(button);
+      }
+    });
   });
 
-  document.addEventListener("turbo:before-fetch-response", function (e) {
-    const allModals = document.querySelectorAll(".modal");
-
-    allModals.forEach((modal) => {
-      let modalInstanceDismissBtn = modal.querySelector("[data-bs-dismiss]");
-      if (modalInstanceDismissBtn) {
-        modalInstanceDismissBtn.click();
-      }
+  document.addEventListener("turbo:before-fetch-response", function () {
+    document.querySelectorAll(".modal").forEach((modal) => {
+      const dismissBtn = modal.querySelector("[data-bs-dismiss]");
+      if (dismissBtn) dismissBtn.click();
     });
   });
 </script>

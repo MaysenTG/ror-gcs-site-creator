@@ -1,44 +1,17 @@
-# default: &default
-#   adapter: postgresql
-#   encoding: unicode
-#   pool: 5
-
-# development:
-#   <<: *default
-#   #host: db
-#   username: postgres
-#   password: qd!/][Km92
-#   database: myapp_development
-
-# test:
-#   <<: *default
-#   database: myapp_test
-
-# production:
-#   <<: *default
-#   database: w3schools_spaces_poc_prod
-
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  username: maysen
 
 development:
-  adapter: postgresql
-  encoding: unicode
-  database: w3schools_spaces_poc_dev
-  pool: 5
-  username: postgres
-  password: qd!/][Km92
-  
+  <<: *default
+  database: ror_site_creator_development
+
 test:
-  adapter: postgresql
-  encoding: unicode
-  database: w3schools_spaces_poc_test
-  pool: 5
-  username: postgres
-  password: qd!/][Km92
+  <<: *default
+  database: ror_site_creator_test
 
 production:
-  adapter: postgresql
-  encoding: unicode
-  database: w3schools_spaces_poc_prod
-  pool: 5
-  username: postgres
-  password: qd!/][Km92
+  <<: *default
+  database: ror_site_creator_production

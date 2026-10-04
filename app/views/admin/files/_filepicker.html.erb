@@ -1,135 +1,142 @@
-<div class="accordion">
-  <div class="accordion-item d-flex">
-    <div class="accordion-collapse show add-new-file w-100" aria-labelledby="headingOne">
-      <a data-bs-toggle="modal" data-bs-target="#createFileModal" href="#" class="w-50">
-        <div class="accordion-body d-flex align-items-center">
-          <i class="bi fs-4 bi-plus-square"></i>
-          &nbsp;
-          File
-        </div>
-      </a>
-    </div>
-    <div class="accordion-collapse show add-new-file d-flex w-100" aria-labelledby="headingOne">
-      <a data-bs-toggle="modal" data-bs-target="#createFolderModal" href="#" class="w-100">
-        <div class="accordion-body d-flex align-items-center">
-          <i class="bi fs-4 bi-plus-square"></i>
-          &nbsp;
-          Folder
-        </div>
-      </a>
-    </div>
+<% site = @site || local_assigns[:site] %>
+<% items = @site_files_and_folders || local_assigns[:site_files_and_folders] || [] %>
+<% site_name = site.respond_to?(:name) ? site.name : site["name"] %>
+<% site_id = site.respond_to?(:id) ? site.id : site["id"] %>
+<% active_file = params[:filename].presence || params[:file_name].presence %>
+
+<div
+  class="filetree"
+  data-controller="filetree"
+  data-filetree-site-name-value="<%= site_name %>"
+  data-site-id="<%= site_id %>"
+>
+  <div class="filetree__toolbar">
+    <button type="button" class="filetree__tool" data-action="click->filetree#startNewFile" title="New file">
+      <i class="bi bi-file-earmark-plus"></i>
+      File
+    </button>
+    <button type="button" class="filetree__tool" data-action="click->filetree#startNewFolder" title="New folder">
+      <i class="bi bi-folder-plus"></i>
+      Folder
+    </button>
   </div>
-  <% @site_files_and_folders.each do |item| %>
-    <% if item["type"] == "file" %>
-      <div class="accordion-item">
-        <div class="accordion-collapse show" aria-labelledby="headingOne">
-          <!-- Using Turboframes, when the file is clicked, fetch the _editor partial -->
-          <a data-filename="<%= item["name"] %>" data-turbo-frame="_top" data-turbo-stream href="/admin/sites/<%= @site.name %>/files/editor?file_name=<%= item["name"] %>">
-            <div class="accordion-body d-flex justify-content-between">
-              <div>
-                <% unless item["name"].nil? %>
-                  <% if item["name"].include?(".css") %>
-                    <i class="fs-4 bi bi-filetype-css"></i>
-                  <% elsif item["name"].include?(".js") %>
-                    <i class="fs-4 bi bi-filetype-js"></i>
-                  <% elsif item["name"].include?(".html") %>
-                    <i class="fs-4 bi bi-filetype-html"></i>
-                  <% elsif item["name"].include?(".png") or item["name"].include?(".jpeg") or item["name"].include?(".gif") or item["name"].include?(".webp") %>
-                    <i class="fs-4 bi bi-file-image"></i>
+
+  <div class="filetree__tree" data-filetree-target="tree">
+    <% items.each do |item| %>
+      <% if item["type"] == "file" %>
+        <% locked = Site::SYSTEM_FILES.include?(item["name"]) %>
+        <div
+          class="filetree__row <%= 'accordion-active' if active_file == item['name'] %>"
+          data-file-row
+          data-filename="<%= item["name"] %>"
+          data-locked="<%= locked %>"
+        >
+          <a
+            class="filetree__link"
+            data-filename="<%= item["name"] %>"
+            data-turbo-stream
+            href="/admin/sites/<%= site_name %>/files/editor?file_name=<%= ERB::Util.url_encode(item["name"]) %>"
+          >
+            <% if item["name"].end_with?(".css") %>
+              <i class="bi bi-filetype-css" aria-hidden="true"></i>
+            <% elsif item["name"].end_with?(".js", ".mjs") %>
+              <i class="bi bi-filetype-js" aria-hidden="true"></i>
+            <% elsif item["name"].end_with?(".html", ".htm") %>
+              <i class="bi bi-filetype-html" aria-hidden="true"></i>
+            <% elsif item["name"].match?(/\.(png|jpe?g|gif|webp|svg)\z/i) %>
+              <i class="bi bi-file-earmark-image" aria-hidden="true"></i>
+            <% else %>
+              <i class="bi bi-file-earmark-code" aria-hidden="true"></i>
+            <% end %>
+            <span class="filetree__name"><%= item["name"] %></span>
+          </a>
+          <div class="filetree__actions">
+            <% unless locked %>
+              <button type="button" class="filetree__icon-btn" data-action="click->filetree#startRename" title="Rename">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button type="button" class="filetree__icon-btn" data-action="click->filetree#openDelete" title="Delete">
+                <i class="bi bi-trash3"></i>
+              </button>
+            <% else %>
+              <button type="button" class="filetree__icon-btn" data-bs-toggle="modal" data-bs-target="#mainOr404" title="About this file">
+                <i class="bi bi-question-lg"></i>
+              </button>
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <div
+          class="filetree__folder"
+          data-folder-row
+          data-filename="<%= item["name"] %>"
+          data-open="false"
+        >
+          <div class="filetree__row filetree__row--folder">
+            <button type="button" class="filetree__link filetree__folder-toggle" data-action="click->filetree#toggleFolder">
+              <i class="bi bi-chevron-right filetree__chevron"></i>
+              <i class="bi bi-folder-fill"></i>
+              <span class="filetree__name"><%= item["name"] %></span>
+            </button>
+            <div class="filetree__actions">
+              <button
+                type="button"
+                class="filetree__icon-btn"
+                data-folder="<%= item["name"] %>"
+                data-action="click->filetree#startNewFile"
+                title="New file in folder"
+              >
+                <i class="bi bi-file-earmark-plus"></i>
+              </button>
+              <button type="button" class="filetree__icon-btn" data-action="click->filetree#openDelete" title="Delete folder">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="filetree__children">
+            <% Array(item["files"]).each do |folder_file| %>
+              <% nested = "#{item["name"]}/#{folder_file["name"]}" %>
+              <% nested_locked = folder_file["name"].include?("index") %>
+              <div
+                class="filetree__row <%= 'accordion-active' if active_file == nested %>"
+                data-file-row
+                data-filename="<%= nested %>"
+                data-locked="<%= nested_locked %>"
+              >
+                <a
+                  class="filetree__link"
+                  data-filename="<%= nested %>"
+                  data-turbo-stream
+                  href="/admin/sites/<%= site_name %>/files/editor?file_name=<%= ERB::Util.url_encode(nested) %>"
+                >
+                  <% if folder_file["name"].end_with?(".css") %>
+                    <i class="bi bi-filetype-css" aria-hidden="true"></i>
+                  <% elsif folder_file["name"].end_with?(".js", ".mjs") %>
+                    <i class="bi bi-filetype-js" aria-hidden="true"></i>
+                  <% elsif folder_file["name"].end_with?(".html", ".htm") %>
+                    <i class="bi bi-filetype-html" aria-hidden="true"></i>
                   <% else %>
-                    <i class="fs-4 bi bi-file-code"></i>
+                    <i class="bi bi-file-earmark-code" aria-hidden="true"></i>
                   <% end %>
-                <% end %>
-                <%= item["name"] %>
-              </div>
-              <div class="d-flex file-icons-container" data-controller="file">
-                <% unless item["name"].include?("index") or item["name"].include?("404") %>
-                  <!-- Edit file -->
-                  <% if item["type"] == "file" %>
-                    <div data-action="click->file#openRenameFileModal" data-bs-target="#renameFileModal" data-bs-toggle="modal" class="div-edit-toggle mx-3 fs-5">
+                  <span class="filetree__name"><%= folder_file["name"] %></span>
+                </a>
+                <div class="filetree__actions">
+                  <% unless nested_locked %>
+                    <button type="button" class="filetree__icon-btn" data-action="click->filetree#startRename" title="Rename">
                       <i class="bi bi-pencil"></i>
-                    </div>
-                  <% end %>
-                  <!-- Delete file -->
-                  <div data-action="click->file#openDeleteFileModal" class="fs-5" data-bs-target="#deleteFileModal" data-bs-toggle="modal">
-                    <i class="bi bi-trash3"></i>
-                  </div>
-                <% else %>
-                  <div class="fs-5" data-bs-target="#mainOr404" data-bs-toggle="modal">
-                    <i class="bi bi-question-lg"></i>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          </a>
-        </div>
-      </div>
-    <% else %>
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="headingOne">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_<%= item["name"] %>" aria-expanded="false" aria-controls="collapseOne">
-            <i class="fs-4 bi bi-folder-fill"></i>&nbsp;<%= item["name"] %>
-          </button>
-        </h2>
-        <div data-controller="file" id="collapse_<%= item["name"] %>" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-          <a data-bs-toggle="modal" data-bs-target="#createFileModal" data-action="click->file#openNewFileInFolderModal" href="#" data-folder="<%= item["name"] %>">
-            <div class="accordion-body d-flex align-items-center">
-              <i class="bi fs-4 bi-plus-square"></i>
-              &nbsp;
-              New file within <%= item["name"] %>
-            </div>
-          </a>
-          <% item["files"].each do |folder_file| %>
-            <a data-filename="<%= item["name"] %>/<%= folder_file["name"] %>" data-turbo-frame="_top" data-turbo-stream href="/admin/sites/<%= @site.name %>/files/editor?file_name=<%= item["name"] %>/<%= folder_file["name"] %>">
-              <div class="accordion-body d-flex justify-content-between">
-                <div>
-                  <% unless folder_file["name"].nil? %>
-                    <% if folder_file["name"].include?(".css") %>
-                      <i class="fs-4 bi bi-filetype-css"></i>
-                    <% elsif folder_file["name"].include?(".js") %>
-                      <i class="fs-4 bi bi-filetype-js"></i>
-                    <% elsif folder_file["name"].include?(".html") %>
-                      <i class="fs-4 bi bi-filetype-html"></i>
-                    <% else %>
-                      <i class="fs-4 bi bi-file-code"></i>
-                    <% end %>
-                  <% end %>
-                  <%= folder_file["name"] %>
-                </div>
-                <div class="d-flex file-icons-container" data-controller="file">
-                  <% unless folder_file["name"].include?("index") %>
-                    <!-- Edit file -->
-                    <% if folder_file["type"] == "file" %>
-                      <div data-action="click->file#openRenameFileModal" data-bs-target="#renameFileModal" data-bs-toggle="modal" class="div-edit-toggle mx-3 fs-5">
-                        <i class="bi bi-pencil"></i>
-                      </div>
-                    <% end %>
-                    <!-- Delete file -->
-                    <div data-action="click->file#openDeleteFileModal" class="fs-5" data-bs-target="#deleteFileModal" data-bs-toggle="modal">
+                    </button>
+                    <button type="button" class="filetree__icon-btn" data-action="click->filetree#openDelete" title="Delete">
                       <i class="bi bi-trash3"></i>
-                    </div>
+                    </button>
                   <% end %>
                 </div>
               </div>
-            </a>
-          <% end %>
+            <% end %>
+          </div>
         </div>
-      </div>
+      <% end %>
     <% end %>
-  <% end %>
+  </div>
 </div>
-<script>
-  allFilePickerLinks = document.querySelectorAll("a[data-filename]");
 
-  allFilePickerLinks.forEach((fileLink) => {
-    fileLink.addEventListener("click", (event) => {
-      let allAccordionCollapse = document.querySelectorAll(".accordion-body");
-      allAccordionCollapse.forEach((accordionCollapse) => {
-        accordionCollapse.classList.remove("accordion-active");
-      });
-
-      let accordionCollapse = fileLink.querySelector(".accordion-body");
-      accordionCollapse.classList.add("accordion-active");
-    });
-  });
-</script>

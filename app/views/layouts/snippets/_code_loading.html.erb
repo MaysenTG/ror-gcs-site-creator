@@ -1,32 +1,115 @@
-<div class="container h-100">
-  <div id="code-editor-bar" class="mb-3 d-flex justify-content-start">
-    <div class="w-100 d-flex justify-content-between">
-      <div class="d-flex justify-content-start align-items-end">
-        <p class="placeholder-glow" style="width: 125px;">
-          <span class="placeholder col-12"></span>
-        </p>
-        &nbsp;
-        <a target="_blank" href="#">
-          <i class="fs-3 bi bi-eye"></i>
-        </a>
-      </div>
-      <button type="button" class="p-3 btn btn-success" disabled="">
-        Save
+<% kind = local_assigns.fetch(:kind, "html").to_s %>
+<% bare = local_assigns.fetch(:bare, false) %>
+<% embedded = local_assigns.fetch(:embedded, false) %>
+<% display_name = local_assigns[:filename].presence || "__FILENAME__" %>
+<% lines =
+     case kind
+     when "css"
+       [
+         { w: 28, tokens: [%w[is-cmt], %w[]] },
+         { w: 0, blank: true },
+         { w: 36, tokens: [%w[is-sel], %w[is-brace]] },
+         { w: 58, tokens: [%w[is-ind], %w[is-prop], %w[is-val]] },
+         { w: 64, tokens: [%w[is-ind], %w[is-prop], %w[is-val]] },
+         { w: 49, tokens: [%w[is-ind], %w[is-prop], %w[is-val]] },
+         { w: 18, tokens: [%w[is-brace]] },
+         { w: 0, blank: true },
+         { w: 44, tokens: [%w[is-sel], %w[is-sel], %w[is-brace]] },
+         { w: 71, tokens: [%w[is-ind], %w[is-prop], %w[is-val]] },
+         { w: 67, tokens: [%w[is-ind], %w[is-prop], %w[is-val]] },
+         { w: 53, tokens: [%w[is-ind], %w[is-prop], %w[is-val]] },
+         { w: 60, tokens: [%w[is-ind], %w[is-prop], %w[is-val]] },
+         { w: 18, tokens: [%w[is-brace]] },
+         { w: 0, blank: true },
+         { w: 40, tokens: [%w[is-sel], %w[is-brace]] },
+         { w: 55, tokens: [%w[is-ind], %w[is-prop], %w[is-val]] },
+         { w: 62, tokens: [%w[is-ind], %w[is-prop], %w[is-val]] }
+       ]
+     when "js"
+       [
+         { w: 34, tokens: [%w[is-cmt]] },
+         { w: 0, blank: true },
+         { w: 52, tokens: [%w[is-kw], %w[], %w[is-fn], %w[is-paren]] },
+         { w: 48, tokens: [%w[is-ind], %w[is-kw], %w[], %w[is-str]] },
+         { w: 66, tokens: [%w[is-ind], %w[is-kw], %w[], %w[is-fn], %w[is-paren]] },
+         { w: 58, tokens: [%w[is-ind], %w[is-ind], %w[], %w[is-str]] },
+         { w: 44, tokens: [%w[is-ind], %w[is-brace]] },
+         { w: 0, blank: true },
+         { w: 61, tokens: [%w[is-kw], %w[], %w[is-fn], %w[is-paren], %w[is-brace]] },
+         { w: 70, tokens: [%w[is-ind], %w[is-kw], %w[], %w[is-str]] },
+         { w: 55, tokens: [%w[is-ind], %w[], %w[is-fn], %w[is-paren]] },
+         { w: 63, tokens: [%w[is-ind], %w[is-kw], %w[], %w[]] },
+         { w: 47, tokens: [%w[is-ind], %w[is-kw], %w[], %w[is-str]] },
+         { w: 22, tokens: [%w[is-brace]] },
+         { w: 0, blank: true },
+         { w: 49, tokens: [%w[], %w[is-fn], %w[is-paren]] },
+         { w: 38, tokens: [%w[is-kw], %w[], %w[is-str]] },
+         { w: 57, tokens: [%w[is-kw], %w[], %w[is-fn], %w[is-paren]] }
+       ]
+     else # html
+       [
+         { w: 32, tokens: [%w[is-tag]] },
+         { w: 40, tokens: [%w[is-tag]] },
+         { w: 48, tokens: [%w[is-ind], %w[is-tag]] },
+         { w: 72, tokens: [%w[is-ind], %w[is-ind], %w[is-tag], %w[is-attr], %w[is-str]] },
+         { w: 61, tokens: [%w[is-ind], %w[is-ind], %w[is-tag], %w[]] },
+         { w: 36, tokens: [%w[is-ind], %w[is-tag]] },
+         { w: 0, blank: true },
+         { w: 38, tokens: [%w[is-ind], %w[is-tag]] },
+         { w: 69, tokens: [%w[is-ind], %w[is-ind], %w[is-tag], %w[is-attr], %w[is-str]] },
+         { w: 54, tokens: [%w[is-ind], %w[is-ind], %w[is-tag], %w[]] },
+         { w: 77, tokens: [%w[is-ind], %w[is-ind], %w[is-tag], %w[is-attr], %w[is-str], %w[]] },
+         { w: 45, tokens: [%w[is-ind], %w[is-ind], %w[is-tag]] },
+         { w: 33, tokens: [%w[is-ind], %w[is-tag]] },
+         { w: 0, blank: true },
+         { w: 58, tokens: [%w[is-ind], %w[is-tag], %w[is-attr], %w[is-str]] },
+         { w: 41, tokens: [%w[is-ind], %w[is-tag]] },
+         { w: 28, tokens: [%w[is-tag]] },
+         { w: 24, tokens: [%w[is-tag]] }
+       ]
+     end %>
+
+<div
+  class="<%= bare || embedded ? "" : "container " %>code-skel code-skel--<%= kind %><%= " code-skel--bare" if bare %><%= " code-skel--embedded" if embedded %>"
+  aria-busy="true"
+  aria-label="Loading <%= kind.upcase %> editor"
+>
+  <% unless bare %>
+    <div id="code-editor-bar" class="mb-3 d-flex justify-content-end align-items-center gap-2 flex-wrap">
+      <% if kind == "html" %>
+        <span class="btn btn-ghost disabled" aria-hidden="true">
+          <i class="bi bi-eye"></i> Preview
+        </span>
+      <% end %>
+      <span class="btn btn-ghost disabled" aria-hidden="true">
+        <i class="bi bi-clock-history"></i> History
+      </span>
+      <button type="button" class="btn btn-success" id="save-file-btn" disabled>
+        <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        <span class="save-btn-text">Save</span>
+        <span class="save-btn-text-loading d-none">Saving...</span>
       </button>
     </div>
-  </div>
-  <div class="card h-100">
-    <div class="card-body">
-      <h5 class="card-title placeholder-glow">
-        <span class="placeholder col-6"></span>
-      </h5>
-      <p class="card-text placeholder-glow">
-        <span class="placeholder col-7"></span>
-        <span class="placeholder col-4"></span>
-        <span class="placeholder col-4"></span>
-        <span class="placeholder col-6"></span>
-        <span class="placeholder col-8"></span>
-      </p>
+  <% end %>
+
+  <div class="code-skel__editor">
+    <div class="code-skel__gutters" aria-hidden="true">
+      <% lines.length.times do |i| %>
+        <span class="code-skel__lineno"><%= i + 1 %></span>
+      <% end %>
+    </div>
+    <div class="code-skel__code" aria-hidden="true">
+      <% lines.each do |line| %>
+        <% if line[:blank] %>
+          <span class="code-skel__line is-blank" style="--w: 0%"></span>
+        <% else %>
+          <span class="code-skel__line" style="--w: <%= line[:w] %>%">
+            <% line[:tokens].each do |token_classes| %>
+              <i class="<%= Array(token_classes).join(" ") %>"></i>
+            <% end %>
+          </span>
+        <% end %>
+      <% end %>
     </div>
   </div>
 </div>

@@ -1,0 +1,430 @@
+<% filters = @dashboard.global_filters.to_h.reverse_merge(SiteDashboard.default_global_filters) %>
+<% content_for :head do %>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<% end %>
+
+<div
+  class="page-shell page-shell--wide dash-studio"
+  data-controller="dashboard-studio dashboard-filters widget-builder telemetry-events"
+  data-dashboard-studio-layout-url-value="<%= layout_admin_dashboard_path(@site.name, @dashboard) %>"
+  data-dashboard-studio-update-url-value="<%= admin_dashboard_path(@site.name, @dashboard) %>"
+  data-dashboard-studio-query-url-value="<%= admin_analytics_query_path(@site.name) %>"
+  data-dashboard-filters-paths-url-value="<%= admin_analytics_paths_path(@site.name) %>"
+  data-telemetry-events-url-value="<%= admin_analytics_events_path(@site.name) %>"
+>
+  <script type="application/json" data-dashboard-studio-target="bootstrap" data-dashboard-filters-target="bootstrap" data-widget-builder-target="bootstrap">
+    <%= raw({ layout: @dashboard.layout, filters: filters, catalog: @catalog }.to_json) %>
+  </script>
+  <div class="page-header">
+    <div>
+      <div class="d-flex flex-wrap gap-2 mb-2">
+        <a href="<%= admin_dashboard_hub_path %>" class="btn btn-ghost btn-sm"><i class="bi bi-arrow-left"></i> All dashboards</a>
+        <a href="/admin/sites/<%= @site.name %>" class="btn btn-ghost btn-sm">Editor</a>
+      </div>
+      <h1><%= @site.name %> analytics</h1>
+      <p class="mb-0">
+        <a href="<%= site_preview_url(@site) %>" target="_blank" rel="noopener"><%= site_preview_label(@site) %></a>
+      </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-primary" data-action="widget-builder#openCreate" data-telemetry-events-target="addWidget">
+        <i class="bi bi-plus-lg"></i> Add widget
+      </button>
+      <a href="<%= site_preview_url(@site) %>" target="_blank" rel="noopener" class="btn btn-outline-primary">Open site</a>
+    </div>
+  </div>
+
+  <div class="dash-studio__mode" role="tablist" aria-label="Analytics view">
+    <button
+      type="button"
+      class="dash-studio__mode-btn is-active"
+      role="tab"
+      aria-selected="true"
+      data-telemetry-events-target="modeDashboard"
+      data-action="telemetry-events#showDashboard"
+    >
+      <i class="bi bi-grid-1x2"></i> Dashboards
+    </button>
+    <button
+      type="button"
+      class="dash-studio__mode-btn"
+      role="tab"
+      aria-selected="false"
+      data-telemetry-events-target="modeEvents"
+      data-action="telemetry-events#showEvents"
+    >
+      <i class="bi bi-activity"></i> Events
+    </button>
+  </div>
+
+  <% if @traffic_story.present? %>
+    <div class="traffic-story surface-panel">
+      <div class="traffic-story__eyebrow">Traffic story</div>
+      <p class="traffic-story__headline"><%= @traffic_story[:headline] %></p>
+      <div class="traffic-story__meta">
+        <span><%= number_with_delimiter(@traffic_story[:views]) %> views</span>
+        <% if @traffic_story[:delta_pct] %>
+          <span class="<%= @traffic_story[:delta_pct] >= 0 ? "is-up" : "is-down" %>">
+            <%= @traffic_story[:delta_pct] >= 0 ? "+" : "" %><%= @traffic_story[:delta_pct] %>% vs prior
+          </span>
+        <% end %>
+        <% if @traffic_story[:top_path] %>
+          <span>Top: <%= @traffic_story[:top_path] %></span>
+        <% end %>
+        <% if @traffic_story[:top_device] %>
+          <span><%= @traffic_story[:top_device].to_s.titleize %></span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%
+    range_key = filters["range"].to_s
+    range_key = "custom" if filters["from"].present? || filters["to"].present?
+    range_label = AnalyticsQuery::RANGE_LABELS[range_key] || "Last 30 days"
+    if range_key == "custom"
+      range_label = [filters["from"], filters["to"]].compact.join(" → ").presence || "Custom range"
+    end
+  %>
+
+  <div class="dash-studio__tabs surface-panel" data-telemetry-events-target="dashTabs">
+    <div class="dash-studio__tablist" role="tablist">
+      <% @dashboards.each do |dash| %>
+        <% if dash.id == @dashboard.id %>
+          <span class="dash-studio__tab is-active" role="tab" aria-selected="true" aria-current="page">
+            <%= dash.name %>
+            <% if dash.is_default? %><span class="dash-studio__badge">Default</span><% end %>
+          </span>
+        <% else %>
+          <a
+            href="<%= admin_dashboard_path(@site.name, dash) %>"
+            class="dash-studio__tab"
+            role="tab"
+            aria-selected="false"
+          >
+            <%= dash.name %>
+            <% if dash.is_default? %><span class="dash-studio__badge">Default</span><% end %>
+          </a>
+        <% end %>
+      <% end %>
+    </div>
+    <div class="dash-studio__tab-actions">
+      <button type="button" class="btn btn-ghost btn-sm" data-bs-toggle="modal" data-bs-target="#newDashboardModal">New</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-bs-toggle="modal" data-bs-target="#renameDashboardModal">Rename</button>
+      <% unless @dashboard.is_default? %>
+        <button type="button" class="btn btn-ghost btn-sm" data-action="dashboard-studio#makeDefault">Set default</button>
+      <% end %>
+      <% if @dashboards.size > 1 %>
+        <%= button_to "Delete", admin_dashboard_path(@site.name, @dashboard), method: :delete, class: "btn btn-ghost btn-sm text-danger", form: { data: { turbo_confirm: "Delete this dashboard?" } } %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="dash-studio__filters surface-panel" data-dashboard-filters-target="form">
+    <div class="dash-studio__filters-grid">
+      <div class="dash-studio__date">
+        <span class="dash-studio__field-label">Date range</span>
+        <button type="button" class="dash-studio__date-trigger" data-dashboard-filters-target="rangeButton" data-action="click->dashboard-filters#toggleRange">
+          <i class="bi bi-calendar3"></i>
+          <span data-dashboard-filters-target="rangeLabel"><%= range_label %></span>
+          <i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="dash-studio__date-panel d-none" data-dashboard-filters-target="rangePanel">
+          <div class="dash-studio__date-presets">
+            <% AnalyticsQuery::RANGE_LABELS.except("custom").each do |id, label| %>
+              <button type="button" class="dash-studio__preset<%= ' is-active' if range_key == id %>" data-range="<%= id %>" data-action="click->dashboard-filters#pickPreset"><%= label %></button>
+            <% end %>
+          </div>
+          <div class="dash-studio__date-custom">
+            <label>
+              <span>From</span>
+              <input type="date" data-dashboard-filters-target="from" value="<%= filters["from"] %>">
+            </label>
+            <label>
+              <span>To</span>
+              <input type="date" data-dashboard-filters-target="to" value="<%= filters["to"] %>">
+            </label>
+            <button type="button" class="btn btn-primary btn-sm" data-action="click->dashboard-filters#applyCustom">Apply dates</button>
+          </div>
+          <input type="hidden" data-dashboard-filters-target="range" value="<%= filters["range"].presence || "30d" %>">
+        </div>
+      </div>
+
+      <label class="dash-studio__check">
+        <input type="checkbox" data-dashboard-filters-target="htmlOnly" data-action="change->dashboard-filters#changed" <%= "checked" if filters["html_only"] %>>
+        <span>HTML pages only</span>
+      </label>
+
+      <div class="dash-studio__suggest">
+        <span class="dash-studio__field-label">Path</span>
+        <input
+          type="text"
+          placeholder="Search paths…"
+          autocomplete="off"
+          data-dashboard-filters-target="path"
+          data-action="input->dashboard-filters#suggestPath focus->dashboard-filters#suggestPath change->dashboard-filters#changed"
+          value="<%= filters["path"] %>"
+        >
+        <ul class="dash-studio__suggest-list d-none" data-dashboard-filters-target="pathList"></ul>
+      </div>
+
+      <label>
+        <span>Country</span>
+        <input type="text" placeholder="US" maxlength="2" data-dashboard-filters-target="country" data-action="change->dashboard-filters#changed" value="<%= filters["country_code"] %>">
+      </label>
+      <label>
+        <span>Device</span>
+        <select data-dashboard-filters-target="device" data-action="change->dashboard-filters#changed">
+          <option value="">Any</option>
+          <% %w[desktop mobile tablet bot unknown].each do |device| %>
+            <option value="<%= device %>" <%= "selected" if filters["device_type"].to_s == device %>><%= device.titleize %></option>
+          <% end %>
+        </select>
+      </label>
+    </div>
+    <div class="dash-studio__filters-actions">
+      <button type="button" class="btn btn-ghost btn-sm" data-action="dashboard-filters#reset">Reset</button>
+      <button type="button" class="btn btn-outline-primary btn-sm" data-action="dashboard-filters#save">Save filters</button>
+    </div>
+  </div>
+
+  <div class="dash-studio__canvas surface-panel<%= ' is-empty' if @dashboard.layout.blank? %>" data-telemetry-events-target="canvas">
+    <div class="grid-stack<%= ' d-none' if @dashboard.layout.blank? %>" data-dashboard-studio-target="grid"></div>
+    <div class="dash-studio__empty<%= ' d-none' if @dashboard.layout.present? %>" data-dashboard-studio-target="empty">
+      <h2>Empty dashboard</h2>
+      <p>Add a widget to start building this report.</p>
+      <button type="button" class="btn btn-primary" data-action="widget-builder#openCreate">Add widget</button>
+    </div>
+  </div>
+
+  <div class="telemetry-events surface-panel d-none" data-telemetry-events-target="panel">
+    <div class="telemetry-events__header">
+      <div>
+        <h2>Events</h2>
+        <p data-telemetry-events-target="meta">Raw page-view telemetry for this site.</p>
+      </div>
+      <div class="telemetry-events__pager">
+        <button type="button" class="btn btn-ghost btn-sm" data-telemetry-events-target="prev" data-action="telemetry-events#prevPage" disabled>Prev</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-telemetry-events-target="next" data-action="telemetry-events#nextPage" disabled>Next</button>
+        <button type="button" class="btn btn-outline-primary btn-sm" data-action="telemetry-events#load">Refresh</button>
+      </div>
+    </div>
+
+    <div class="telemetry-events__table-wrap">
+      <table class="telemetry-events__table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Event</th>
+            <th>Path</th>
+            <th>Status</th>
+            <th>Location</th>
+            <th>Device</th>
+          </tr>
+        </thead>
+        <tbody data-telemetry-events-target="tbody"></tbody>
+      </table>
+      <div class="telemetry-events__empty d-none" data-telemetry-events-target="empty">
+        <h3>No events in this range</h3>
+        <p>Open your live site or widen the filters to see page views land here.</p>
+      </div>
+    </div>
+
+    <div class="telemetry-events__detail d-none" data-telemetry-events-target="detail">
+      <div class="telemetry-events__detail-panel">
+        <div class="telemetry-events__detail-head">
+          <strong>Event properties</strong>
+          <button type="button" class="btn btn-ghost btn-sm" data-action="telemetry-events#closeDetail" aria-label="Close">&times;</button>
+        </div>
+        <dl class="telemetry-events__props" data-telemetry-events-target="detailBody"></dl>
+      </div>
+    </div>
+  </div>
+
+  <aside class="dash-studio__drawer" data-widget-builder-target="drawer" aria-hidden="true">
+    <div class="dash-studio__drawer-panel">
+      <div class="dash-studio__drawer-header">
+        <h2 data-widget-builder-target="heading">Add widget</h2>
+        <button type="button" class="btn btn-ghost btn-sm" data-action="widget-builder#close" aria-label="Close">&times;</button>
+      </div>
+      <form data-widget-builder-target="form" data-action="submit->widget-builder#submit">
+        <input type="hidden" name="edit_id" data-widget-builder-target="editId">
+
+        <label>
+          <span>Title</span>
+          <input type="text" name="title" required data-widget-builder-target="title" data-action="input->widget-builder#updatePreviewTitle" placeholder="Page views">
+        </label>
+        <label>
+          <span>Widget type</span>
+          <select name="type" data-widget-builder-target="type" data-action="change->widget-builder#syncAndPreview">
+            <option value="stat">Stat</option>
+            <option value="timeseries">Timeseries</option>
+            <option value="breakdown">Breakdown</option>
+            <option value="table">Table</option>
+          </select>
+        </label>
+        <label>
+          <span>Metric</span>
+          <select name="metric" data-widget-builder-target="metric" data-action="change->widget-builder#syncAndPreview">
+            <% AnalyticsQuery::METRICS.each do |metric| %>
+              <option value="<%= metric %>"><%= AnalyticsQuery::METRIC_LABELS[metric] || metric.humanize %></option>
+            <% end %>
+          </select>
+        </label>
+        <label data-widget-builder-target="dimensionWrap">
+          <span>Dimension</span>
+          <select name="dimension" data-widget-builder-target="dimension" data-action="change->widget-builder#syncAndPreview">
+            <option value="">None</option>
+            <% AnalyticsQuery::DIMENSIONS.keys.each do |dim| %>
+              <option value="<%= dim %>"><%= dim.humanize %></option>
+            <% end %>
+          </select>
+        </label>
+        <label data-widget-builder-target="chartWrap">
+          <span>Chart</span>
+          <select name="chart" data-widget-builder-target="chart" data-action="change->widget-builder#syncAndPreview">
+            <option value="number">Number</option>
+            <option value="bar">Bar</option>
+            <option value="line">Line</option>
+            <option value="doughnut">Doughnut</option>
+            <option value="table">Table</option>
+          </select>
+        </label>
+        <label data-widget-builder-target="limitWrap">
+          <span>Limit</span>
+          <input type="number" min="1" max="100" value="10" name="limit" data-widget-builder-target="limit" data-action="change->widget-builder#syncAndPreview">
+        </label>
+        <fieldset class="dash-studio__local-filters">
+          <legend>Widget filters (optional overrides)</legend>
+          <label>
+            <span>Range override</span>
+            <select name="filter_range" data-widget-builder-target="filterRange" data-action="change->widget-builder#syncAndPreview">
+              <option value="">Use global</option>
+              <% AnalyticsQuery::RANGE_LABELS.except("custom").each do |id, label| %>
+                <option value="<%= id %>"><%= label %></option>
+              <% end %>
+            </select>
+          </label>
+          <label>
+            <span>HTML only override</span>
+            <select name="filter_html" data-widget-builder-target="filterHtml" data-action="change->widget-builder#syncAndPreview">
+              <option value="">Use global</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <details class="dash-studio__commons" data-widget-builder-target="commons">
+          <summary>Fill from a common template</summary>
+          <p class="dash-studio__commons-hint">Loads settings into the form above so you can tweak before adding.</p>
+          <div class="dash-studio__commons-chips">
+            <% SiteDashboard::COMMON_WIDGETS.each do |preset| %>
+              <button
+                type="button"
+                class="dash-studio__common-chip"
+                title="<%= preset["blurb"] %>"
+                data-action="click->widget-builder#applyCommon"
+                data-widget="<%= ERB::Util.html_escape(preset["widget"].to_json) %>"
+              >
+                <%= preset["label"] %>
+              </button>
+            <% end %>
+          </div>
+        </details>
+
+        <div class="dash-studio__live-preview">
+          <span class="dash-studio__field-label">Live block preview</span>
+          <article class="dash-widget dash-widget--preview">
+            <header class="dash-widget__header">
+              <h3 class="dash-widget__title" data-widget-builder-target="previewTitle">Untitled</h3>
+            </header>
+            <div class="dash-widget__body" data-widget-builder-target="preview">
+              <div class="dash-widget__loading">Choose a metric to preview…</div>
+            </div>
+          </article>
+        </div>
+        <div class="dash-studio__drawer-actions">
+          <button type="button" class="btn btn-ghost" data-action="widget-builder#close">Cancel</button>
+          <button type="submit" class="btn btn-primary" data-widget-builder-target="submitBtn">Add to dashboard</button>
+        </div>
+      </form>
+    </div>
+  </aside>
+</div>
+
+<div class="modal fade" id="newDashboardModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <%= form_with url: admin_dashboards_path(@site.name), method: :post, local: true, data: { controller: "form-guard", action: "submit->form-guard#submit" } do %>
+        <div class="modal-header">
+          <h2 class="modal-title fs-5">New dashboard</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" required maxlength="60" placeholder="Marketing">
+          <label class="form-check mt-3">
+            <input type="checkbox" name="copy_overview" value="1" class="form-check-input" checked>
+            <span class="form-check-label">Start from Overview template</span>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="renameDashboardModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <%= form_with url: admin_dashboard_path(@site.name, @dashboard), method: :patch, local: true, data: { controller: "form-guard", action: "submit->form-guard#submit" } do %>
+        <div class="modal-header">
+          <h2 class="modal-title fs-5">Rename dashboard</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" required maxlength="60" value="<%= @dashboard.name %>">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<template id="dash-widget-template">
+  <div class="grid-stack-item">
+    <div class="grid-stack-item-content dash-widget">
+      <header class="dash-widget__header">
+        <div class="dash-widget__heading">
+          <h3 class="dash-widget__title"></h3>
+          <p class="dash-widget__subtitle"></p>
+        </div>
+        <div class="dash-widget__actions">
+          <button type="button" class="dash-widget__btn" data-widget-action="edit" title="Edit" aria-label="Edit">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button type="button" class="dash-widget__btn" data-widget-action="duplicate" title="Duplicate" aria-label="Duplicate">
+            <i class="bi bi-files"></i>
+          </button>
+          <button type="button" class="dash-widget__btn is-danger" data-widget-action="remove" title="Remove" aria-label="Remove">
+            <i class="bi bi-trash3"></i>
+          </button>
+        </div>
+      </header>
+      <div class="dash-widget__body">
+        <div class="dash-widget__loading">Loading…</div>
+      </div>
+    </div>
+  </div>
+</template>

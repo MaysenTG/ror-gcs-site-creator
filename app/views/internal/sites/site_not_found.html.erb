@@ -10,7 +10,7 @@
       <div class="d-flex justify-content-between">
         <form action="/internal/accounts/<%= @account_id %>/sites/<%= @site.id %>/create_bucket" method="POST" data-turbo="true">
           <input type="hidden" name="site_name" value="<%= @site.name %>s">
-          <button type="submit" class="btn btn-primary">Create Google Cloud bucket</button>
+          <button type="submit" class="btn btn-primary">Create R2 bucket</button>
         </form>
         <form action="/internal/accounts/<%= @account_id %>/sites/<%= @site.id %>/delete_site" method="DELETE" data-turbo="true">
           <button type="submit" class="btn btn-danger">Delete site</button>

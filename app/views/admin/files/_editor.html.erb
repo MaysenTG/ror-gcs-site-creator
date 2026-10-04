@@ -1,56 +1,78 @@
-<div class="container">
+<% skeleton_kind = editor_skeleton_kind(@file_name) %>
+<div
+  class="editor-pane is-booting"
+  data-controller="file-versions"
+  data-file-versions-list-url-value="<%= admin_file_versions_path(@site["name"]) %>"
+  data-file-versions-restore-url-value="<%= admin_restore_file_version_path(@site["name"]) %>"
+  data-file-versions-file-name-value="<%= @file_name %>"
+>
   <%= turbo_frame_tag "editor_message" do %>
   <% end %>
-  <div id="code-editor-bar" class="mb-3 d-flex justify-content-start">
-    <div class="w-100 d-flex justify-content-between">
-      <div class="d-flex justify-content-start align-items-center">
-        <h3 class="text-primary"><%= @file_name %></h3>
-        &nbsp;
-        <% if @file_name.include?("/") %>
-          <% folder_name,file_name = @file_name.split("/") %>
-        <% else %>
-          <% file_name = @file_name %>
-        <% end %>
-        <% if folder_name.nil? %>
-          <% a_href = "https://"+@site["name"]+".maysengreenwood.com/" + file_name %>
-        <% else %>
-          <% a_href = "https://"+@site["name"]+".maysengreenwood.com/"+folder_name + "/" + file_name %>
-        <% end %>
-        <% if @file_name == "index.html" %>
-          <% root_path = "https://"+@site["name"]+".maysengreenwood.com" %>
-          <% a_href = root_path %>
-        <% end %>
-        <% if @file_name.include?(".html") %>
-          <a target="_blank" href="<%= a_href %>">
-            <i class="fs-3 bi bi-eye"></i>
-          </a>
-        <% end %>
+
+  <div id="code-editor-bar" class="editor-pane__bar mb-3 d-flex justify-content-end align-items-center gap-2 flex-wrap">
+    <% a_href = site_preview_url(@site["name"], path: @file_name == "index.html" ? nil : @file_name) %>
+    <% if @file_name.to_s.include?(".html") %>
+      <a target="_blank" href="<%= a_href %>" class="btn btn-ghost" aria-label="Preview file">
+        <i class="bi bi-eye"></i> Preview
+      </a>
+    <% end %>
+    <button type="button" class="btn btn-ghost" data-action="file-versions#toggle">
+      <i class="bi bi-clock-history"></i> History
+    </button>
+    <button type="submit" class="btn btn-success" id="save-file-btn" form="file-editor-form" disabled="">
+      <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      <span class="save-btn-text">Save</span>
+      <span class="save-btn-text-loading d-none">Saving...</span>
+    </button>
+  </div>
+
+  <div class="file-versions panel d-none" data-file-versions-target="panel">
+    <div class="file-versions__header">
+      <div>
+        <strong>Recent versions</strong>
+        <span>Kept for about 2 days</span>
       </div>
-      <button type="submit" class="p-3 btn btn-success" id="save-file-btn" form="file-editor-form" disabled="">
-        <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        <span class="save-btn-text">Save</span>
-        <span class="save-btn-text-loading d-none">Saving...</span>
-      </button>
+      <button type="button" class="btn btn-ghost btn-sm" data-action="file-versions#close" aria-label="Close history">&times;</button>
+    </div>
+    <p class="file-versions__empty d-none" data-file-versions-target="empty">No versions yet for this file. Save a change to start history.</p>
+    <ul class="file-versions__list" data-file-versions-target="list"></ul>
+  </div>
+
+  <div class="editor-pane__stage">
+    <div class="editor-pane__boot" data-editor-boot>
+      <%= render partial: "layouts/snippets/code_loading", locals: { kind: skeleton_kind, filename: @file_name, bare: true, embedded: true } %>
+    </div>
+
+    <div class="editor-pane__live" data-editor-live>
+      <form action="/admin/sites/<%= @site["name"] %>/files/update" id="file-editor-form" method="post" data-turbo="true">
+        <input type="hidden" id="site_id" name="site_id" value="<%= @site["id"] %>">
+        <input type="hidden" id="site_name" name="site_name" value="<%= @site["name"] %>">
+        <input type="hidden" id="file_name" name="file_name" value="<%= @file_name %>">
+        <turbo-frame id="file-editor-turbo-frame">
+          <textarea class="d-none" name="original_contents"><%= @file_contents %></textarea>
+          <textarea class="d-none" data-filename="<%= @file_name %>" name="contents" id="file_content"><%= @file_contents %></textarea>
+        </turbo-frame>
+      </form>
     </div>
   </div>
-  <form action="/admin/sites/<%= @site["name"] %>/files/update" id="file-editor-form" method="post" data-turbo="true">
-    <input type="hidden" id="site_id" name="site_id" value="<%= @site["id"] %>">
-    <input type="hidden" id="site_name" name="site_name" value="<%= @site["name"] %>">
-    <input type="hidden" id="file_name" name="file_name" value="<%= @file_name %>">
-    <turbo-frame id="file-editor-turbo-frame">
-      <textarea class="d-none" name="original_contents"><%= @file_contents %></textarea>
-      <textarea data-filename="<%= @file_name %>" name="contents" id="file_content"><%= @file_contents %></textarea>
-      <style>
-        .CodeMirror {
-          height: 100%;
-          border: 1px solid black;
-          min-height: 300px;
-        }
-      </style>
-    </turboframe>
-  </form>
 </div>
 <script>
-  // Add the filename to the URL
-  window.history.pushState({}, "", "?filename=<%= @file_name %>");
+  (function () {
+    const path = <%= raw @file_name.to_json %>;
+    const url = new URL(window.location.href);
+    url.searchParams.set("filename", path);
+    window.history.replaceState({}, "", url);
+
+    const tree = document.querySelector("[data-controller~='filetree']");
+    const controller = tree && window.Stimulus
+      ? window.Stimulus.getControllerForElementAndIdentifier(tree, "filetree")
+      : null;
+    if (controller?.setActiveFile) {
+      controller.setActiveFile(path);
+    } else {
+      document.querySelectorAll(".filetree__row[data-file-row]").forEach((row) => {
+        row.classList.toggle("accordion-active", row.dataset.filename === path);
+      });
+    }
+  })();
 </script>

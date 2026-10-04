@@ -1,13 +1,20 @@
 class ApplicationController < ActionController::Base
   include Pagy::Backend
+  include OwnerBarCookie
+
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :authenticate_internal_staff
-  # Before action authenticate account if the request contains internal
-  
-  
+  before_action :refresh_owner_bar_cookie
+
   # Devise: Redirect to admin/sites after sign in
   def after_sign_in_path_for(resource)
+    set_owner_bar_cookie(resource) if resource.is_a?(Account)
     "/admin/sites"
+  end
+
+  def after_sign_out_path_for(_resource_or_scope)
+    clear_owner_bar_cookie
+    root_path
   end
 
   def configure_permitted_parameters
@@ -17,13 +24,12 @@ class ApplicationController < ActionController::Base
   end
   
   def self.get_max_site_size_for_account_in_mb(current_account)
-    # max_site_size is in MB, so convert to bytes
-    Plan.where(plan_handle: current_account.plan_handle).first.max_site_size.to_i
+    plan = current_account.respond_to?(:current_plan) ? current_account.current_plan : Plan.for_handle(current_account.plan_handle)
+    plan.max_site_size.to_i
   end
-  
+
   def self.get_max_site_size_for_account_in_bytes(current_account)
-    # max_site_size is in MB, so convert to bytes
-    Plan.where(plan_handle: current_account.plan_handle).first.max_site_size.to_i * 1048576
+    get_max_site_size_for_account_in_mb(current_account) * 1_048_576
   end
   
   def authenticate_internal_staff

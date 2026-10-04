@@ -1,0 +1,88 @@
+<div class="modal fade" id="siteSettingsModal" tabindex="-1" aria-labelledby="siteSettingsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content" data-controller="site-settings">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="siteSettingsModalLabel">Password &amp; SEO</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with url: admin_site_settings_path(@site.name), method: :patch, local: true, html: { id: "site-settings-form", class: "site-settings-form", data: { site_settings_target: "form", action: "submit->site-settings#save" } } do %>
+        <div class="modal-body">
+          <section class="mb-4">
+            <h2 class="h6">Visitor password</h2>
+            <p class="text-muted small">
+              Gate the live site behind a password. Shown here in plain text so you can share it with clients.
+              Customize the lock screen by editing <code>password.html</code>.
+            </p>
+            <input type="hidden" name="site[gate_enabled]" value="0">
+            <label class="form-check mb-3">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                name="site[gate_enabled]"
+                value="1"
+                <%= "checked" if @site.gate_enabled? %>
+              >
+              <span class="form-check-label">Require password to view the published site</span>
+            </label>
+            <div class="mb-3">
+              <label class="form-label" for="site_visitor_password">Password</label>
+              <input
+                type="text"
+                class="form-control"
+                id="site_visitor_password"
+                name="site[visitor_password]"
+                value="<%= @site.visitor_password %>"
+                autocomplete="off"
+                spellcheck="false"
+                minlength="4"
+                placeholder="e.g. client-preview"
+              >
+            </div>
+            <% if @site.visitor_password.present? %>
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="site[clear_password]" value="1">
+                <span class="form-check-label">Remove password and open the site publicly</span>
+              </label>
+            <% end %>
+          </section>
+
+          <section>
+            <h2 class="h6">SEO pack</h2>
+            <p class="text-muted small mb-3">
+              Powers meta tags on HTML pages plus live <code>/robots.txt</code> and <code>/sitemap.xml</code>.
+            </p>
+            <div class="mb-3">
+              <label class="form-label" for="seo_title">Site title</label>
+              <input type="text" class="form-control" id="seo_title" name="site[seo_title]" value="<%= @site.seo_title %>" maxlength="120" placeholder="<%= @site.name.to_s.titleize %>">
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="seo_description">Meta description</label>
+              <textarea class="form-control" id="seo_description" name="site[seo_description]" rows="3" maxlength="320" placeholder="A short summary for search results"><%= @site.seo_description %></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="seo_og_image">Social image path</label>
+              <input type="text" class="form-control" id="seo_og_image" name="site[seo_og_image]" value="<%= @site.seo_og_image %>" placeholder="og.png">
+              <div class="form-text">Relative to the site root, or a full https URL.</div>
+            </div>
+            <input type="hidden" name="site[robots_index]" value="0">
+            <label class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                name="site[robots_index]"
+                value="1"
+                <%= "checked" if @site.robots_index? %>
+              >
+              <span class="form-check-label">Allow search engines to index this site</span>
+            </label>
+          </section>
+        </div>
+      <% end %>
+      <div class="modal-footer site-settings-footer">
+        <span class="site-settings-status d-none" data-site-settings-target="status" aria-live="polite"></span>
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary" form="site-settings-form" data-site-settings-target="submit">Save settings</button>
+      </div>
+    </div>
+  </div>
+</div>

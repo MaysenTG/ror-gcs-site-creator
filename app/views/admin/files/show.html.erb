@@ -1,52 +1,72 @@
-<div class="container mt-3">
-  <div id="code-editor-bar" class="mb-3 d-flex justify-content-start">
-    <a href="/admin/sites/<%= @site["name"] %>" class="btn btn-secondary px-3 d-flex align-items-center">Back</a>&nbsp;
-    <div class="w-100 d-flex justify-content-between">
-      <div class="d-flex justify-content-start align-items-center">
-        <h3 class="text-primary">Editing "<%= @file_name %>"</h3>
-        &nbsp;
-        <% if @file_name.include?("/") %>
-          <% folder_name,file_name = @file_name.split("/") %>
-        <% else %>
-          <% file_name = @file_name %>
-        <% end %>
-        <% if folder_name.nil? %>
-          <% a_href = "https://"+@site["name"]+".maysengreenwood.com/" + file_name %>
-        <% else %>
-          <% a_href = "https://"+@site["name"]+".maysengreenwood.com/"+folder_name + "/" + file_name %>
-        <% end %>
-        <% if @file_name.include?(".html") %>
-          <a target="_blank" href="<%= a_href %>">
-            <i class="fs-3 bi bi-eye"></i>
-          </a>
-        <% end %>
-      </div>
-      <button type="submit" class="p-3 btn btn-success" id="save-file-btn" form="file-editor-form" disabled="">
-        <span class="d-none spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        Save changes
-      </button>
-    </div>
-  </div>
-  <form action="/admin/sites/<%= @site["name"] %>/files/update" id="file-editor-form" method="post" data-turbo="true">
-    <input type="hidden" id="site_id" name="site_id" value="<%= @site["id"] %>">
-    <input type="hidden" id="site_name" name="site_name" value="<%= @site["name"] %>">
-    <input type="hidden" id="file_name" name="file_name" value="<%= @file_name %>">
-    <%= render :partial => 'admin/files/editor', :locals => { :file_contents => @file_contents, :file_name => @file_name } %>
-  </form>
-</div>
-<div class="toast-container position-fixed bottom-0 p-3">
-  <div id="fileSavedToast" class="toast text-bg-primary">
-    <div class="toast-header text-bg-primary">
-      <strong class="me-auto">File saved</strong>
-    </div>
-    <div class="toast-body">
-      File was successfully saved!
-    </div>
-  </div>
-</div>
+<% content_for :head do %>
+  <%= render partial: "layouts/codemirror_styles" %>
+<% end %>
 
-<style>
-  #code-editor-bar {
-   position: static;
-  }
-</style>
+<div class="page-shell page-shell--wide">
+  <div class="mb-3">
+    <a href="/admin/sites/<%= @site["name"] %>" class="btn btn-ghost btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+  </div>
+  <div class="surface-panel">
+    <%= render partial: "admin/files/editor", locals: { file_contents: @file_contents, file_name: @file_name, site: @site } %>
+  </div>
+</div>
+<%= render partial: "layouts/codemirror_scripts" %>
+<script>
+  (async function () {
+    const wait = () =>
+      new Promise((resolve, reject) => {
+        const start = Date.now();
+        const tick = () => {
+          if (window.CodeMirror?.fromTextArea) return resolve();
+          if (Date.now() - start > 8000) return reject(new Error("CodeMirror failed to load"));
+          requestAnimationFrame(tick);
+        };
+        tick();
+      });
+
+    function revealEditorPane() {
+      const pane = document.querySelector(".editor-pane.is-booting") || document.getElementById("file_content")?.closest(".editor-pane");
+      if (!pane) return;
+      pane.classList.remove("is-booting");
+      pane.querySelector("[data-editor-boot]")?.remove();
+    }
+
+    try {
+      await wait();
+    } catch (_e) {
+      revealEditorPane();
+      return;
+    }
+
+    const area = document.getElementById("file_content");
+    if (!area) return;
+    if (area.parentElement?.querySelector(".CodeMirror")) {
+      revealEditorPane();
+      return;
+    }
+    const ext = (area.dataset.filename || "").split(".").pop();
+    let mode = "htmlmixed";
+    if (ext === "js" || ext === "mjs") mode = "text/javascript";
+    else if (ext === "css") mode = "text/css";
+    const editor = window.CodeMirror.fromTextArea(area, {
+      mode,
+      lineNumbers: true,
+      autoCloseTags: true,
+      autoCloseBrackets: true,
+      matchBrackets: true,
+      styleActiveLine: true,
+      indentUnit: 2,
+      tabSize: 2,
+    });
+    editor.on("change", (cm) => {
+      area.value = cm.getValue();
+      const saveBtn = document.querySelector("#save-file-btn");
+      if (saveBtn) saveBtn.disabled = false;
+    });
+    requestAnimationFrame(() => {
+      editor.refresh();
+      revealEditorPane();
+      requestAnimationFrame(() => editor.refresh());
+    });
+  })();
+</script>

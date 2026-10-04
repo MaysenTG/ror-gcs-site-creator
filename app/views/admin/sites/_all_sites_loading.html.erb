@@ -1,30 +1,26 @@
-<%# Used as the loading partial for all account's sites %>
-
-<table class="table align-middle table-hover">
-  <thead class="table-secondary">
-    <tr>
-      <th scope="col" class="col-8 p-3">Name</th>
-      <th scope="col" class="p-3">Total size</th>
-      <th scope="col" class="text-center p-3">Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% 2.times.each do %>
-      <tr>
-        <!-- Using Bootstrap 5.1 placeholders, make a table row with a loading animation -->
-        <td class="p-3">
-          <div class="p-4 placeholder-glow">
-            <div class="placeholder col-4"></div>
+<div class="site-card-grid" aria-busy="true" aria-label="Loading sites">
+  <% 3.times do %>
+    <article class="site-card site-card--skeleton">
+      <div class="site-card__top">
+        <div class="w-100">
+          <div class="placeholder-glow mb-2">
+            <span class="placeholder col-6"></span>
           </div>
-        </td>
-        <td class="p-3">
-          <div class="p-4 placeholder-glow">
-            <div class="placeholder col-4"></div>
+          <div class="placeholder-glow">
+            <span class="placeholder col-9"></span>
           </div>
-        </td>
-        <td class="p-3">
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+        </div>
+      </div>
+      <div class="placeholder-glow">
+        <span class="placeholder col-4"></span>
+      </div>
+      <div class="progress skeleton-progress">
+        <div class="progress-bar" style="width: 40%"></div>
+      </div>
+      <div class="site-card__footer">
+        <span class="placeholder col-3"></span>
+        <span class="placeholder col-3"></span>
+      </div>
+    </article>
+  <% end %>
+</div>

@@ -29,9 +29,10 @@ export default class extends Controller {
     let form = document.querySelector("#create-folder-form");
     let formData = new FormData(form);
 
-    let delete_folder_button = event.target;
+    let delete_folder_button = event.target.closest("button") || event.target;
     delete_folder_button.disabled = true;
-    delete_folder_button.querySelector("span").classList.remove("d-none");
+    delete_folder_button.classList.add("is-loading");
+    delete_folder_button.querySelector("span")?.classList.remove("d-none");
 
     var myModalEl = document.getElementById("createFolderModal");
     //var modal = bootstrap.Modal.getInstance(myModalEl);
@@ -47,17 +48,22 @@ export default class extends Controller {
     })
       .then((response) => response.json())
       .then((data) => {
-        if (data.status == "success") {
-          delete_folder_button.disabled = false;
-          delete_folder_button.querySelector("span").classList.add("d-none");
+        delete_folder_button.disabled = false;
+        delete_folder_button.classList.remove("is-loading");
+        delete_folder_button.querySelector("span")?.classList.add("d-none");
 
+        if (data.status == "success") {
+          window.AppToast?.show(`Created folder “${data.folder_name || "folder"}”`, { type: "success" });
           window.location.reload(true);
-          // modal.hide();
-          // // Add the folder to the files table
-          // let table = document.querySelector("#site-files");
-          // //let row = document.createElement("tr");
-          // //row.setAttribute("data-folder-name", data.folder_name);
+        } else {
+          window.AppToast?.show("Couldn't create folder", { type: "error" });
         }
+      })
+      .catch(() => {
+        delete_folder_button.disabled = false;
+        delete_folder_button.classList.remove("is-loading");
+        delete_folder_button.querySelector("span")?.classList.add("d-none");
+        window.AppToast?.show("Couldn't create folder", { type: "error" });
       });
   }
 

@@ -6,19 +6,16 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
-# Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
+# Site file storage uses SiteStorage (Cloudflare R2 via aws-sdk-s3), not Active Storage.
+# See config/initializers/site_storage.rb for R2 env vars.
+#
 # amazon:
 #   service: S3
-#   access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>
-#   secret_access_key: <%= Rails.application.credentials.dig(:aws, :secret_access_key) %>
-#   region: us-east-1
-#   bucket: your_own_bucket-<%= Rails.env %>
-
-# Remember not to checkin your GCS keyfile to a repository
-# google:
-#   service: GCS
-#   project: custom-website-creator
-#   credentials: <%= Rails.root.join("config/secrets/custom-website-creator.json") %>
+#   access_key_id: <%= ENV["R2_ACCESS_KEY_ID"] %>
+#   secret_access_key: <%= ENV["R2_SECRET_ACCESS_KEY"] %>
+#   region: auto
+#   endpoint: <%= ENV.fetch("R2_ENDPOINT") { "https://#{ENV["R2_ACCOUNT_ID"]}.r2.cloudflarestorage.com" } %>
+#   force_path_style: true
 #   bucket: your_own_bucket-<%= Rails.env %>
 
 # Use bin/rails credentials:edit to set the Azure Storage secret (as azure_storage:storage_access_key)

@@ -1,8 +1,13 @@
-<div class="container mt-3">
-  <div class="d-flex align-items-center mb-3">
-    <a class="btn btn-secondary" href="/admin/sites/<%= @site_name || @site.name %>/domains">Back to domains</a>
+<div class="page-shell">
+  <div class="page-header">
+    <div>
+      <a href="/admin/sites/<%= @site.name %>/domains" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> Domains</a>
+      <h1>Add a domain</h1>
+      <p class="mb-0">Enter the hostname you want to point at this site.</p>
+    </div>
   </div>
-  <h2 class="mb-3 m-auto mr-3">Add a new domain</h2>
-  <%= render "form", domain: @domain %>
+
+  <div class="surface-panel create-site__panel">
+    <%= render "form", domain: @domain %>
+  </div>
 </div>
-<br>
