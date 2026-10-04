@@ -1,0 +1,103 @@
+<% sites_max = @sites_max.to_i %>
+<% sites_used = @sites_used.to_i %>
+<% sites_pct = sites_max.positive? ? ((sites_used.to_f / sites_max) * 100).clamp(0, 100).round : 0 %>
+
+<div class="page-shell page-shell--wide">
+  <div class="page-header">
+    <div>
+      <h1>Billing &amp; usage</h1>
+      <p>See how your plan limits compare to live site storage and site count.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="/accounts/edit" class="btn btn-ghost">Account settings</a>
+      <a href="/home/pricing" class="btn btn-primary">Upgrade plan</a>
+    </div>
+  </div>
+
+  <div class="dash-stat-grid">
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Current plan</span>
+      <span class="dash-stat__value" style="font-size:1.45rem;"><%= @plan&.name || @account.plan_handle.to_s.titleize %></span>
+      <span class="dash-stat__hint">
+        <% if @plan&.price.to_i.positive? %>
+          $<%= @plan.price %> NZD / mo
+        <% else %>
+          Free tier
+        <% end %>
+      </span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Sites used</span>
+      <span class="dash-stat__value"><%= sites_used %>/<%= sites_max.positive? ? sites_max : "—" %></span>
+      <span class="dash-stat__hint"><%= @account.sites_remaining %> remaining</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Storage total</span>
+      <span class="dash-stat__value"><%= internal_bytes_label(@total_storage_bytes) %></span>
+      <span class="dash-stat__hint"><%= @max_site_size_mb %> MB max per site</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Limit warnings</span>
+      <span class="dash-stat__value"><%= @over_limit_sites.size + @near_limit_sites.size %></span>
+      <span class="dash-stat__hint"><%= @over_limit_sites.size %> over · <%= @near_limit_sites.size %> near limit</span>
+    </div>
+  </div>
+
+  <section class="surface-panel mb-3">
+    <h2 class="h5 mb-3">Site slots</h2>
+    <div class="usage-meter mb-2">
+      <div class="usage-meter__fill" style="width: <%= sites_pct %>%"></div>
+    </div>
+    <p class="text-muted mb-0">
+      <%= sites_used %> of <%= sites_max.positive? ? sites_max : "∞" %> site slots in use
+      <% unless @account.can_create_site? %>
+        · <strong>You’re at your site limit.</strong> <a href="/home/pricing">Upgrade</a> to create more.
+      <% end %>
+    </p>
+  </section>
+
+  <section class="surface-panel mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 mb-0">Per-site storage</h2>
+      <a href="/admin/sites" class="btn btn-ghost btn-sm">Your sites</a>
+    </div>
+
+    <% if @sites.blank? %>
+      <div class="empty-state empty-state--compact">
+        <p class="mb-2">No sites yet.</p>
+        <a href="/admin/sites/new" class="btn btn-primary btn-sm">Create a site</a>
+      </div>
+    <% else %>
+      <ul class="ops-rank-list">
+        <% @sites.each do |site| %>
+          <% size = @size_per_site[site.id].to_i %>
+          <% max_bytes = @max_site_size_bytes.to_i %>
+          <% pct = max_bytes.positive? ? ((size.to_f / max_bytes) * 100).clamp(0, 100).round : 0 %>
+          <% tone = pct >= 100 ? "is-over" : (pct >= 85 ? "is-near" : "") %>
+          <li>
+            <div class="ops-rank-list__main">
+              <a href="/admin/sites/<%= site.name %>?filename=index.html"><%= site.name %></a>
+              <small class="text-muted"><%= site_preview_label(site) %></small>
+              <div class="usage-meter usage-meter--thin <%= tone %>">
+                <div class="usage-meter__fill" style="width: <%= pct %>%"></div>
+              </div>
+            </div>
+            <div class="ops-rank-list__meta">
+              <strong><%= internal_bytes_label(size) %></strong>
+              <small class="text-muted"><%= pct %>% of <%= @max_site_size_mb %> MB</small>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <section class="surface-panel">
+    <h2 class="h5 mb-3">Change plan</h2>
+    <p class="text-muted mb-3">Compare plans and start checkout when you’re ready to upgrade.</p>
+    <div class="ops-quick-links">
+      <a href="/home/pricing" class="btn btn-primary">View pricing</a>
+      <a href="/accounts/edit#plans" class="btn btn-ghost">Plans in account settings</a>
+    </div>
+  </section>
+</div>

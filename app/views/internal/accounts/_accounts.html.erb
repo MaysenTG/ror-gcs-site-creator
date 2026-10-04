@@ -1,29 +1,38 @@
-<% if @query and @query != "" %>
-  Your query: <strong>"<%= @query %>"</strong> returned <%= @accounts.length %> accounts
+<% if @query.present? %>
+  <p class="text-muted mb-3">
+    Query <strong>"<%= @query %>"</strong> returned <%= @pagy.count %> account<%= @pagy.count == 1 ? "" : "s" %>.
+  </p>
 <% else %>
-  <p>Total accounts: <%= @accounts.size %></p>
+  <p class="text-muted mb-3"><%= @pagy.count %> account<%= @pagy.count == 1 ? "" : "s" %> total</p>
 <% end %>
 
-<div class="row row-cols-1 row-cols-md-2 g-4 mb-3 mt-3">
-  <% if @accounts.length == 0 %>
-    <div class="col">
-      <h4>Oops, there aren't any results, try broadening your search</h4>
-    </div>
-  <% else %>
+<% if @accounts.blank? %>
+  <div class="empty-state surface-panel">
+    <h2>No accounts found</h2>
+    <p>Try a broader search, or create a new account.</p>
+    <a href="<%= internal_new_account_path %>" class="btn btn-primary">Create account</a>
+  </div>
+<% else %>
+  <div class="site-card-grid mb-3">
     <% @accounts.each do |account| %>
-      <a href="/internal/accounts/<%= account.id %>">
-        <div class="col">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title"><% if account.name.nil? %>Unknown name<% else %><%= account.name %><% end %></h5>
-              <p class="card-text">Email: <%= account.email %></p>
-              <p class="card-text">Plan: <%= account.plan_handle.titleize %></p>
-              <p class="card-text">Number of stores: <%= account.sites.length %>/<%= Plan.where(plan_handle: account.plan_handle).first.max_sites %></p>
-            </div>
+      <a href="<%= internal_account_path(account) %>" class="site-card site-card--link">
+        <div class="site-card__top">
+          <div>
+            <h2 class="site-card__title"><%= account.name.presence || "Unnamed account" %></h2>
+            <span class="site-card__url"><%= account.email %></span>
           </div>
+          <% if account.admin? %>
+            <span class="internal-pill">Admin</span>
+          <% end %>
+        </div>
+        <div class="site-card__meta">
+          <span><%= account.plan_handle.to_s.titleize %></span>
+          <span><%= internal_account_sites_label(account) %> sites</span>
         </div>
       </a>
     <% end %>
-  <% end %>
-</div>
-<%== pagy_bootstrap_nav(@pagy) %>
+  </div>
+  <div class="internal-pagination">
+    <%== @pagy.series_nav(:bootstrap) %>
+  </div>
+<% end %>

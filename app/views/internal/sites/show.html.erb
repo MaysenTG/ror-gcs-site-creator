@@ -1,21 +1,144 @@
-<% if notice %>
-  <div class="alert alert-warning alert-dismissible fade show" role="alert">
-    <%= notice %>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<% ops = @ops || {} %>
+<% ship = ops[:ship_check] || {} %>
+<% story = ops[:traffic_story] || {} %>
+
+<div class="page-shell page-shell--wide">
+  <div class="page-header">
+    <div>
+      <a href="<%= internal_account_path(@account_id) %>" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> Account</a>
+      <h1><%= @site.name %></h1>
+      <p class="mb-0">
+        <a href="<%= site_preview_url(@site) %>" target="_blank" rel="noopener"><%= site_preview_label(@site) %></a>
+        <% if @account %>
+          · <a href="<%= internal_account_path(@account) %>"><%= @account.email %></a>
+        <% end %>
+      </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="/admin/sites/<%= @site.name %>?filename=index.html" class="btn btn-primary">Open in editor</a>
+      <a href="<%= admin_moments_path(@site.name) %>" class="btn btn-ghost">Moments</a>
+      <a href="<%= site_preview_url(@site) %>" target="_blank" rel="noopener" class="btn btn-ghost">View site</a>
+    </div>
   </div>
-<% end %>
-<a class="btn btn-secondary my-3 mx-5" href="/internal/accounts/<%= @account_id %>">Back to account</a>
-<h1 style="margin-top: 4rem;" class="mb-3 text-center">Site details</h1>
-<div class="container">
-  <h2 class="mb-3">Viewing <%= @site.name %>.maysengreenwood.com</h2>
-  <div class="card">
-    <div class="card-header">
-      Site information
+
+  <div class="dash-stat-grid">
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Storage size</span>
+      <span class="dash-stat__value"><%= format("%.2f", @total_site_size.to_f / 1_000_000.0) %> MB</span>
+      <span class="dash-stat__hint"><%= internal_bytes_label(@total_site_size) %> total</span>
     </div>
-    <div class="card-body">
-      <h5 class="card-title">Total size: <%= @total_site_size.to_f / 1000000.00 %>MB</h5>
-      <p class="card-text">Number of files: <%= @total_num_files %></p>
-      <a target="_blank" href="https://<%= @site.name %>.maysengreenwood.com" class="btn btn-primary">View site</a>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Files</span>
+      <span class="dash-stat__value"><%= @total_num_files %></span>
+      <span class="dash-stat__hint">objects in bucket</span>
     </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Page views (7d)</span>
+      <span class="dash-stat__value"><%= number_with_delimiter(ops[:page_views_7d].to_i) %></span>
+      <span class="dash-stat__hint"><%= internal_bytes_label(ops[:bandwidth_7d]) %> bandwidth</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Errors (7d)</span>
+      <span class="dash-stat__value"><%= number_with_delimiter(ops[:errors_7d].to_i) %></span>
+      <span class="dash-stat__hint"><%= ops[:error_rate_7d].to_f %>% · <%= number_with_delimiter(ops[:requests_7d].to_i) %> req</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Password gate</span>
+      <span class="dash-stat__value" style="font-size:1.35rem;"><%= @site.gate_enabled? ? "On" : "Off" %></span>
+      <span class="dash-stat__hint">Robots index: <%= @site.robots_index? ? "allowed" : "blocked" %></span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Moments</span>
+      <span class="dash-stat__value"><%= ops[:moments_count].to_i %></span>
+      <span class="dash-stat__hint">Ship check: <%= ship[:grade] || "—" %> · <%= ship[:summary] %></span>
+    </div>
+  </div>
+
+  <% if story[:headline].present? %>
+    <section class="surface-panel mb-3 ops-traffic">
+      <p class="ops-traffic__eyebrow">Traffic story · 7d</p>
+      <h2 class="ops-traffic__headline"><%= story[:headline] %></h2>
+      <div class="ops-traffic__stats mt-3 mb-0">
+        <div>
+          <span class="dash-stat__label">Views</span>
+          <strong><%= number_with_delimiter(story[:views].to_i) %></strong>
+          <small class="text-muted <%= ops_delta_class(story[:delta_pct]) %>"><%= ops_delta_label(story[:delta_pct]) %> vs prior</small>
+        </div>
+        <div>
+          <span class="dash-stat__label">Top path</span>
+          <strong style="font-size:1rem;"><%= story[:top_path].presence || "—" %></strong>
+          <small class="text-muted"><%= number_with_delimiter(story[:top_path_views].to_i) %> views</small>
+        </div>
+        <div>
+          <span class="dash-stat__label">Top country</span>
+          <strong style="font-size:1rem;"><%= story[:top_country_name].presence || story[:top_country_code].presence || "—" %></strong>
+        </div>
+        <div>
+          <span class="dash-stat__label">Top device</span>
+          <strong style="font-size:1rem;"><%= story[:top_device].to_s.titleize.presence || "—" %></strong>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
+  <div class="dash-panels">
+    <section class="surface-panel">
+      <h2 class="h5 mb-3">Top paths (7d)</h2>
+      <% if ops[:top_paths].blank? %>
+        <p class="text-muted mb-0">No HTML page views yet.</p>
+      <% else %>
+        <ul class="internal-kv-list">
+          <% ops[:top_paths].each do |path, count| %>
+            <li>
+              <span><code class="ops-path"><%= path %></code></span>
+              <strong><%= number_with_delimiter(count) %></strong>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="surface-panel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Ship check</h2>
+        <a href="/admin/sites/<%= @site.name %>" class="btn btn-ghost btn-sm">Open studio</a>
+      </div>
+      <p class="mb-2">
+        <strong><%= ship[:grade] || "—" %></strong>
+        <span class="text-muted">· <%= ship[:summary] %></span>
+      </p>
+      <% checks = Array(ship[:checks]).first(6) %>
+      <% if checks.blank? %>
+        <p class="text-muted mb-0">No checks available.</p>
+      <% else %>
+        <ul class="internal-kv-list">
+          <% checks.each do |check| %>
+            <li>
+              <span>
+                <span class="internal-pill"><%= check[:status] %></span>
+                <%= check[:detail] %>
+              </span>
+              <small class="text-muted text-nowrap"><%= check[:severity] %></small>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+  </div>
+
+  <div class="surface-panel">
+    <h2 class="h5 mb-3">Custom domains</h2>
+    <% if @domains.blank? %>
+      <p class="text-muted mb-0">No custom domains attached.</p>
+    <% else %>
+      <ul class="internal-kv-list">
+        <% @domains.each do |domain| %>
+          <li>
+            <span><%= domain.domain %></span>
+            <small class="text-muted"><%= time_ago_in_words(domain.created_at) %> ago</small>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
   </div>
 </div>

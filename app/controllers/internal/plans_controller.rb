@@ -3,11 +3,12 @@ class Internal::PlansController < ApplicationController
 
   # GET /plans or /plans.json
   def index
-    @plans = Plan.all.sort_by  { |plan| plan.max_sites.to_i }
+    @plans = Plan.includes(:accounts).sort_by { |plan| plan.max_sites.to_i }
   end
 
   # GET /plans/1 or /plans/1.json
   def show
+    redirect_to edit_internal_plan_path(@plan)
   end
 
   # GET /plans/new
@@ -25,7 +26,7 @@ class Internal::PlansController < ApplicationController
 
     respond_to do |format|
       if @plan.save
-        format.html { redirect_to internal_plan_url(@plan), notice: "Plan was successfully created." }
+        format.html { redirect_to edit_internal_plan_path(@plan), notice: "Plan was successfully created." }
         format.json { render :show, status: :created, location: @plan }
       else
         format.html { render :new, status: :unprocessable_entity }
@@ -65,6 +66,6 @@ class Internal::PlansController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def plan_params
-      params.require(:plan).permit(:max_site_size, :max_sites, :price, :name)
+      params.require(:plan).permit(:max_site_size, :max_sites, :price, :name, :plan_handle)
     end
 end

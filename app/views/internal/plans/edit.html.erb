@@ -1,74 +1,58 @@
-<% if notice %>
-  <div class="alert alert-warning alert-dismissible fade show" role="alert">
-    <%= notice %>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="page-shell page-shell--narrow">
+  <div class="page-header">
+    <div>
+      <a href="<%= internal_plans_path %>" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> Plans</a>
+      <h1><%= @plan.name %></h1>
+      <p>Update limits and pricing for this plan.</p>
+    </div>
   </div>
-<% end %>
-<a class="btn btn-secondary my-3 mx-5" href="/internal/plans">Back to plans</a>
-<h1 style="margin-top: 4rem;" class="mb-3 text-center">Plan details</h1>
-<div class="container">
-  <h2 class="mb-3">Viewing <%= @plan.name %></h2>
-  <div class="card">
-    <div class="card-header">
-      Plan information
-    </div>
-    <div class="card-body">
-      <form action="/internal/plans/<%= @plan.id %>" data-turbo="true" id="edit-plan-form" method="put">
-        <div class="row">
-          <div class="col-6">
-            <h5 class="card-title mb-3">
-              Name:
-              <input type="text" class="form-control" name="plan[name]" value="<%= @plan.name %>"/>
-            </h5>
-          </div>
-          <div class="col-6">
-            <h5 class="card-title mb-3">
-              Plan handle:
-              <input type="text" disabled class="form-control" value="<%= @plan.plan_handle %>"/>
-            </h5>
-          </div>
-          <div class="col-6">
-            <h5 class="card-title mb-3">
-              Max sites:
-              <input type="number" class="form-control" name="plan[max_sites]" value="<%= @plan.max_sites %>"/>
-            </h5>
-          </div>
-          <div class="col-6">
-            <h5 class="card-title mb-3">
-              Max site size:
-              <input type="number" class="form-control" name="plan[max_site_size]" value="<%= @plan.max_site_size %>"/>
-            </h5>
-          </div>
-          <div class="col-12">
-            <h5 class="card-title mb-3">
-              Plan price (in NZD/month):
-              <input type="number" class="form-control" name="plan[price]" value="<%= @plan.price %>"/>
-            </h5>
-          </div>
-          <button type="submit" class="d-none btn btn-primary">Save changes</button>
+
+  <div class="surface-panel">
+    <form action="<%= internal_plan_path(@plan) %>" data-turbo="true" id="edit-plan-form" method="post">
+      <input type="hidden" name="_method" value="put">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+
+      <div class="mb-3">
+        <label class="form-label" for="plan_name">Name</label>
+        <input type="text" class="form-control" id="plan_name" name="plan[name]" value="<%= @plan.name %>">
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="plan_handle">Plan handle</label>
+        <input type="text" class="form-control" id="plan_handle" value="<%= @plan.plan_handle %>" disabled>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label" for="plan_max_sites">Max sites</label>
+          <input type="number" class="form-control" id="plan_max_sites" name="plan[max_sites]" value="<%= @plan.max_sites %>">
         </div>
-      </form>
-    </div>
+        <div class="col-md-6">
+          <label class="form-label" for="plan_max_site_size">Max site size (MB)</label>
+          <input type="number" class="form-control" id="plan_max_site_size" name="plan[max_site_size]" value="<%= @plan.max_site_size %>">
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="plan_price">Price (NZD / month)</label>
+        <input type="number" class="form-control" id="plan_price" name="plan[price]" value="<%= @plan.price %>">
+      </div>
+      <button type="submit" class="d-none btn btn-primary">Save changes</button>
+    </form>
   </div>
 </div>
 
 <script>
-  document.addEventListener("turbo:load", function() {
-    let inputs = document.querySelectorAll("input")
-    let saveButton = document.querySelector("#edit-plan-form button[type='submit']")
-    inputs.forEach(input => {
-      input.addEventListener("input", function() {
-        console.log("input")
-        console.log(saveButton)
+  document.addEventListener("turbo:load", function () {
+    const form = document.querySelector("#edit-plan-form");
+    if (!form) return;
+    const saveButton = form.querySelector("button[type='submit']");
+    form.querySelectorAll("input:not([disabled])").forEach((input) => {
+      input.addEventListener("input", function () {
         saveButton.classList.remove("d-none");
-      })
-    })
+      });
+    });
   });
-  
-  document.addEventListener("turbo:before-fetch-response", function() {
-    let saveButton = document.querySelector("#edit-plan-form button[type='submit']");
-    if(saveButton) {
-      saveButton.classList.add("d-none");
-    }
-  })
+
+  document.addEventListener("turbo:before-fetch-response", function () {
+    const saveButton = document.querySelector("#edit-plan-form button[type='submit']");
+    if (saveButton) saveButton.classList.add("d-none");
+  });
 </script>

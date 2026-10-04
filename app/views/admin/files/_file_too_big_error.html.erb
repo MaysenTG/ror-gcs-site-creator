@@ -1,4 +1,6 @@
+<% message = local_assigns[:size_error].presence || @size_error %>
 <div class="alert alert-warning file__too__big__error" role="alert">
-  <h4 class="alert-heading">File too large!</h4>
-  <%= @size_error %>
+  <h4 class="alert-heading">Site size limit reached</h4>
+  <p class="mb-2"><%= message %></p>
+  <a href="<%= account_usage_path %>" class="alert-link">Check usage &amp; plan limits</a>
 </div>

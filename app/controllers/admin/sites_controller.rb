@@ -44,6 +44,7 @@ class Admin::SitesController < ApplicationController
 
     @sites = kept
     @num_sites_left = @account_plan.max_sites.to_i - @sites.size
+    render layout: false
   end
 
   def new
@@ -122,8 +123,8 @@ class Admin::SitesController < ApplicationController
     @new_site = current_account.sites.new(name: @site_name)
 
     if @new_site.save
-      CreateSiteJob.perform_later(@new_site.storage_prefix, params[:theme_type])
-      redirect_to "/admin/sites", notice: "Your site is being created. Preview it at #{SiteStorage.site_preview_url(@new_site.name, origin: request.base_url)} in a few seconds."
+      CreateSiteJob.perform_later(@new_site.id, params[:theme_type])
+      redirect_to "/admin/sites", notice: "Your site is being created. We’ll notify you here when “#{@new_site.name}” is ready."
     else
       error_message = "<strong>Oops, there was an error creating your site. <a href='/admin/sites/new'>Click here to try again</a>.</strong>"
       render turbo_stream: turbo_stream.replace(

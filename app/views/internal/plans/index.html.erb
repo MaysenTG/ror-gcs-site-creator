@@ -1,24 +1,41 @@
-<!-- Loop over all accounts and return a table -->
-<div class="container">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-3">All plans</h2>
-    <a class="btn btn-primary" href="/internal/accounts/new">Create plan</a>
+<div class="page-shell">
+  <div class="page-header">
+    <div>
+      <h1>Plans</h1>
+      <p>Edit plan limits and pricing for customer accounts.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="<%= internal_root_path %>" class="btn btn-ghost">Ops dashboard</a>
+      <a href="<%= new_internal_plan_path %>" class="btn btn-primary">Create plan</a>
+    </div>
   </div>
-  <div class="row row-cols-1 row-cols-md-2 g-4 mb-3 mt-3">
-    <% @plans.each do |plan| %>
-      <a href="/internal/plans/<%= plan.id %>/edit">
-        <div class="col">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title"><%= plan.name %></h5>
-              <p class="card-text">Handle: <%= plan.plan_handle %></p>
-              <p class="card-text">Max sites: <%= plan.max_sites %></p>
-              <p class="card-text">Max site size: <%= plan.max_site_size %></p>
-              <p class="card-text">Price per month: $<%= plan.price %> NZD</p>
+
+  <% if @plans.blank? %>
+    <div class="empty-state surface-panel">
+      <h2>No plans yet</h2>
+      <p>Create the first plan to attach to accounts.</p>
+      <a href="<%= new_internal_plan_path %>" class="btn btn-primary">Create plan</a>
+    </div>
+  <% else %>
+    <div class="site-card-grid">
+      <% @plans.each do |plan| %>
+        <a href="<%= edit_internal_plan_path(plan) %>" class="site-card site-card--link">
+          <div class="site-card__top">
+            <div>
+              <h2 class="site-card__title"><%= plan.name %></h2>
+              <span class="site-card__url"><%= plan.plan_handle %></span>
             </div>
           </div>
-        </div>
-      </a>
-    <% end %>
-  </div>
+          <div class="site-card__meta">
+            <span><%= plan.max_sites %> sites</span>
+            <span><%= plan.max_site_size %> MB</span>
+          </div>
+          <div class="site-card__meta">
+            <span>$<%= plan.price.to_i %> NZD / month</span>
+            <span><%= plan.accounts.size %> accounts</span>
+          </div>
+        </a>
+      <% end %>
+    </div>
+  <% end %>
 </div>

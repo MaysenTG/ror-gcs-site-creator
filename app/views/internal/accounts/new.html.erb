@@ -1,27 +1,39 @@
-<a class="btn btn-secondary my-3 mx-5" href="/internal/accounts">Back to all accounts</a>
-<div class="container">
-  <h2 class="mb-3">Create a new account</h2>
-  <form action="/internal/accounts/create" method="post" data-turbo="true">
-    <div class="mb-3">
-      <label for="exampleInputEmail1" class="form-label">Email address</label>
-      <input type="email" class="form-control" name="email" id="exampleInputEmail1" aria-describedby="emailHelp">
+<div class="page-shell page-shell--narrow">
+  <div class="page-header">
+    <div>
+      <a href="<%= internal_accounts_path %>" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> Accounts</a>
+      <h1>Create account</h1>
+      <p>Provision a customer account with a temporary password.</p>
     </div>
-    <div class="mb-3">
-      <label for="exampleInputEmail1" class="form-label">Full name</label>
-      <input type="text" class="form-control" name="name" id="exampleInputEmail1" aria-describedby="emailHelp">
-    </div>
-    <div class="mb-3">
-      <label for="exampleInputPassword1" class="form-label">Password</label>
-      <input type="text" class="form-control" name="password" id="exampleInputPassword1" value="temp_pass_123">
-    </div>
-    <div class="mb-3">
-      <select class="form-select" name="plan_handle" aria-label="Default select example">
-        <option selected>Select a plan</option>
-        <option value="free">Free (3 sites, 1MB max per site)</option>
-        <option value="enthusiast">Enthusiast (10 sites, 10MB max per site)</option>
-        <option value="enterprise">Enterprise (100 sites, 100MB max per site)</option>
-      </select>
-    </div>
-    <button type="submit" class="btn btn-primary">Create account</button>
-  </form>
+  </div>
+
+  <div class="surface-panel">
+    <form action="<%= internal_create_account_path %>" method="post" data-turbo="true">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <div class="mb-3">
+        <label for="account_email" class="form-label">Email address</label>
+        <input type="email" class="form-control" name="email" id="account_email" required>
+      </div>
+      <div class="mb-3">
+        <label for="account_name" class="form-label">Full name</label>
+        <input type="text" class="form-control" name="name" id="account_name" required>
+      </div>
+      <div class="mb-3">
+        <label for="account_password" class="form-label">Temporary password</label>
+        <input type="text" class="form-control" name="password" id="account_password" value="temp_pass_123" required>
+      </div>
+      <div class="mb-4">
+        <label for="account_plan" class="form-label">Plan</label>
+        <select class="form-select" name="plan_handle" id="account_plan" required>
+          <option value="" selected disabled>Select a plan</option>
+          <% (@plans || Plan.all.sort_by { |p| p.max_sites.to_i }).each do |plan| %>
+            <option value="<%= plan.plan_handle %>">
+              <%= plan.name %> (<%= plan.max_sites %> sites, <%= plan.max_site_size %>MB)
+            </option>
+          <% end %>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Create account</button>
+    </form>
+  </div>
 </div>

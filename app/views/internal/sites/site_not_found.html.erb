@@ -1,21 +1,27 @@
-<% full_site_domain = @site.name+".maysengreenwood.com" %>
-<a class="btn btn-secondary my-3 mx-5" href="/internal/accounts/<%= @account_id %>">Back to account</a>
-<h1 style="margin-top: 4rem;" class="mb-3 text-center">Site details</h1>
-<div class="container">
-  <h2 class="mb-3">Oh no! An error occured while viewing <%= full_site_domain %></h2>
-  <div class="card">
-    <div class="card-body">
-      <h5 class="card-title">The site <strong><%= full_site_domain %></strong> has a Database entry, but doesn't have a Cloud bucket</h5>
-      <p class="card-text">You'll need to either create the missing bucket, or delete this site's DB entry</p>
-      <div class="d-flex justify-content-between">
-        <form action="/internal/accounts/<%= @account_id %>/sites/<%= @site.id %>/create_bucket" method="POST" data-turbo="true">
-          <input type="hidden" name="site_name" value="<%= @site.name %>s">
-          <button type="submit" class="btn btn-primary">Create R2 bucket</button>
-        </form>
-        <form action="/internal/accounts/<%= @account_id %>/sites/<%= @site.id %>/delete_site" method="DELETE" data-turbo="true">
-          <button type="submit" class="btn btn-danger">Delete site</button>
-        </form>
-      </div>
+<% full_site_domain = "#{@site.name}.#{SiteStorage::DOMAIN_NAME}" %>
+
+<div class="page-shell">
+  <div class="page-header">
+    <div>
+      <a href="<%= internal_account_path(@account_id) %>" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> Account</a>
+      <h1>Missing storage</h1>
+      <p>Database record exists for <strong><%= full_site_domain %></strong>, but the bucket was not found.</p>
+    </div>
+  </div>
+
+  <div class="surface-panel">
+    <p class="mb-4">Create the missing bucket, or delete the orphaned site record.</p>
+    <div class="d-flex flex-wrap gap-2 justify-content-between">
+      <form action="<%= internal_create_account_site_bucket_path(@account_id, @site) %>" method="post" data-turbo="true">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <input type="hidden" name="site_name" value="<%= @site.name %>">
+        <button type="submit" class="btn btn-primary">Create R2 bucket</button>
+      </form>
+      <form action="<%= internal_delete_account_site_path(@account_id, @site) %>" method="post" data-turbo="true">
+        <input type="hidden" name="_method" value="delete">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <button type="submit" class="btn btn-danger" data-turbo-confirm="Delete this site record?">Delete site</button>
+      </form>
     </div>
   </div>
 </div>

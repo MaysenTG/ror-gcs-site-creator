@@ -4,7 +4,7 @@ Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Code is not reloaded between requests.
-  config.cache_classes = true
+  config.enable_reloading = false
 
   # Eager load code on boot. This eager loads most of Rails and
   # your application in memory, allowing both threaded web servers
@@ -23,9 +23,6 @@ Rails.application.configure do
   # Fly.io and similar hosts serve static assets from the app process.
   config.public_file_server.enabled = ENV["RAILS_SERVE_STATIC_FILES"].present? || ENV["FLY_APP_NAME"].present?
 
-  # Compress CSS using a preprocessor.
-  # config.assets.css_compressor = :sass
-
   # Do not fallback to assets pipeline if a precompiled asset is missed.
   config.assets.compile = false
 
@@ -43,6 +40,9 @@ Rails.application.configure do
   # config.action_cable.mount_path = nil
   # config.action_cable.url = "wss://example.com/cable"
   # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
+
+  # Fly terminates TLS; tell Rails the original request was HTTPS.
+  config.assume_ssl = ENV["RAILS_ASSUME_SSL"].present? || ENV["FLY_APP_NAME"].present?
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   config.force_ssl = ENV["RAILS_FORCE_SSL"].present? || ENV["FLY_APP_NAME"].present?

@@ -1,136 +1,168 @@
-<% if notice %>
-  <div class="alert alert-warning alert-dismissible fade show" role="alert">
-    <%= notice %>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-<% end %>
-<a class="btn btn-secondary my-3 mx-5" href="/internal/accounts">Back to all accounts</a>
-<h1 style="margin-top: 4rem;" class="mb-3 text-center">Account details</h1>
-<div class="container">
-  <div class="row flex-lg-nowrap">
-    <div class="col-2"></div>
-    <div class="col-8">
-      <div class="col mb-3">
-        <div class="card">
-          <div class="card-body">
-            <div class="e-profile">
-              <div id="save-account-plan-change-banner" class="d-none alert alert-primary d-flex justify-content-between align-items-center" role="alert">
-                <span>Unsaved plan changes.</span>
-                <button type="submit" form="plan-change-form" class="btn btn-primary">Save plan change</button>
-              </div>
-              <div class="col d-flex flex-column flex-sm-row justify-content-between mb-3">
-                <div class="d-flex flex-column">
-                  <% account_plan = Plan.where(plan_handle: @account.plan_handle).first %>
-                  <div>
-                    <h4 class="d-flex">
-                      <strong>Plan name:&nbsp;</strong>
-                      <!-- Render a select input -->
-                      <form id="plan-change-form" action="/internal/accounts/update" method="put">
-                        <input type="hidden" name="id" value="<%= @account.id %>">
-                        <select name="plan_handle" onchange="handleShowSave(this)" class="w-50 form-select" aria-label="Default select example">
-                          <option value="" selected>Current: <%= account_plan.name %></option>
-                          <% @plans.each do |plan| %>
-                            <% if plan.name != account_plan.name %>
-                              <option value="<%= plan.plan_handle %>"><%= plan.name %>(<%= plan.max_sites %> max sites, <%= plan.max_site_size %>MB max site size)</option>
-                            <% end %>
-                          <% end %>
-                        </select>
-                      </form>
-                    </h4>
-                  </div>
-                  <br>
-                  <div>
-                    <h4><strong>Max site size (per site):</strong> <%= account_plan.max_site_size %>MB</h4>
-                  </div>
-                  <br>
-                  <div>
-                    <h4><strong>Max number of sites:</strong> <%= account_plan.max_sites %></h4>
-                    <p>Sites created: <%= @account.sites.count %></p>
-                  </div>
-                </div>
-                <div class="text-left text-sm-right">
-                  <div class="text-muted"><small>Joined <%= @account.created_at.to_fs(:custom_datetime) %></small></div>
-                  <div class="text-muted"><small>Last updated <%= @account.updated_at.to_fs(:custom_datetime) %></small></div>
-                </div>
-              </div>
-            </div>
-            <ul class="nav nav-tabs">
-              <li class="nav-item"><a href="" class="active nav-link">Settings</a></li>
-            </ul>
-            <div class="tab-content pt-3">
-              <div class="tab-pane active">
-                <div class="row">
-                  <div class="col">
-                    <div class="form-group">
-                      <label>Full Name</label>
-                      <input class="form-control" type="text" disabled value="<%= @account.name %>">
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col">
-                    <div class="form-group">
-                      <label>Email</label>
-                      <input class="form-control" type="email" value="<%= @account.email %>" disabled>
-                    </div>
-                  </div>
-                </div>
-                <div class="row mt-5">
-                  <div class="col text-end">
-                    <div class="form-group">
-                      <form action="/internal/accounts/delete" method="DELETE" data-turbo="true">
-                        <input type="hidden" name="id" value="<%= @account.id %>">
-                        <button type="submit" onclick="if(confirm('Are you sure want delete this account?')) {this.form.requestSubmit()}" data-turbo-confirm="Are you sure you want to delete this account?" class="btn btn-danger">Delete account</button>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+<div class="page-shell page-shell--wide">
+  <div class="page-header">
+    <div>
+      <a href="<%= internal_accounts_path %>" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> Accounts</a>
+      <h1><%= @account.name.presence || "Unnamed account" %></h1>
+      <p class="mb-0"><%= @account.email %></p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <% if @account.admin? %>
+        <span class="internal-pill align-self-center">Admin</span>
+      <% end %>
     </div>
   </div>
-  <div class="container">
-    <h2 class="mb-3">User sites</h2>
-    <div class="row row-cols-1 row-cols-md-2 g-4 mb-3">
-      <% if @account_sites.length == 0 %>
-        <div class="col">
-          <h4>This user has no sites</h4>
-        </div>
-      <% else %>
+
+  <% account_plan = @account.current_plan %>
+
+  <% traffic = @traffic || {} %>
+  <% top_site_max = Array(traffic[:top_sites]).map { |row| row[:views] }.max.to_i %>
+
+  <div class="dash-stat-grid">
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Plan</span>
+      <span class="dash-stat__value"><%= account_plan&.name || @account.plan_handle.to_s.titleize %></span>
+      <span class="dash-stat__hint">Handle: <%= @account.plan_handle %></span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Sites</span>
+      <span class="dash-stat__value"><%= @account.sites.count %>/<%= account_plan&.max_sites || "—" %></span>
+      <span class="dash-stat__hint"><%= account_plan&.max_site_size || "—" %> MB max per site</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Page views (7d)</span>
+      <span class="dash-stat__value"><%= number_with_delimiter(traffic[:page_views_7d].to_i) %></span>
+      <span class="dash-stat__hint"><%= traffic[:active_sites_7d].to_i %> active sites</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Bandwidth (7d)</span>
+      <span class="dash-stat__value"><%= internal_bytes_label(traffic[:bandwidth_7d]) %></span>
+      <span class="dash-stat__hint"><%= number_with_delimiter(traffic[:requests_7d].to_i) %> requests</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Errors (7d)</span>
+      <span class="dash-stat__value"><%= number_with_delimiter(traffic[:errors_7d].to_i) %></span>
+      <span class="dash-stat__hint"><%= traffic[:error_rate_7d].to_f %>% error rate</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Joined</span>
+      <span class="dash-stat__value" style="font-size:1.2rem;"><%= @account.created_at.to_fs(:custom_datetime) %></span>
+      <span class="dash-stat__hint">Updated <%= time_ago_in_words(@account.updated_at) %> ago</span>
+    </div>
+  </div>
+
+  <% if Array(traffic[:top_sites]).any? %>
+    <section class="surface-panel mb-3">
+      <h2 class="h5 mb-3">Busiest sites (7d)</h2>
+      <ul class="ops-rank-list">
+        <% traffic[:top_sites].each do |row| %>
+          <li>
+            <div class="ops-rank-list__main">
+              <a href="<%= internal_account_site_path(@account, row[:site]) %>"><%= row[:site].name %></a>
+              <div class="ops-rank-list__bar" style="width: <%= ops_bar_width(row[:views], top_site_max) %>%"></div>
+            </div>
+            <div class="ops-rank-list__meta">
+              <strong><%= number_with_delimiter(row[:views]) %></strong>
+              <small class="text-muted"><%= internal_bytes_label(row[:bandwidth]) %><% if row[:errors].positive? %> · <%= row[:errors] %> err<% end %></small>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <div class="surface-panel mb-3">
+    <div id="save-account-plan-change-banner" class="d-none alert alert-primary d-flex justify-content-between align-items-center mb-3" role="alert">
+      <span>Unsaved plan changes.</span>
+      <button type="submit" form="plan-change-form" class="btn btn-primary btn-sm">Save plan change</button>
+    </div>
+
+    <h2 class="h5 mb-3">Plan</h2>
+    <form id="plan-change-form" action="<%= internal_update_account_path %>" method="post">
+      <input type="hidden" name="_method" value="put">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <input type="hidden" name="id" value="<%= @account.id %>">
+      <label class="form-label" for="plan_handle">Change plan</label>
+      <select id="plan_handle" name="plan_handle" onchange="handleShowSave(this)" class="form-select" aria-label="Plan">
+        <option value="" selected>Current: <%= account_plan&.name || @account.plan_handle %></option>
+        <% @plans.each do |plan| %>
+          <% next if plan.plan_handle == @account.plan_handle %>
+          <option value="<%= plan.plan_handle %>">
+            <%= plan.name %> (<%= plan.max_sites %> sites, <%= plan.max_site_size %>MB)
+          </option>
+        <% end %>
+      </select>
+    </form>
+  </div>
+
+  <div class="surface-panel mb-3">
+    <h2 class="h5 mb-3">Account details</h2>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Full name</label>
+        <input class="form-control" type="text" disabled value="<%= @account.name %>">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Email</label>
+        <input class="form-control" type="email" disabled value="<%= @account.email %>">
+      </div>
+    </div>
+    <div class="d-flex justify-content-end mt-4">
+      <form action="<%= internal_delete_account_path %>" method="post" data-turbo="true">
+        <input type="hidden" name="_method" value="delete">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <input type="hidden" name="id" value="<%= @account.id %>">
+        <button
+          type="submit"
+          data-turbo-confirm="Are you sure you want to delete this account?"
+          class="btn btn-danger"
+        >
+          Delete account
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="surface-panel">
+    <h2 class="h5 mb-3">Sites</h2>
+    <% if @account_sites.blank? %>
+      <div class="empty-state empty-state--compact">
+        <p class="mb-0">This account has no sites.</p>
+      </div>
+    <% else %>
+      <div class="site-card-grid mb-3">
         <% @account_sites.each do |site| %>
-          <a href="/internal/accounts/<%= @account.id %>/sites/<%= site.id %>">
-            <div class="col">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title"><%= site.name %>.maysengreenwood.com</h5>
-                </div>
+          <% site_views = traffic.dig(:views_by_site_id, site.id).to_i %>
+          <a href="<%= internal_account_site_path(@account, site) %>" class="site-card site-card--link">
+            <div class="site-card__top">
+              <div>
+                <h2 class="site-card__title"><%= site.name %></h2>
+                <span class="site-card__url"><%= site_preview_label(site) %></span>
               </div>
+              <% if site.gate_enabled? %>
+                <span class="internal-pill">Gated</span>
+              <% end %>
+            </div>
+            <div class="site-card__meta">
+              <span><%= number_with_delimiter(site_views) %> views · 7d</span>
             </div>
           </a>
         <% end %>
-      <% end %>
-    </div>
-    <%== pagy_bootstrap_nav(@pagy) %>
+      </div>
+      <div class="internal-pagination">
+        <%== @pagy.series_nav(:bootstrap) %>
+      </div>
+    <% end %>
   </div>
 </div>
-</div>
+
 <script>
   function handleShowSave(e) {
-    // Get the selected plan handle
-    let selectedPlanHandle = e.value;
-    console.log(selectedPlanHandle);
-
-    if(selectedPlanHandle == "") {
-      // Hide the save alert
-      let saveAlert = document.getElementById("save-account-plan-change-banner");
+    const saveAlert = document.getElementById("save-account-plan-change-banner");
+    if (!saveAlert) return;
+    if (e.value === "") {
       saveAlert.classList.add("d-none");
       return;
     }
-
-    let saveAlert = document.getElementById("save-account-plan-change-banner");
     saveAlert.classList.remove("d-none");
   }
 </script>

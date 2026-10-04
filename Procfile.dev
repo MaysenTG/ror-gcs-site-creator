@@ -1,2 +1,4 @@
-web: bin/rails s
-worker: bundle exec sidekiq -C config/sidekiq.yml
+web: bin/rails server -p 3000
+worker: bin/sidekiq -C config/sidekiq.yml
+# Always use project bins (bin/rails, bin/sidekiq, bin/bundle).
+# Activate RVM first: `rvm use 3.2.3` (or cd into the app so .rvmrc applies).

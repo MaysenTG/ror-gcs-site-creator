@@ -1,2 +1,38 @@
-<h1>Internal::Plans#new</h1>
-<p>Find me in app/views/internal/plans/new.html.erb</p>
+<div class="page-shell page-shell--narrow">
+  <div class="page-header">
+    <div>
+      <a href="<%= internal_plans_path %>" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> Plans</a>
+      <h1>Create plan</h1>
+      <p>Define a new plan handle, limits, and monthly price.</p>
+    </div>
+  </div>
+
+  <div class="surface-panel">
+    <form action="<%= internal_plans_path %>" method="post" data-turbo="true">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <div class="mb-3">
+        <label class="form-label" for="plan_name">Name</label>
+        <input type="text" class="form-control" id="plan_name" name="plan[name]" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="plan_handle">Plan handle</label>
+        <input type="text" class="form-control" id="plan_handle" name="plan[plan_handle]" placeholder="enthusiast" required>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label" for="plan_max_sites">Max sites</label>
+          <input type="number" class="form-control" id="plan_max_sites" name="plan[max_sites]" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="plan_max_site_size">Max site size (MB)</label>
+          <input type="number" class="form-control" id="plan_max_site_size" name="plan[max_site_size]" required>
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="plan_price">Price (NZD / month)</label>
+        <input type="number" class="form-control" id="plan_price" name="plan[price]" value="0">
+      </div>
+      <button type="submit" class="btn btn-primary">Create plan</button>
+    </form>
+  </div>
+</div>

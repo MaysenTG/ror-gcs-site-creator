@@ -1,63 +1,66 @@
-class Internal::AccountsController < ApplicationController  
+class Internal::AccountsController < ApplicationController
   def index
-    #@accounts = Account.all
-    @pagy, @accounts = pagy(Account.all)
+    @pagy, @accounts = pagy(Account.includes(:plan, :sites).order(created_at: :desc))
   end
 
   def show
-    begin
-      @account = Account.find(params[:id])
-      @pagy, @account_sites = pagy(@account.sites)
-      @plans = Plan.all.sort_by { |user| user.max_sites.to_i }
-    rescue ActiveRecord::RecordNotFound
-      redirect_to internal_accounts_path, notice: "Account not found."
-    end
+    @account = Account.includes(:plan).find(params[:id])
+    @pagy, @account_sites = pagy(@account.sites.order(created_at: :desc))
+    @plans = Plan.all.sort_by { |plan| plan.max_sites.to_i }
+    @traffic = Internal::AccountTrafficStats.build(@account)
+  rescue ActiveRecord::RecordNotFound
+    redirect_to internal_accounts_path, notice: "Account not found."
   end
 
   def update
-    new_plan_handle = params[:plan_handle]
-    account_id = params[:id]
-    
-    account = Account.find(account_id)
-    account.plan_handle = new_plan_handle
-    account.save!
-    
-    redirect_to internal_path(account_id), notice: "Plan successfully updated."
+    account = Account.find(params[:id])
+    account.update!(plan_handle: params[:plan_handle])
+    redirect_to internal_account_path(account), notice: "Plan successfully updated."
   end
-  
+
   def new
+    @plans = Plan.all.sort_by { |plan| plan.max_sites.to_i }
   end
-  
+
   def create
-    account = Account.new
-    account.name = params[:name]
-    account.email = params[:email]
-    account.password = params[:password]
-    account.password_confirmation = params[:password]
-    account.plan_handle = params[:plan_handle]
+    account = Account.new(
+      name: params[:name],
+      email: params[:email],
+      password: params[:password],
+      password_confirmation: params[:password],
+      plan_handle: params[:plan_handle]
+    )
     account.save!
-    
-    redirect_to internal_path(account.id), notice: "Account successfully created."
+    redirect_to internal_account_path(account), notice: "Account successfully created."
   end
-  
+
   def destroy
     account = Account.find(params[:id])
     account.destroy
-    
     redirect_to internal_accounts_path, notice: "Account successfully deleted."
   end
-  
+
   def search
-    search_term = params[:q]
-    
-    
+    search_term = params[:q].to_s.strip
+
+    scope = Account.includes(:plan, :sites).order(created_at: :desc)
     if search_term.present?
-      @pagy, @accounts = pagy(Account.where("name LIKE :search or email LIKE :search or plan_handle LIKE :search", search: "%#{search_term}%"))
       @query = search_term
+      @pagy, @accounts = pagy(
+        scope.where(
+          "accounts.name ILIKE :search OR accounts.email ILIKE :search OR accounts.plan_handle ILIKE :search",
+          search: "%#{search_term}%"
+        )
+      )
     else
       @query = ""
-      @pagy, @accounts = pagy(Account.all)
+      @pagy, @accounts = pagy(scope)
     end
-    render turbo_stream: turbo_stream.update("accounts_list", partial: "internal/accounts/accounts", locals: { accounts: @accounts, query: @query })
+
+    render turbo_stream: turbo_stream.update(
+      "accounts_list",
+      partial: "internal/accounts/accounts",
+      locals: { accounts: @accounts, query: @query }
+    )
   end
 end

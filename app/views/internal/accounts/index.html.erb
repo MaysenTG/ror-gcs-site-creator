@@ -1,45 +1,47 @@
-<!-- Loop over all accounts and return a table -->
-<div class="container">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-3">All accounts</h2>
-    <a class="btn btn-primary" href="/internal/accounts/new">Create account</a>
+<div class="page-shell page-shell--wide">
+  <div class="page-header">
+    <div>
+      <h1>Accounts</h1>
+      <p>Search and open customer accounts, plans, and sites.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="<%= internal_root_path %>" class="btn btn-ghost">Ops dashboard</a>
+      <a href="<%= internal_new_account_path %>" class="btn btn-primary">Create account</a>
+    </div>
   </div>
-  <form data-controller="search" action="/internal/accounts/search<% unless request.query_parameters[:page].nil? %>?page<%= request.query_parameters[:page] %><% end %>" class="mb-3 d-flex" data-turbo="true" method="get">
-    <input data-action="input->search#debounceSearchInput" type="search" name="q" class="form-control" placeholder="site name, email, name..."> &nbsp;
-  </form>
+
+  <div class="surface-panel mb-3">
+    <form
+      data-controller="search"
+      action="<%= internal_accounts_search_path %>"
+      class="internal-search"
+      data-turbo="true"
+      method="get"
+    >
+      <input
+        data-action="input->search#debounceSearchInput"
+        type="search"
+        name="q"
+        class="form-control"
+        placeholder="Search by name, email, or plan…"
+        value="<%= params[:q] %>"
+      >
+    </form>
+  </div>
+
   <%= turbo_frame_tag "accounts_list", target: "_top", class: "account-results-wrapper" do %>
-    <%= render partial: "internal/accounts/accounts", locales: { @accounts => @accounts, @query => @query } %>
+    <%= render partial: "internal/accounts/accounts" %>
   <% end %>
-  <div class="account-load-placeholder d-none row row-cols-1 row-cols-md-2 g-4 mb-3 mt-3">
-    <% 4.times do %>
-      <div class="col">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title placeholder-glow">
-              <span class="placeholder col-6"></span>
-            </h5>
-            <p class="card-text placeholder-glow">
-              <span class="placeholder col-7"></span>
-            </p>
-            <p class="card-text placeholder-glow">
-              <span class="placeholder col-5"></span>
-            </p>
-          </div>
-        </div>
-      </div>
-    <% end %>
-    <nav aria-label="...">
-      <ul class="pagination">
-        <li class="page-item disabled">
-          <a class="page-link">‹ Prev</a>
-        </li>
-        <li class="page-item active" aria-current="page">
-          <a class="page-link" href="#">1</a>
-        </li>
-        <li class="page-item disabled">
-          <a class="page-link" href="#">Next ›</a>
-        </li>
-      </ul>
-    </nav>
+
+  <div class="account-load-placeholder d-none">
+    <div class="site-card-grid">
+      <% 4.times do %>
+        <article class="site-card site-card--skeleton">
+          <h5 class="placeholder-glow mb-2"><span class="placeholder col-7"></span></h5>
+          <p class="placeholder-glow mb-1"><span class="placeholder col-9"></span></p>
+          <p class="placeholder-glow mb-0"><span class="placeholder col-5"></span></p>
+        </article>
+      <% end %>
+    </div>
   </div>
 </div>

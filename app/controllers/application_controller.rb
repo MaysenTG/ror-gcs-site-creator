@@ -1,5 +1,5 @@
 class ApplicationController < ActionController::Base
-  include Pagy::Backend
+  include Pagy::Method
   include OwnerBarCookie
 
   before_action :configure_permitted_parameters, if: :devise_controller?
@@ -33,14 +33,14 @@ class ApplicationController < ActionController::Base
   end
   
   def authenticate_internal_staff
-    if request.path.include? "internal"
-      if current_account
-        if current_account.admin == false
-          redirect_to root_path, notice: "You do not have access to this page."
-        end
-      else
-        redirect_to root_path, notice: "You do not have access to this page."
-      end
-    end
+    return unless request.path.start_with?("/internal")
+
+    # Reload so console/admin toggles apply without requiring a re-login.
+    account = current_account
+    account&.reload
+
+    return if account&.admin?
+
+    redirect_to root_path, alert: "You do not have access to this page."
   end
 end

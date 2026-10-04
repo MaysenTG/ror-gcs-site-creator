@@ -32,12 +32,18 @@
           <li class="nav-item">
             <a class="nav-link <%= "active" if request.path == "/admin/sites/new" %>" href="/admin/sites/new">New site</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link <%= "active" if request.path == account_usage_path %>" href="<%= account_usage_path %>">Usage</a>
+          </li>
           <% if current_account.admin %>
             <li class="nav-item">
-              <a class="nav-link <%= "active" if request.path.include?("/internal/account") %>" href="/internal/accounts">Accounts</a>
+              <a class="nav-link <%= "active" if request.path == "/internal" || request.path == "/internal/" %>" href="<%= internal_root_path %>">Ops</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link <%= "active" if request.path.include?("/internal/plan") %>" href="/internal/plans">Plans</a>
+              <a class="nav-link <%= "active" if request.path.include?("/internal/account") %>" href="<%= internal_accounts_path %>">Accounts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <%= "active" if request.path.include?("/internal/plan") %>" href="<%= internal_plans_path %>">Plans</a>
             </li>
           <% end %>
         <% end %>
@@ -50,6 +56,7 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
               <li><a class="dropdown-item <%= "active" if request.path == "/accounts/edit" %>" href="/accounts/edit">Edit account</a></li>
+              <li><a class="dropdown-item <%= "active" if request.path == account_usage_path %>" href="<%= account_usage_path %>">Billing &amp; usage</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><button type="submit" form="sign-out-account-form" class="dropdown-item">Sign out</button></li>
             </ul>

@@ -1,22 +1,26 @@
 class Internal::SitesController < ApplicationController
   def show
-    @site = Site.where(id: params[:id], account_id: params[:account_id]).first
+    @site = Site.find_by(id: params[:id], account_id: params[:account_id])
     @account_id = params[:account_id]
 
     if @site.nil?
-      redirect_to internal_path(params[:account_id]), notice: "The site ID of #{params[:id]} doesn't belong to the requested account."
+      redirect_to internal_account_path(params[:account_id]), notice: "The site ID of #{params[:id]} doesn't belong to the requested account."
       return
     end
 
+    @ops = Internal::SiteOpsStats.build(@site)
+    @account = @site.account
+
     begin
       storage = SiteStorage.instance
-      bucket_name = @site.name + ".maysengreenwood.com"
+      bucket_name = @site.storage_prefix
       bucket = storage.bucket bucket_name
 
       raise SiteStorage::NotFoundError if bucket.nil?
 
       @total_site_size = bucket.files.inject(0) { |sum, file| sum + file.size }
       @total_num_files = bucket.files.size
+      @domains = @site.domains.order(:domain)
     rescue SiteStorage::NotFoundError, Aws::S3::Errors::NotFound, Aws::S3::Errors::NoSuchBucket
       render "internal/sites/site_not_found"
     end
@@ -27,12 +31,12 @@ class Internal::SitesController < ApplicationController
     site = Site.find(params[:id])
     site.destroy
 
-    redirect_to internal_path(account_id), notice: "Site successfully deleted."
+    redirect_to internal_account_path(account_id), notice: "Site successfully deleted."
   end
 
   def create_bucket
     site_name = params[:site_name]
-    bucket_name = site_name + ".maysengreenwood.com"
+    bucket_name = "#{site_name}.#{SiteStorage::DOMAIN_NAME}"
     storage = SiteStorage.instance
 
     bucket = storage.create_bucket bucket_name

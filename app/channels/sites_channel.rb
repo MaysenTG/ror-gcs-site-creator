@@ -1,9 +1,8 @@
 class SitesChannel < ApplicationCable::Channel
   def subscribed
-    stream_from "sites_channel"
+    stream_for current_account
   end
 
   def unsubscribed
-    # Any cleanup needed when channel is unsubscribed
   end
 end

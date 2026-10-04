@@ -20,5 +20,30 @@ class CloneSiteJob < ApplicationJob
       b.website_main = SiteStorage::MAIN_PAGE
       b.website_404 = SiteStorage::NOT_FOUND_PAGE
     end
+
+    SitesChannel.broadcast_to(
+      destination.account,
+      {
+        event: "site_ready",
+        action: "cloned",
+        site_id: destination.id,
+        site_name: destination.name,
+        message: "Clone “#{destination.name}” is ready (from #{source.name})."
+      }
+    )
+  rescue StandardError => e
+    if defined?(destination) && destination&.account_id
+      SitesChannel.broadcast_to(
+        destination.account,
+        {
+          event: "site_failed",
+          action: "cloned",
+          site_id: destination.id,
+          site_name: destination.name,
+          message: "Couldn’t finish cloning “#{destination.name}”: #{e.message.to_s.truncate(120)}"
+        }
+      )
+    end
+    raise
   end
 end

@@ -23,6 +23,16 @@ class Admin::FilesController < ApplicationController
       else
         ""
       end
+
+    if over_site_size_limit?(bucket, added_bytes: contents.bytesize)
+      return render_site_size_limit_error(
+        target: "editor_message",
+        added_bytes: contents.bytesize,
+        total_site_size: projected_site_size(bucket, added_bytes: contents.bytesize),
+        action: "create"
+      )
+    end
+
     content_type = HtmlSkeleton.html_file?(file_name) ? "text/html; charset=utf-8" : nil
     bucket.create_file StringIO.new(contents), file_name, cache_control: "no-store", content_type: content_type
 
@@ -103,16 +113,16 @@ class Admin::FilesController < ApplicationController
     Rails.cache.delete(cache_key)
 
     file_contents_difference = @file_contents.bytesize - @original_file_contents.bytesize
-    total_site_size = Admin::SitesController.get_total_bucket_size(bucket) + file_contents_difference
+    total_site_size = projected_site_size(bucket, added_bytes: file_contents_difference)
 
-    user_max_site_size_mb = ApplicationController.get_max_site_size_for_account_in_mb(current_account)
-    user_max_site_size_bytes = ApplicationController.get_max_site_size_for_account_in_bytes(current_account)
-
-    if total_site_size > user_max_site_size_bytes
-      response.set_header("site-over-limit", true)
-      @size_error = "This file update pushes your site over #{user_max_site_size_mb}MB in size (total of #{total_site_size.to_f / 1000000}MB). Please delete some content before you can save this file."
-      render turbo_stream: turbo_stream.update("editor_message", partial: "admin/files/file_too_big_error", locals: { @size_error => @size_error })
-      return
+    if over_site_size_limit?(bucket, added_bytes: file_contents_difference)
+      return render_site_size_limit_error(
+        target: "editor_message",
+        added_bytes: file_contents_difference,
+        total_site_size: total_site_size,
+        action: "save",
+        file_name: @file_name
+      )
     end
 
     SiteFileVersion.snapshot!(site: site, path: @file_name, content: @original_file_contents)
@@ -183,14 +193,16 @@ class Admin::FilesController < ApplicationController
     bucket_name = site.name + "." + DOMAIN_NAME
     bucket = storage.bucket bucket_name, skip_lookup: true
 
-    total_site_size = Admin::SitesController.get_total_bucket_size(bucket) + file_contents.bytesize
-    user_max_site_size_bytes = ApplicationController.get_max_site_size_for_account_in_bytes(current_account)
+    total_site_size = projected_site_size(bucket, added_bytes: file_contents.bytesize)
 
-    if total_site_size >= user_max_site_size_bytes
-      response.set_header("site-over-limit", true)
-      @size_error = "This file puts you over your site limit."
-      render turbo_stream: turbo_stream.update("editor", partial: "admin/files/file_too_big_error", locals: { @size_error => @size_error })
-      return
+    if over_site_size_limit?(bucket, added_bytes: file_contents.bytesize)
+      return render_site_size_limit_error(
+        target: "editor_message",
+        added_bytes: file_contents.bytesize,
+        total_site_size: total_site_size,
+        action: "upload",
+        file_name: file_name
+      )
     end
 
     bucket.create_file StringIO.new(file_contents), file_name, cache_control: "no-store"
@@ -367,5 +379,58 @@ class Admin::FilesController < ApplicationController
 
       render turbo_stream: turbo_stream.update("file_delete_error", @error_message)
     end
+  end
+
+  def projected_site_size(bucket, added_bytes:)
+    Admin::SitesController.get_total_bucket_size(bucket) + added_bytes.to_i
+  end
+
+  def over_site_size_limit?(bucket, added_bytes:)
+    projected_site_size(bucket, added_bytes: added_bytes) > max_site_size_bytes
+  end
+
+  def max_site_size_mb
+    ApplicationController.get_max_site_size_for_account_in_mb(current_account)
+  end
+
+  def max_site_size_bytes
+    ApplicationController.get_max_site_size_for_account_in_bytes(current_account)
+  end
+
+  def render_site_size_limit_error(target:, added_bytes:, total_site_size:, action:, file_name: nil)
+    limit_mb = max_site_size_mb
+    total_mb = (total_site_size.to_f / 1_000_000).round(2)
+    added_label = number_to_human_size([added_bytes.to_i, 0].max)
+    verb =
+      case action.to_s
+      when "upload" then "upload"
+      when "create" then "create this file"
+      else "save"
+      end
+    focus = file_name.present? ? " “#{file_name}”" : ""
+
+    @size_error =
+      "Can't #{verb}#{focus}: your plan allows #{limit_mb} MB per site, and this would bring the site to about #{total_mb} MB" \
+      "#{" (+#{added_label})" if added_bytes.to_i.positive?}. Delete or shrink files, or upgrade your plan."
+
+    response.set_header("site-over-limit", "true")
+    response.set_header("site-limit-message", @size_error.to_s.tr("\r\n", " ").truncate(280))
+
+    streams = [
+      turbo_stream.update(
+        "site_limit_banner",
+        partial: "admin/files/file_too_big_error",
+        locals: { size_error: @size_error }
+      )
+    ]
+    if target.present? && target.to_s != "site_limit_banner"
+      streams << turbo_stream.update(
+        target,
+        partial: "admin/files/file_too_big_error",
+        locals: { size_error: @size_error }
+      )
+    end
+
+    render turbo_stream: streams
   end
 end

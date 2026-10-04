@@ -1,0 +1,316 @@
+<% daily = @stats[:daily_page_views] || [] %>
+<% daily_max = daily.map { |d| d[:views] }.max.to_i %>
+<% top_site_max = @stats[:top_sites].map { |row| row[:views] }.max.to_i %>
+<% country_max = @stats[:top_countries].values.max.to_i %>
+<% device_total = @stats[:devices].values.sum %>
+
+<div class="page-shell page-shell--wide">
+  <div class="page-header">
+    <div>
+      <h1>Internal ops</h1>
+      <p>Platform pulse across accounts, sites, plans, and published-site traffic.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="<%= internal_accounts_path %>" class="btn btn-ghost">Accounts</a>
+      <a href="<%= internal_plans_path %>" class="btn btn-ghost">Plans</a>
+      <a href="<%= internal_new_account_path %>" class="btn btn-primary">Create account</a>
+    </div>
+  </div>
+
+  <% attention = Array(@stats[:attention]) %>
+  <% if attention.any? %>
+    <section class="ops-attention mb-3">
+      <div class="ops-attention__header">
+        <h2 class="h5 mb-0">Needs attention</h2>
+        <span class="text-muted"><%= attention.size %> signal<%= "s" if attention.size != 1 %></span>
+      </div>
+      <div class="ops-attention__grid">
+        <% attention.each do |item| %>
+          <article class="surface-panel ops-attention__card ops-attention__card--<%= item[:kind] %>">
+            <p class="ops-traffic__eyebrow mb-1"><%= item[:title] %></p>
+            <p class="mb-2"><%= item[:detail] %></p>
+            <ul class="internal-kv-list">
+              <% Array(item[:accounts]).each do |account| %>
+                <li>
+                  <span>
+                    <a href="<%= internal_account_path(account) %>"><%= account.name.presence || account.email %></a>
+                    <small class="d-block text-muted"><%= account.plan_handle.to_s.titleize %></small>
+                  </span>
+                </li>
+              <% end %>
+              <% Array(item[:sites]).each do |row| %>
+                <li>
+                  <span>
+                    <a href="<%= internal_account_site_path(row[:account], row[:site]) %>"><%= row[:site].name %></a>
+                    <small class="d-block text-muted"><%= row[:account]&.email %></small>
+                  </span>
+                  <% if row[:errors].to_i.positive? %>
+                    <strong class="text-danger"><%= number_with_delimiter(row[:errors]) %> err</strong>
+                  <% else %>
+                    <small class="text-muted">quiet</small>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </article>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <div class="dash-stat-grid">
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Accounts</span>
+      <span class="dash-stat__value"><%= @stats[:accounts_total] %></span>
+      <span class="dash-stat__hint">+<%= @stats[:accounts_7d] %> in 7d · <%= @stats[:accounts_30d] %> in 30d</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Sites</span>
+      <span class="dash-stat__value"><%= @stats[:sites_total] %></span>
+      <span class="dash-stat__hint">+<%= @stats[:sites_7d] %> in 7d · <%= @stats[:gated_sites] %> gated</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Paid accounts</span>
+      <span class="dash-stat__value"><%= @stats[:paid_accounts] %></span>
+      <span class="dash-stat__hint"><%= @stats[:admins] %> staff admins</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Custom domains</span>
+      <span class="dash-stat__value"><%= @stats[:domains_total] %></span>
+      <span class="dash-stat__hint">on <%= @stats[:sites_with_domains] %> sites</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">At site limit</span>
+      <span class="dash-stat__value"><%= @stats[:at_site_limit] %></span>
+      <span class="dash-stat__hint"><%= @stats[:moments_total] %> moments saved</span>
+    </div>
+    <div class="dash-stat surface-panel">
+      <span class="dash-stat__label">Quiet sites (7d)</span>
+      <span class="dash-stat__value"><%= @stats[:dormant_sites_7d] %></span>
+      <span class="dash-stat__hint"><%= @stats[:active_sites_7d] %> active · <%= @stats[:gated_sites] %> gated</span>
+    </div>
+  </div>
+
+  <section class="surface-panel ops-traffic">
+    <div class="ops-traffic__header">
+      <div>
+        <p class="ops-traffic__eyebrow">Overall traffic · last <%= daily.size %> days</p>
+        <h2 class="ops-traffic__headline"><%= @stats[:traffic_headline] %></h2>
+      </div>
+      <div class="ops-traffic__delta <%= ops_delta_class(@stats[:page_views_delta_pct]) %>">
+        <%= ops_delta_label(@stats[:page_views_delta_pct]) %>
+        <small>vs prior 7d</small>
+      </div>
+    </div>
+
+    <div class="ops-traffic__stats">
+      <div>
+        <span class="dash-stat__label">Today</span>
+        <strong><%= number_with_delimiter(@stats[:page_views_today]) %></strong>
+        <small class="text-muted">Yesterday <%= number_with_delimiter(@stats[:page_views_yesterday]) %></small>
+      </div>
+      <div>
+        <span class="dash-stat__label">Page views (7d)</span>
+        <strong><%= number_with_delimiter(@stats[:page_views_7d]) %></strong>
+        <small class="text-muted"><%= number_with_delimiter(@stats[:page_views_30d]) %> in 30d</small>
+      </div>
+      <div>
+        <span class="dash-stat__label">Bandwidth (7d)</span>
+        <strong><%= internal_bytes_label(@stats[:bandwidth_7d]) %></strong>
+        <small class="text-muted"><%= internal_bytes_label(@stats[:bandwidth_30d]) %> in 30d</small>
+      </div>
+      <div>
+        <span class="dash-stat__label">Requests (7d)</span>
+        <strong><%= number_with_delimiter(@stats[:requests_7d]) %></strong>
+        <small class="text-muted"><%= number_with_delimiter(@stats[:requests_30d]) %> in 30d</small>
+      </div>
+      <div>
+        <span class="dash-stat__label">Error rate (7d)</span>
+        <strong><%= @stats[:error_rate_7d] %>%</strong>
+        <small class="text-muted"><%= number_with_delimiter(@stats[:errors_7d]) %> 4xx/5xx</small>
+      </div>
+      <div>
+        <span class="dash-stat__label">Active sites (7d)</span>
+        <strong><%= @stats[:active_sites_7d] %></strong>
+        <small class="text-muted"><%= @stats[:dormant_sites_7d] %> with no traffic</small>
+      </div>
+    </div>
+
+    <% if daily.any? %>
+      <div class="ops-bars" role="img" aria-label="Daily page views for the last <%= daily.size %> days">
+        <% daily.each do |day| %>
+          <div class="ops-bars__item" title="<%= day[:date].strftime("%b %-d") %>: <%= number_with_delimiter(day[:views]) %> views">
+            <div class="ops-bars__track">
+              <div class="ops-bars__fill<%= " is-today" if day[:date] == Date.current %>" style="height: <%= ops_bar_width(day[:views], daily_max) %>%"></div>
+            </div>
+            <span class="ops-bars__label"><%= ops_day_label(day[:date]) %></span>
+            <span class="ops-bars__value"><%= number_with_delimiter(day[:views]) %></span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <div class="dash-panels">
+    <section class="surface-panel">
+      <h2 class="h5 mb-3">Busiest sites (7d)</h2>
+      <% if @stats[:top_sites].blank? %>
+        <p class="text-muted mb-0">No HTML page views yet.</p>
+      <% else %>
+        <ul class="ops-rank-list">
+          <% @stats[:top_sites].each do |row| %>
+            <li>
+              <div class="ops-rank-list__main">
+                <a href="<%= internal_account_site_path(row[:account], row[:site]) %>"><%= row[:site].name %></a>
+                <small class="text-muted"><%= row[:account]&.email || "Unknown account" %></small>
+                <div class="ops-rank-list__bar" style="width: <%= ops_bar_width(row[:views], top_site_max) %>%"></div>
+              </div>
+              <div class="ops-rank-list__meta">
+                <strong><%= number_with_delimiter(row[:views]) %></strong>
+                <small class="text-muted"><%= internal_bytes_label(row[:bandwidth]) %><% if row[:errors].positive? %> · <%= row[:errors] %> err<% end %></small>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="surface-panel">
+      <h2 class="h5 mb-3">Audience (7d)</h2>
+      <% if @stats[:top_countries].blank? && @stats[:devices].blank? %>
+        <p class="text-muted mb-0">No geo or device data yet.</p>
+      <% else %>
+        <div class="ops-split">
+          <div>
+            <h3 class="ops-split__title">Countries</h3>
+            <% if @stats[:top_countries].blank? %>
+              <p class="text-muted mb-0">No country data.</p>
+            <% else %>
+              <ul class="internal-kv-list">
+                <% @stats[:top_countries].each do |(code, name), count| %>
+                  <li>
+                    <span>
+                      <span class="internal-pill"><%= code %></span>
+                      <%= name.presence || code %>
+                      <div class="ops-rank-list__bar ops-rank-list__bar--inline" style="width: <%= ops_bar_width(count, country_max) %>%"></div>
+                    </span>
+                    <strong><%= number_with_delimiter(count) %></strong>
+                  </li>
+                <% end %>
+              </ul>
+            <% end %>
+          </div>
+          <div>
+            <h3 class="ops-split__title">Devices</h3>
+            <% if @stats[:devices].blank? %>
+              <p class="text-muted mb-0">No device data.</p>
+            <% else %>
+              <ul class="internal-kv-list">
+                <% @stats[:devices].each do |device, count| %>
+                  <li>
+                    <span><%= device.to_s.titleize.presence || "Unknown" %></span>
+                    <strong>
+                      <%= number_with_delimiter(count) %>
+                      <small class="text-muted d-block"><%= device_total.positive? ? ((count.to_f / device_total) * 100).round(0) : 0 %>%</small>
+                    </strong>
+                  </li>
+                <% end %>
+              </ul>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </section>
+  </div>
+
+  <div class="dash-panels">
+    <section class="surface-panel">
+      <h2 class="h5 mb-3">Top error paths (7d)</h2>
+      <% if @stats[:top_error_paths].blank? %>
+        <p class="text-muted mb-0">No 4xx/5xx responses in the last 7 days.</p>
+      <% else %>
+        <ul class="internal-kv-list">
+          <% @stats[:top_error_paths].each do |row| %>
+            <li>
+              <span>
+                <code class="ops-path"><%= row[:path] %></code>
+                <small class="d-block text-muted">HTTP <%= row[:status] %></small>
+              </span>
+              <strong><%= number_with_delimiter(row[:count]) %></strong>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="surface-panel">
+      <h2 class="h5 mb-3">Accounts by plan</h2>
+      <% if @stats[:accounts_by_plan].blank? %>
+        <p class="text-muted mb-0">No accounts yet.</p>
+      <% else %>
+        <ul class="internal-kv-list">
+          <% @stats[:accounts_by_plan].each do |handle, count| %>
+            <li>
+              <span><%= handle.to_s.titleize.presence || "Unknown" %></span>
+              <strong><%= count %></strong>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+      <div class="ops-quick-links mt-3">
+        <a href="<%= internal_accounts_path %>" class="btn btn-ghost btn-sm">Browse accounts</a>
+        <a href="<%= internal_plans_path %>" class="btn btn-ghost btn-sm">Manage plans</a>
+        <a href="<%= new_internal_plan_path %>" class="btn btn-ghost btn-sm">Create plan</a>
+      </div>
+    </section>
+  </div>
+
+  <div class="dash-panels">
+    <section class="surface-panel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Newest accounts</h2>
+        <a href="<%= internal_accounts_path %>" class="btn btn-ghost btn-sm">View all</a>
+      </div>
+      <% if @stats[:recent_accounts].blank? %>
+        <div class="empty-state empty-state--compact">
+          <p class="mb-0">No accounts yet.</p>
+        </div>
+      <% else %>
+        <ul class="internal-kv-list">
+          <% @stats[:recent_accounts].each do |account| %>
+            <li>
+              <span>
+                <a href="<%= internal_account_path(account) %>"><%= account.name.presence || "Unnamed" %></a>
+                <small class="d-block text-muted"><%= account.email %> · <%= account.plan_handle.to_s.titleize %></small>
+              </span>
+              <small class="text-muted text-nowrap"><%= time_ago_in_words(account.created_at) %> ago</small>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="surface-panel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Newest sites</h2>
+      </div>
+      <% if @stats[:recent_sites].blank? %>
+        <div class="empty-state empty-state--compact">
+          <p class="mb-0">No sites yet.</p>
+        </div>
+      <% else %>
+        <ul class="internal-kv-list">
+          <% @stats[:recent_sites].each do |site| %>
+            <li>
+              <span>
+                <a href="<%= internal_account_site_path(site.account_id, site) %>"><%= site.name %></a>
+                <small class="d-block text-muted"><%= site.account&.email || "Unknown account" %></small>
+              </span>
+              <small class="text-muted text-nowrap"><%= time_ago_in_words(site.created_at) %> ago</small>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+  </div>
+</div>

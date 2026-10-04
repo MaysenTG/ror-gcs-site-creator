@@ -84,6 +84,8 @@
     </div>
   </div>
 
+  <div id="site_limit_banner"></div>
+
   <div class="ship-check surface-panel mb-3 d-none" data-site-studio-target="shipPanel">
     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
       <strong>Ship check</strong>
@@ -275,6 +277,15 @@
         file_too_big: "error",
       };
       window.AppToast?.show(messages[selector] || selector, { type: types[selector] || "info" });
+    }
+
+    function showSiteLimitToast(response) {
+      const detail = response.headers.get("site-limit-message");
+      if (detail) {
+        window.AppToast?.show(detail, { type: "error", timeout: 6500 });
+        return;
+      }
+      showToast("file_too_big");
     }
 
     function waitForElm(selector) {
@@ -509,7 +520,7 @@
       if (url.includes("/files/update")) {
         if (response.headers.get("site-over-limit")) {
           document.querySelector(".file__too__big__error")?.classList.remove("d-none");
-          showToast("file_too_big");
+          showSiteLimitToast(response);
         } else if (response.ok) {
           document.querySelector(".file__too__big__error")?.classList.add("d-none");
           showToast("file_saved");
@@ -525,7 +536,7 @@
 
       if (url.includes("/files/upload")) {
         if (response.headers.get("site-over-limit")) {
-          showToast("file_too_big");
+          showSiteLimitToast(response);
         } else if (response.ok) {
           showToast("file_upload");
           const fileName = response.headers.get("file-name");
@@ -543,7 +554,7 @@
 
       if (response.headers.get("site-over-limit") && !url.includes("/files/update") && !url.includes("/files/upload")) {
         document.querySelector(".file__too__big__error")?.classList.remove("d-none");
-        showToast("file_too_big");
+        showSiteLimitToast(response);
       }
 
       const eventType = response.headers.get("action-type") || response.headers.get("ACTION-TYPE");
