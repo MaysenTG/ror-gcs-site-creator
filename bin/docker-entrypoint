@@ -1,7 +1,16 @@
 #!/bin/bash
 set -e
 
-# Remove a stale PID if the container restarted uncleanly.
+# SQLite lives on the Fly volume. Release machines don't share that volume,
+# so migrate/seed here when the app process starts with /data mounted.
+if [ -n "$DATABASE_PATH" ] && [ "${SKIP_DB_PREPARE:-}" != "1" ]; then
+  mkdir -p "$(dirname "$DATABASE_PATH")"
+  chown -R rails:rails "$(dirname "$DATABASE_PATH")" 2>/dev/null || true
+  echo "== Preparing database at $DATABASE_PATH =="
+  bundle exec rails db:prepare
+  bundle exec rails db:seed
+fi
+
 rm -f /rails/tmp/pids/server.pid
 
 exec "$@"

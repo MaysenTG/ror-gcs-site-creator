@@ -1424,6 +1424,147 @@ tbody > tr:hover {
   text-decoration: underline;
 }
 
+.dns-status {
+  border: 1px solid color-mix(in srgb, var(--gc-border, #d7d2c8) 100%, transparent);
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: color-mix(in srgb, var(--gc-surface, #fff) 92%, #f3f1ec);
+}
+
+.dns-status--ok {
+  border-color: color-mix(in srgb, #1f7a4d 35%, transparent);
+  background: color-mix(in srgb, #1f7a4d 8%, #fff);
+}
+
+.dns-status--error {
+  border-color: color-mix(in srgb, #a33b2b 35%, transparent);
+  background: color-mix(in srgb, #a33b2b 7%, #fff);
+}
+
+.dns-status--pending {
+  border-color: color-mix(in srgb, #6b7280 25%, transparent);
+}
+
+.dns-status__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.dns-status__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.dns-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.dns-badge--ok {
+  color: #145a38;
+  background: color-mix(in srgb, #1f7a4d 16%, #fff);
+}
+
+.dns-badge--error {
+  color: #8a2f22;
+  background: color-mix(in srgb, #a33b2b 14%, #fff);
+}
+
+.dns-badge--pending {
+  color: #4b5563;
+  background: color-mix(in srgb, #6b7280 12%, #fff);
+}
+
+.dns-records {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.dns-record {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--gc-border, #d7d2c8) 80%, transparent);
+  background: #fff;
+}
+
+.dns-record--ok {
+  border-color: color-mix(in srgb, #1f7a4d 40%, transparent);
+}
+
+.dns-record--error {
+  border-color: color-mix(in srgb, #a33b2b 40%, transparent);
+}
+
+.dns-record--optional {
+  border-color: color-mix(in srgb, #6b7280 25%, transparent);
+  opacity: 0.8;
+}
+
+.dns-record--pending {
+  opacity: 0.85;
+}
+
+.dns-record__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+}
+
+.dns-record__type {
+  font-weight: 700;
+  min-width: 3.5rem;
+}
+
+.dns-record__name,
+.dns-record__expected {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8rem;
+}
+
+.dns-record__result {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+  font-size: 0.85rem;
+}
+
+.dns-record--ok .dns-record__icon {
+  color: #1f7a4d;
+  font-weight: 700;
+}
+
+.dns-record--error .dns-record__icon {
+  color: #a33b2b;
+  font-weight: 700;
+}
+
+.dns-record--optional .dns-record__icon {
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.dns-hint code {
+  font-size: 0.8em;
+}
+
 .site-card-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -25,7 +25,11 @@ namespace :admin do
   post "sites/:site_name/folders/new" => "files#create_folder"
 
   scope "sites/:site_name" do
-    resources :domains
+    resources :domains do
+      member do
+        get :dns_check
+      end
+    end
     resources :dashboards, only: %i[index show create update destroy] do
       member do
         patch :layout

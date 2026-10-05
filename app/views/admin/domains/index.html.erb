@@ -19,8 +19,16 @@
         <a href="/admin/sites/<%= @site.name %>/domains/new" class="btn btn-primary">Add domain</a>
       </div>
     <% else %>
-      <% @domains.each_with_index do |domain, index| %>
-        <article class="surface-panel domain-card">
+      <% @domains.each do |domain| %>
+        <%
+          record_name = domain.domain.split(".").length >= 3 ? domain.domain.split(".").first : "@"
+        %>
+        <article
+          class="surface-panel domain-card"
+          data-controller="dns-status"
+          data-dns-status-url-value="<%= dns_check_admin_domain_path(@site.name, domain) %>"
+          data-dns-status-cooldown-ms-value="<%= @dns_refresh_ms %>"
+        >
           <div class="domain-card__top">
             <div>
               <h2 class="h4 mb-1">
@@ -28,20 +36,68 @@
               </h2>
               <p class="text-muted mb-0 small">Custom domain</p>
             </div>
-            <%= button_to "Delete", admin_domain_url(@site.name, domain), method: :delete, class: "btn btn-ghost btn-sm text-danger" %>
+            <div class="d-flex flex-wrap gap-2 align-items-start">
+              <span class="dns-badge dns-badge--pending" data-dns-status-target="badge">Checking…</span>
+              <%= button_to "Delete", admin_domain_url(@site.name, domain), method: :delete, class: "btn btn-ghost btn-sm text-danger" %>
+            </div>
           </div>
 
-          <% if index == 0 %>
-            <div class="alert alert-info mb-0 mt-3" role="alert">
-              Add this DNS record at your registrar:
-              <ul class="mb-2 mt-2">
-                <li><strong>Type:</strong> A</li>
-                <li><strong>Name:</strong> <% if domain.domain.split(".").length == 3 %><%= domain.domain.split(".")[0] %><% else %><%= domain.domain %> (or <code>@</code>)<% end %></li>
-                <li><strong>Value:</strong> <%= @a_record_ip %></li>
-              </ul>
-              DNS can take up to 24 hours. On Cloudflare, set SSL/TLS mode to <strong>Flexible</strong>.
+          <div class="dns-status dns-status--pending mt-3" data-dns-status-target="status">
+            <div class="dns-status__header">
+              <div>
+                <h3 class="h6 mb-1">DNS status</h3>
+                <p class="mb-0 small" data-dns-status-target="summary">Looking up DNS records…</p>
+              </div>
+              <div class="dns-status__actions">
+                <button
+                  type="button"
+                  class="btn btn-outline-primary btn-sm"
+                  data-dns-status-target="refresh"
+                  data-action="dns-status#refresh"
+                  disabled
+                >Refresh DNS</button>
+                <span class="dns-status__cooldown small text-muted" data-dns-status-target="cooldown"></span>
+              </div>
             </div>
-          <% end %>
+
+            <ul class="dns-records" data-dns-status-target="records">
+              <% if @a_record_ip.present? %>
+                <li class="dns-record dns-record--pending">
+                  <div class="dns-record__meta">
+                    <span class="dns-record__type">A</span>
+                    <span class="dns-record__name"><%= record_name %></span>
+                    <span class="dns-record__expected"><%= @a_record_ip %></span>
+                  </div>
+                  <div class="dns-record__result">
+                    <span class="dns-record__icon" aria-hidden="true">…</span>
+                    <span>Checking A record…</span>
+                  </div>
+                </li>
+              <% end %>
+              <li class="dns-record dns-record--pending">
+                <div class="dns-record__meta">
+                  <span class="dns-record__type">CNAME</span>
+                  <span class="dns-record__name"><%= record_name %></span>
+                  <span class="dns-record__expected"><%= @cname_target %></span>
+                </div>
+                <div class="dns-record__result">
+                  <span class="dns-record__icon" aria-hidden="true">…</span>
+                  <span>Checking CNAME…</span>
+                </div>
+              </li>
+            </ul>
+
+            <p class="dns-hint mb-0 mt-3 small text-muted">
+              <% if @a_record_ip.present? %>
+                Set an <strong>A</strong> record to <code><%= @a_record_ip %></code>
+                or a <strong>CNAME</strong> to <code><%= @cname_target %></code>.
+              <% else %>
+                Set a <strong>CNAME</strong> to <code><%= @cname_target %></code>
+                (or configure <code>CUSTOM_DOMAIN_IP</code> for an A record).
+              <% end %>
+              DNS can take up to 24 hours. On Cloudflare, set SSL/TLS mode to <strong>Flexible</strong>.
+            </p>
+          </div>
         </article>
       <% end %>
     <% end %>

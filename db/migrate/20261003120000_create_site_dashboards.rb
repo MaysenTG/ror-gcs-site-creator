@@ -6,8 +6,8 @@ class CreateSiteDashboards < ActiveRecord::Migration[7.0]
       t.string :slug, null: false
       t.integer :position, null: false, default: 0
       t.boolean :is_default, null: false, default: false
-      t.jsonb :global_filters, null: false, default: {}
-      t.jsonb :layout, null: false, default: []
+      t.json :global_filters, null: false, default: {}
+      t.json :layout, null: false, default: []
       t.timestamps
     end
 

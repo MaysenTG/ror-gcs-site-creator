@@ -1,4 +1,4 @@
-#!/home/maysen/.rvm/rubies/ruby-3.2.3/bin/ruby
+#!/usr/bin/env ruby
 require_relative "../config/boot"
 require "rake"
 Rake.application.run

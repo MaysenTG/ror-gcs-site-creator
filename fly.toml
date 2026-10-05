@@ -1,54 +1,55 @@
-# Fly.io app config — prepare only (do not deploy from this change set).
-# Create resources, then deploy when ready:
-#   fly apps create gusto-cloud
-#   fly mpg create --name gusto-cloud-db
-#   fly redis create
-#   fly secrets set SECRET_KEY_BASE=... R2_ACCOUNT_ID=... R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... R2_ENDPOINT=... R2_BUCKET=... R2_PUBLIC_BASE_URL=...
-#   fly deploy
+# Single Fly Machine (~$2–5/mo): Rails + SQLite volume + nginx for custom domains.
+# No Managed Postgres. No separate Redis/nginx apps.
 #
-# Scale after first deploy:
-#   fly scale count web=1 worker=1
+#   fly volumes create data --region syd --size 1 -a static-site-creator
+#   fly secrets set SECRET_KEY_BASE=... R2_*=...
+#   fly deploy
+# Custom domains: CNAME → static-site-creator.fly.dev (free)
+# App hostname: code.maysengreenwood.com (fly certs add + DNS)
+#   or: fly ips allocate-v4 -a static-site-creator  (~+$2/mo) then set CUSTOM_DOMAIN_IP
 
-app = "gusto-cloud"
+app = "static-site-creator"
 primary_region = "syd"
 console_command = "/rails/bin/rails console"
 
 [build]
 
 [deploy]
-  release_command = "bundle exec rails db:prepare"
+  # Migrations run in bin/docker-entrypoint against the mounted /data volume.
+  # (Fly release_command machines do not share the app volume.)
+
 
 [env]
   RAILS_ENV = "production"
   RAILS_LOG_TO_STDOUT = "1"
   RAILS_SERVE_STATIC_FILES = "1"
   PORT = "3000"
-
-[processes]
-  web = "./bin/rails server -b 0.0.0.0"
-  worker = "bundle exec sidekiq -C config/sidekiq.yml"
+  DATABASE_PATH = "/data/production.sqlite3"
+  APP_HOST = "code.maysengreenwood.com"
+  APP_ORIGIN = "https://code.maysengreenwood.com"
+  SITE_PREVIEW_VIA_APP = "1"
+  CUSTOM_DOMAIN_CNAME = "static-site-creator.fly.dev"
+  ACTIVE_JOB_ADAPTER = "async"
 
 [http_service]
-  internal_port = 3000
+  internal_port = 8080
   force_https = true
   auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 1
-  processes = ["web"]
+  min_machines_running = 0
 
   [[http_service.checks]]
     interval = "15s"
     timeout = "2s"
-    grace_period = "20s"
+    grace_period = "30s"
     method = "GET"
     path = "/up"
 
-[[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
-  processes = ["web"]
+[mounts]
+  source = "data"
+  destination = "/data"
 
 [[vm]]
   size = "shared-cpu-1x"
   memory = "512mb"
-  processes = ["worker"]
+  cpus = 1

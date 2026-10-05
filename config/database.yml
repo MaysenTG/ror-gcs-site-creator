@@ -12,8 +12,10 @@ test:
   <<: *default
   database: ror_site_creator_test
 
+# Cheap Fly deploy: SQLite on a persistent volume (/data).
+# Local/dev stays on Postgres above.
 production:
-  <<: *default
-  # Fly.io / managed Postgres provides DATABASE_URL.
-  url: <%= ENV["DATABASE_URL"] %>
-  database: ror_site_creator_production
+  adapter: sqlite3
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+  database: <%= ENV.fetch("DATABASE_PATH", "storage/production.sqlite3") %>

@@ -66,8 +66,8 @@ ActiveRecord::Schema[7.0].define(version: 2026_10_04_160000) do
     t.string "slug", null: false
     t.integer "position", default: 0, null: false
     t.boolean "is_default", default: false, null: false
-    t.jsonb "global_filters", default: {}, null: false
-    t.jsonb "layout", default: [], null: false
+    t.json "global_filters", default: {}, null: false
+    t.json "layout", default: [], null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["site_id", "is_default"], name: "index_site_dashboards_on_site_id_and_is_default"
@@ -130,7 +130,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_10_04_160000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "name", null: false
-    t.jsonb "dashboard_widgets"
+    t.json "dashboard_widgets"
     t.boolean "gate_enabled", default: false, null: false
     t.string "seo_title"
     t.text "seo_description"

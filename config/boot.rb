@@ -1,8 +1,7 @@
 ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../Gemfile", __dir__)
 
-# This app is developed with RVM Ruby 3.2.3. System /usr/bin/ruby is also "3.2.3"
-# but a different build — native gems won't load across the two.
-unless RbConfig.ruby.to_s.include?("/.rvm/rubies/ruby-3.2.3/")
+# Local tip only — Docker/production use the image Ruby, not RVM.
+if ENV["RAILS_ENV"] != "production" && !File.exist?("/.dockerenv") && !RbConfig.ruby.to_s.include?("/.rvm/rubies/ruby-3.2.3/")
   warn <<~MSG
     Wrong Ruby: #{RbConfig.ruby}
     Run:  rvm use 3.2.3

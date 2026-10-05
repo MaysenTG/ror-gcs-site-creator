@@ -1,13 +1,23 @@
-# This file should contain all the record creation needed to seed the database with its default values.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Examples:
-#
-#   movies = Movie.create([{ name: "Star Wars" }, { name: "Lord of the Rings" }])
-#   Character.create(name: "Luke", movie: movies.first)
+# Plans (idempotent)
+[
+  { name: "Free", plan_handle: "free", max_sites: "3", max_site_size: "1", price: 0 },
+  { name: "Enthusiast", plan_handle: "enthusiast", max_sites: "10", max_site_size: "10", price: 9 },
+  { name: "Enterprise", plan_handle: "enterprise", max_sites: "100", max_site_size: "100", price: 49 }
+].each do |attrs|
+  plan = Plan.find_or_initialize_by(plan_handle: attrs[:plan_handle])
+  plan.update!(attrs)
+end
 
-# Max sites is the number of sites that can be created for the account
-# Max site size is the maximum size of a site in MB
-Plan.create(name: "Free", plan_handle: "free", max_sites: 3, max_site_size: 1)
-Plan.create(name: "Enthusiast", plan_handle: "enthusiast", max_sites: 10, max_site_size: 10)
-Plan.create(name: "Enterprise", plan_handle: "enterprise", max_sites: 100, max_site_size: 100)
+# Optional bootstrap admin for production (set via fly secrets).
+email = ENV["ADMIN_EMAIL"].to_s.strip.presence
+password = ENV["ADMIN_PASSWORD"].to_s.presence
+if email && password
+  account = Account.find_or_initialize_by(email: email)
+  account.name = account.name.presence || "Admin"
+  account.password = password
+  account.password_confirmation = password
+  account.plan_handle = account.plan_handle.presence || "enterprise"
+  account.admin = true
+  account.save!
+  puts "Admin account ready: #{email}"
+end

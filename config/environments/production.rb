@@ -54,14 +54,15 @@ Rails.application.configure do
   # Prepend all log lines with the following tags.
   config.log_tags = [ :request_id ]
 
-  # Redis cache (shared with Sidekiq). Falls back to memory if REDIS_URL is absent.
+  # Redis cache only if REDIS_URL is set (optional free Upstash). Otherwise memory.
   if ENV["REDIS_URL"].present?
-    config.cache_store = :redis_cache_store, { url: ENV["REDIS_URL"], namespace: "gusto_cloud", expires_in: 1.hour }
+    config.cache_store = :redis_cache_store, { url: ENV["REDIS_URL"], namespace: "static_site_creator", expires_in: 1.hour }
   else
     config.cache_store = :memory_store, { size: 64.megabytes }
   end
 
-  config.active_job.queue_adapter = :sidekiq
+  # Default async = no Sidekiq/Redis machine. Set ACTIVE_JOB_ADAPTER=sidekiq only if Redis exists.
+  config.active_job.queue_adapter = ENV.fetch("ACTIVE_JOB_ADAPTER", "async").to_sym
 
   config.action_mailer.perform_caching = false
 
@@ -92,9 +93,14 @@ Rails.application.configure do
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
   
-  # Allow apex + wildcard site subdomains.
+  # Multi-tenant custom domains arrive with arbitrary Host headers (via nginx).
+  config.hosts.clear
   config.hosts << "maysengreenwood.com"
   config.hosts << /.*\.maysengreenwood\.com/
   config.hosts << ENV["APP_HOST"] if ENV["APP_HOST"].present?
-  config.hosts << /.*\.fly\.dev/ if ENV["FLY_APP_NAME"].present?
+  config.hosts << /.*\.fly\.dev/
+  # Allow any host for published custom domains / proxy lookup.
+  config.host_authorization = { exclude: ->(req) { req.path.start_with?("/admin/proxy/site/lookup") || req.path == "/up" } }
+  # Customer sites may hit the app directly with their own Host.
+  config.hosts << /.*/
 end

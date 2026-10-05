@@ -1,32 +1,5 @@
-# Custom-domain edge for Gusto Cloud.
-# Customers point A records at this app's dedicated IPv4.
-#
-#   fly apps create gusto-cloud-nginx
-#   fly ips allocate-v4 -a gusto-cloud-nginx
-#   fly deploy -c deploy/nginx/fly.toml -a gusto-cloud-nginx
-#
-# Then update Admin::DomainsController @a_record_ip to the allocated address.
+# Customers point A records here after: fly ips allocate-v4 -a static-site-creator
+# (shared anycast is free via CNAME → static-site-creator.fly.dev)
 
-app = "gusto-cloud-nginx"
-primary_region = "syd"
-
-[build]
-  dockerfile = "Dockerfile"
-
-[http_service]
-  internal_port = 8080
-  force_https = true
-  auto_stop_machines = "off"
-  auto_start_machines = true
-  min_machines_running = 1
-
-  [[http_service.checks]]
-    interval = "15s"
-    timeout = "2s"
-    grace_period = "10s"
-    method = "GET"
-    path = "/up"
-
-[[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
+# Separate nginx Fly app removed — nginx runs inside the main Machine.
+# See Dockerfile + deploy/nginx/fly.nginx.conf

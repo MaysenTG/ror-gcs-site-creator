@@ -1,15 +1,21 @@
 class Admin::DomainsController < ApplicationController
-  before_action :set_domain, only: %i[ show edit update destroy ]
+  before_action :set_domain, only: %i[ show edit update destroy dns_check ]
   before_action :authenticate_account!
   before_action :check_site_owner
 
   # GET /domains or /domains.json
   def index
-    # Used for pointing the custom domain to the NGINX server
-    @a_record_ip = "170.64.162.111"
-    
+    @a_record_ip = DnsLookup.expected_a_ip
+    @cname_target = DnsLookup.expected_cname
+    @dns_refresh_ms = DnsLookup.refresh_cooldown_ms
     @site = Site.find_by(name: params[:site_name])
     @domains = @site.domains
+  end
+
+  # GET /domains/:id/dns_check
+  def dns_check
+    result = DnsLookup.new(@domain.domain).call
+    render json: result.to_h
   end
 
   # GET /domains/1 or /domains/1.json
