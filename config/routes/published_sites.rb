@@ -7,7 +7,7 @@ get "/s/:site_name/*path", to: "published_sites#show", format: false
 post "/s/:site_name/gate", to: "published_sites#unlock", as: :published_site_gate
 
 site_host_domains = %w[localhost lvh.me maysengreenwood.com]
-reserved_subdomains = %w[www app admin api cdn mail ftp code test-app]
+reserved_subdomains = %w[www app admin api cdn mail ftp code testapp]
 constraints(->(req) {
   subdomain = req.subdomains.first.to_s
   req.subdomains.present? &&

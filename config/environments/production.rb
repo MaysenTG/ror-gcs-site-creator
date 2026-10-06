@@ -39,7 +39,13 @@ Rails.application.configure do
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
   # config.action_cable.url = "wss://example.com/cable"
-  # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
+  config.action_cable.allowed_request_origins = [
+    ENV["APP_ORIGIN"].presence,
+    "https://#{ENV['APP_HOST']}".presence,
+    "https://static-site-creator.fly.dev",
+    /https:\/\/.*\.maysengreenwood\.com/,
+    /https:\/\/.*\.fly\.dev/
+  ].compact
 
   # Fly terminates TLS; tell Rails the original request was HTTPS.
   config.assume_ssl = ENV["RAILS_ASSUME_SSL"].present? || ENV["FLY_APP_NAME"].present?

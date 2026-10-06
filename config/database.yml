@@ -8,9 +8,13 @@ development:
   <<: *default
   database: ror_site_creator_development
 
+# SQLite keeps the suite runnable without a local Postgres daemon.
+# Override with DATABASE_URL if you prefer Postgres for tests.
 test:
-  <<: *default
-  database: ror_site_creator_test
+  adapter: sqlite3
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+  database: storage/test.sqlite3
 
 # Cheap Fly deploy: SQLite on a persistent volume (/data).
 # Local/dev stays on Postgres above.
