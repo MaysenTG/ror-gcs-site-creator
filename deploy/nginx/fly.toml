@@ -1,5 +1,0 @@
-# Customers point A records here after: fly ips allocate-v4 -a static-site-creator
-# (shared anycast is free via CNAME → static-site-creator.fly.dev)
-
-# Separate nginx Fly app removed — nginx runs inside the main Machine.
-# See Dockerfile + deploy/nginx/fly.nginx.conf

@@ -25,7 +25,6 @@ console_command = "/rails/bin/rails console"
   APP_ORIGIN = "https://code.maysengreenwood.com"
   SITE_PREVIEW_VIA_APP = "1"
   CUSTOM_DOMAIN_CNAME = "static-site-creator.fly.dev"
-  CUSTOM_DOMAIN_IP = "137.66.63.153"
   ACTIVE_JOB_ADAPTER = "async"
 
 [http_service]
