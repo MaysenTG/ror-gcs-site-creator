@@ -3,7 +3,7 @@
     <div>
       <a href="/admin/sites/<%= @site.name %>" class="btn btn-ghost btn-sm mb-2"><i class="bi bi-arrow-left"></i> Editor</a>
       <h1>Domains</h1>
-      <p class="mb-0">Point a custom domain at <strong><%= @site.name %></strong>.</p>
+      <p class="mb-0">Check that a domain's DNS is set up correctly for <strong><%= @site.name %></strong>.</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
       <a href="<%= site_preview_url(@site) %>" target="_blank" rel="noopener" class="btn btn-outline-primary">Open site</a>
@@ -11,11 +11,24 @@
     </div>
   </div>
 
+  <section class="surface-panel mb-3">
+    <h2 class="h6 mb-2">How this works</h2>
+    <ol class="small mb-2 ps-3">
+      <li>Add the domain you want to use, like <code>www.example.com</code>.</li>
+      <li>At your DNS provider, create the record shown on its card below.</li>
+      <li>We look up the domain and tell you whether it points to the right place.</li>
+    </ol>
+    <p class="small text-muted mb-0">
+      DNS changes usually show up within a few minutes, but some providers take up to a day.
+      Using Cloudflare? Set the record to <strong>DNS only</strong> (grey cloud) while you check, otherwise Cloudflare hides where it points.
+    </p>
+  </section>
+
   <div id="domains" class="domains-list">
     <% if @domains.blank? %>
       <div class="empty-state surface-panel">
         <h2>No domains yet</h2>
-        <p>Add a custom domain to serve this site on your own URL.</p>
+        <p>Add a domain and we'll show you the exact record to create.</p>
         <a href="/admin/sites/<%= @site.name %>/domains/new" class="btn btn-primary">Add domain</a>
       </div>
     <% else %>
@@ -31,10 +44,8 @@
         >
           <div class="domain-card__top">
             <div>
-              <h2 class="h4 mb-1">
-                <a target="_blank" rel="noopener" href="https://<%= domain.domain %>"><%= domain.domain %></a>
-              </h2>
-              <p class="text-muted mb-0 small">Custom domain</p>
+              <h2 class="h4 mb-1"><%= domain.domain %></h2>
+              <p class="text-muted mb-0 small">DNS check</p>
             </div>
             <div class="d-flex flex-wrap gap-2 align-items-start">
               <span class="dns-badge dns-badge--pending" data-dns-status-target="badge">Checking…</span>
@@ -89,13 +100,12 @@
 
             <p class="dns-hint mb-0 mt-3 small text-muted">
               <% if @a_record_ip.present? %>
-                Set an <strong>A</strong> record to <code><%= @a_record_ip %></code>
-                or a <strong>CNAME</strong> to <code><%= @cname_target %></code>.
+                You only need one of these: an <strong>A</strong> record pointing to <code><%= @a_record_ip %></code>,
+                or a <strong>CNAME</strong> pointing to <code><%= @cname_target %></code>.
               <% else %>
-                Set a <strong>CNAME</strong> to <code><%= @cname_target %></code>
-                (or configure <code>CUSTOM_DOMAIN_IP</code> for an A record).
+                Create a <strong>CNAME</strong> record pointing to <code><%= @cname_target %></code>.
               <% end %>
-              DNS can take up to 24 hours. On Cloudflare, set SSL/TLS mode to <strong>Flexible</strong>.
+              Use <code><%= record_name %></code> as the record name.
             </p>
           </div>
         </article>

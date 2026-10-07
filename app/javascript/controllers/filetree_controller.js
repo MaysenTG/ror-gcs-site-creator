@@ -1,5 +1,25 @@
 import { Controller } from "@hotwired/stimulus";
 
+const PREFETCH_DELAY_MS = 80;
+const PREFETCH_TTL_MS = 20_000;
+const PREFETCH_MAX = 8;
+const STREAM_ACCEPT = "text/vnd.turbo-stream.html, text/html, application/xhtml+xml";
+
+// Module-level so it survives the filepicker being re-rendered (which reconnects the controller).
+const prefetched = new Map(); // href -> { at, promise }
+
+function clearPrefetched() {
+  prefetched.clear();
+}
+
+if (!window.__filetreePrefetchBound) {
+  window.__filetreePrefetchBound = true;
+  window.FiletreePrefetch = { clear: clearPrefetched };
+  // Anything that may change file contents invalidates every prefetched copy.
+  document.addEventListener("turbo:submit-start", clearPrefetched);
+  document.addEventListener("turbo:visit", clearPrefetched);
+}
+
 // IDE-style file tree: inline create/rename, expand/collapse folders.
 export default class extends Controller {
   static targets = ["tree", "draft"];
@@ -9,19 +29,110 @@ export default class extends Controller {
     this.boundOutsideClick = this.handleOutsideClick.bind(this);
     document.addEventListener("mousedown", this.boundOutsideClick);
     this.element.addEventListener("click", this.onTreeClick);
+    this.element.addEventListener("mouseover", this.onTreeHover);
+    this.element.addEventListener("mouseout", this.onTreeHoverEnd);
+    this.element.addEventListener("focusin", this.onTreeHover);
     this.syncActiveFromPage();
   }
 
   disconnect() {
     document.removeEventListener("mousedown", this.boundOutsideClick);
     this.element.removeEventListener("click", this.onTreeClick);
+    this.element.removeEventListener("mouseover", this.onTreeHover);
+    this.element.removeEventListener("mouseout", this.onTreeHoverEnd);
+    this.element.removeEventListener("focusin", this.onTreeHover);
+    clearTimeout(this.hoverTimer);
   }
 
   onTreeClick = (event) => {
     const link = event.target.closest("a[data-filename]");
     if (!link || !this.element.contains(link)) return;
     this.setActiveFile(link.dataset.filename);
+
+    if (link.dataset.skipPrefetch === "1") {
+      delete link.dataset.skipPrefetch;
+      return;
+    }
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const entry = this.takePrefetched(link.href);
+    if (!entry || !window.Turbo) return;
+
+    // Stop Turbo's own request; replay the prefetched stream instead.
+    event.preventDefault();
+    this.openFromPrefetch(link, entry);
   };
+
+  onTreeHover = (event) => {
+    const link = event.target.closest("a[data-filename]");
+    if (!link || !this.element.contains(link) || link === this.hoverLink) return;
+
+    clearTimeout(this.hoverTimer);
+    this.hoverLink = link;
+    this.hoverTimer = setTimeout(() => this.prefetch(link), PREFETCH_DELAY_MS);
+  };
+
+  onTreeHoverEnd = (event) => {
+    const link = event.target.closest("a[data-filename]");
+    if (!link || link.contains(event.relatedTarget)) return;
+    clearTimeout(this.hoverTimer);
+    this.hoverLink = null;
+  };
+
+  prefetch(link) {
+    const href = link.href;
+    if (!href || this.isOpenFile(link.dataset.filename)) return;
+
+    const existing = prefetched.get(href);
+    if (existing && Date.now() - existing.at < PREFETCH_TTL_MS) return;
+
+    const promise = fetch(href, {
+      headers: { Accept: STREAM_ACCEPT },
+      credentials: "same-origin",
+    })
+      .then(async (response) => {
+        const type = response.headers.get("Content-Type") || "";
+        if (!response.ok || !type.includes("turbo-stream")) throw new Error(`prefetch ${response.status}`);
+        return response.text();
+      });
+    // Failed prefetches drop out so the click falls back to a normal request.
+    promise.catch(() => {
+      if (prefetched.get(href)?.promise === promise) prefetched.delete(href);
+    });
+
+    prefetched.set(href, { at: Date.now(), promise });
+    while (prefetched.size > PREFETCH_MAX) prefetched.delete(prefetched.keys().next().value);
+  }
+
+  takePrefetched(href) {
+    const entry = prefetched.get(href);
+    if (!entry) return null;
+    prefetched.delete(href);
+    return Date.now() - entry.at < PREFETCH_TTL_MS ? entry : null;
+  }
+
+  async openFromPrefetch(link, entry) {
+    const href = link.href;
+    let settled = false;
+    entry.promise.then(() => { settled = true; }, () => { settled = true; });
+    // Still in flight: show the usual skeleton until it lands.
+    await Promise.resolve();
+    if (!settled) document.dispatchEvent(new CustomEvent("filetree:editor-loading", { detail: { href } }));
+
+    try {
+      const body = await entry.promise;
+      document.dispatchEvent(new CustomEvent("filetree:editor-stream", { detail: { href } }));
+      window.Turbo.renderStreamMessage(body);
+    } catch (_error) {
+      link.dataset.skipPrefetch = "1";
+      link.click();
+    }
+  }
+
+  isOpenFile(path) {
+    const open = document.getElementById("file_content")?.dataset?.filename;
+    return Boolean(open) && open === path;
+  }
 
   setActiveFile(path) {
     const name = (path || "").toString();
@@ -445,6 +556,7 @@ export default class extends Controller {
   }
 
   async postTurbo(url, formData, method = "POST") {
+    clearPrefetched();
     const csrf =
       document.querySelector("#csrf_token")?.value ||
       document.querySelector("meta[name='csrf-token']")?.content;

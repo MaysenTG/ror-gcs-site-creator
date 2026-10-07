@@ -72,6 +72,7 @@ export default class extends Controller {
     button.disabled = true;
     button.textContent = "Restoring…";
 
+    window.FiletreePrefetch?.clear();
     try {
       const response = await fetch(this.restoreUrlValue, {
         method: "POST",

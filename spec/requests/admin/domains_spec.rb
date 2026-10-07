@@ -54,8 +54,8 @@ RSpec.describe "Admin::Domains", type: :request do
       get admin_domains_path(site_name: site.name)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("configure")
-      expect(response.body).to include("CUSTOM_DOMAIN_IP")
+      expect(response.body).to include("Create a <strong>CNAME</strong> record pointing to")
+      expect(response.body).not_to include("CUSTOM_DOMAIN_IP")
       expect(response.body).not_to include("Checking A record…")
     end
   end

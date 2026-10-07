@@ -1,9 +1,14 @@
 require "resolv"
+require "ipaddr"
 
 # Resolves a custom domain and compares A / CNAME records to expected targets.
 class DnsLookup
   DEFAULT_CNAME = "static-site-creator.fly.dev"
   IP_PATTERN = /\A\d{1,3}(?:\.\d{1,3}){3}\z/
+  # Proxied (orange cloud) records resolve to Cloudflare, hiding the real target.
+  CLOUDFLARE_RANGES = %w[104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 188.114.96.0/20 162.158.0.0/15].map { |cidr| IPAddr.new(cidr) }.freeze
+  CLOUDFLARE_PROXY_SUMMARY = "This domain is behind Cloudflare's proxy, so we can't see where it points. " \
+                             "Set the record to DNS only (grey cloud) and check again."
 
   Result = Struct.new(
     :domain,
@@ -135,9 +140,17 @@ class DnsLookup
   def summary_for(ok, records, found_a, found_cname)
     return "DNS looks good" if ok
     return "No DNS records found yet" if found_a.empty? && found_cname.empty?
+    return CLOUDFLARE_PROXY_SUMMARY if found_cname.empty? && found_a.all? { |ip| cloudflare_ip?(ip) }
 
     failing = records.reject { |r| r[:ok] }.map { |r| r[:type] }
-    "Update #{failing.join(' or ')} so traffic reaches this site"
+    "Records found, but they point somewhere else. Update the #{failing.join(' or ')} record to the value shown."
+  end
+
+  def cloudflare_ip?(ip)
+    addr = IPAddr.new(ip)
+    CLOUDFLARE_RANGES.any? { |range| range.include?(addr) }
+  rescue IPAddr::InvalidAddressError
+    false
   end
 
   def normalize(name)

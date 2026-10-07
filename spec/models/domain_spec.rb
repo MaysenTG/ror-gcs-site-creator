@@ -41,6 +41,21 @@ RSpec.describe Domain, type: :model do
     
       expect(@domain).to_not be_valid
     end
+
+    it "accepts hyphens and nested subdomains" do
+      @domain.site = Site.new
+      @domain.domain = "blog.my-shop.example.com"
+
+      @domain.valid?
+      expect(@domain.errors[:domain]).to be_empty
+    end
+
+    it "strips a pasted scheme and path" do
+      @domain.domain = "  HTTPS://www.Example.com/about  "
+
+      @domain.valid?
+      expect(@domain.domain).to eq("www.example.com")
+    end
   end
   
   describe "associations" do

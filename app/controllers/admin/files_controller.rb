@@ -41,6 +41,7 @@ class Admin::FilesController < ApplicationController
     end
 
     set_main_or_404(file_name, bucket)
+    SiteFile.upsert_file!(site, path: params[:file_name], byte_size: contents.bytesize, content_type: content_type)
     touch_site!(site)
     formatFoldersForTurboResponse(bucket, site)
   end
@@ -129,6 +130,7 @@ class Admin::FilesController < ApplicationController
     bucket.create_file StringIO.new(@file_contents), @file_name, cache_control: "no-store"
     set_main_or_404(@file_name, bucket)
     Rails.cache.write(cache_key, @file_contents)
+    SiteFile.upsert_file!(site, path: @file_name, byte_size: @file_contents.bytesize)
     touch_site!(site, path: @file_name)
     render turbo_stream: turbo_stream.append("editor")
   end
@@ -177,6 +179,7 @@ class Admin::FilesController < ApplicationController
     bucket.create_file StringIO.new(version.content), path, cache_control: "no-store"
     set_main_or_404(path, bucket)
     Rails.cache.write(cache_key, version.content)
+    SiteFile.upsert_file!(site, path: path, byte_size: version.content.bytesize)
     touch_site!(site, path: path)
 
     render json: { status: "success", contents: version.content, file_name: path }
@@ -206,7 +209,9 @@ class Admin::FilesController < ApplicationController
     end
 
     bucket.create_file StringIO.new(file_contents), file_name, cache_control: "no-store"
+    Rails.cache.delete("editor:#{bucket_name}:#{file_name}")
     set_main_or_404(file_name, bucket)
+    SiteFile.upsert_file!(site, path: file_name, byte_size: file_contents.bytesize)
     touch_site!(site)
     response.set_header("file-name", file_name)
     formatFoldersForTurboResponse(bucket, site)
@@ -226,12 +231,18 @@ class Admin::FilesController < ApplicationController
     is_folder = params[:entry_kind].to_s == "folder" || file_name.end_with?("/")
     if is_folder
       folder_prefix = file_name.delete_suffix("/") + "/"
-      bucket.files(prefix: folder_prefix).each(&:delete)
+      bucket.files(prefix: folder_prefix).each do |f|
+        Rails.cache.delete("editor:#{bucket_name}:#{f.name}")
+        f.delete
+      end
+      SiteFile.remove_path!(site, file_name)
       response.set_header("deleted-path", folder_prefix)
       response.set_header("deleted-kind", "folder")
     else
       file = bucket.file(file_name)
       file&.delete
+      Rails.cache.delete("editor:#{bucket_name}:#{file_name}")
+      SiteFile.remove_path!(site, file_name)
       response.set_header("deleted-path", file_name)
       response.set_header("deleted-kind", "file")
     end
@@ -268,11 +279,14 @@ class Admin::FilesController < ApplicationController
     file = bucket.file file_name_plus_type
     return head :not_found unless file
 
+    byte_size = file.size.to_i
     file.copy new_file_name
     file.delete
 
     Rails.cache.delete("editor:#{bucket_name}:#{file_name_plus_type}")
     Rails.cache.delete("editor:#{bucket_name}:#{new_file_name}")
+    SiteFile.remove_path!(site, file_name_plus_type)
+    SiteFile.upsert_file!(site, path: new_file_name, byte_size: byte_size)
 
     touch_site!(site)
     response.set_header("ACTION-TYPE", "rename")
@@ -290,6 +304,7 @@ class Admin::FilesController < ApplicationController
     bucket = storage.bucket bucket_name, skip_lookup: true
 
     bucket.create_file StringIO.new(""), folder_name
+    SiteFile.upsert_folder!(site, path: params[:folder_name])
     touch_site!(site)
     formatFoldersForTurboResponse(bucket, site)
   end
@@ -306,59 +321,25 @@ class Admin::FilesController < ApplicationController
     nil
   end
 
-  def formatFoldersForTurboResponse(bucket, site)
-    all_files = []
-
-    unless bucket.files.nil?
-      bucket.files.each do |file|
-        if bucket.website_main == file.name
-          all_files.push({ type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: true, is_404: false })
-        elsif bucket.website_404 == file.name
-          all_files.push({ type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: false, is_404: true })
-        else
-          all_files.push({ type: "file", name: file.name, size: file.size, last_updated: file.updated_at, is_main: false, is_404: false })
-        end
-      end
-    end
-
+  def formatFoldersForTurboResponse(_bucket, site)
     @site = site
-    site_files = all_files.as_json
-    all_folders = []
-    files = []
-
-    all_files.each do |file|
-      if file[:name].include?("/")
-        folder_name = file[:name].split("/")[0]
-        all_folders.push({ type: "folder", name: folder_name, files: [], size: 0 })
+    # Prefer DB catalog; fall back to a full R2 sync if empty.
+    @site_files_and_folders =
+      if site.site_files.exists?
+        SiteListing.build_from_site(site)
       else
-        files.push(file)
+        SiteFile.sync_from_storage!(site)
+        SiteListing.build_from_site(site)
       end
-    end
-
-    all_folders.uniq!
-
-    all_folders.each do |folder|
-      site_files.each do |file|
-        if file["name"].include?(folder[:name]) && !file["name"].ends_with?("/")
-          file_without_folder = file["name"].split("/")[1]
-          folder[:files].push({ type: "file", name: file_without_folder, size: file["size"], last_updated: file["last_updated"], is_main: false, is_404: false })
-        end
-      end
-    end
-
-    @site_files_and_folders = files + all_folders
-    @site_files_and_folders.sort_by! do |file|
-      [
-        SiteStorage::SYSTEM_FILES.include?(file[:name]) ? SiteStorage::SYSTEM_FILES.index(file[:name]) : 99,
-        file[:type] == "file" ? 0 : 1,
-        file[:type] == "folder" ? 0 : 1,
-        file[:name].to_s
-      ]
-    end
-    @site_files_and_folders = @site_files_and_folders.as_json
 
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.update("filepicker", partial: "admin/files/filepicker", locals: { site: @site, site_files_and_folders: @site_files_and_folders }) }
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.update(
+          "filepicker",
+          partial: "admin/files/filepicker",
+          locals: { site: @site, site_files_and_folders: @site_files_and_folders }
+        )
+      end
     end
   end
 

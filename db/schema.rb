@@ -10,9 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_10_04_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_07_010000) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
+  enable_extension "pg_catalog.plpgsql"
 
   create_table "accounts", force: :cascade do |t|
     t.string "email", default: "", null: false
@@ -86,6 +86,20 @@ ActiveRecord::Schema[7.0].define(version: 2026_10_04_160000) do
     t.index ["site_id"], name: "index_site_file_versions_on_site_id"
   end
 
+  create_table "site_files", force: :cascade do |t|
+    t.bigint "site_id", null: false
+    t.string "path", null: false
+    t.string "kind", default: "file", null: false
+    t.bigint "byte_size", default: 0, null: false
+    t.string "content_type"
+    t.datetime "remote_updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["site_id", "kind"], name: "index_site_files_on_site_id_and_kind"
+    t.index ["site_id", "path"], name: "index_site_files_on_site_id_and_path", unique: true
+    t.index ["site_id"], name: "index_site_files_on_site_id"
+  end
+
   create_table "site_moment_files", force: :cascade do |t|
     t.bigint "site_moment_id", null: false
     t.string "path", null: false
@@ -143,6 +157,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_10_04_160000) do
 
   add_foreign_key "site_dashboards", "sites"
   add_foreign_key "site_file_versions", "sites"
+  add_foreign_key "site_files", "sites"
   add_foreign_key "site_moment_files", "site_moments"
   add_foreign_key "site_moments", "sites"
   add_foreign_key "site_page_views", "sites", name: "site_page_views_site_id_fkey"

@@ -139,7 +139,7 @@ RSpec.describe DnsLookup do
       cname_record = result.records.find { |r| r[:type] == "CNAME" }
 
       expect(result.ok).to eq(false)
-      expect(result.summary).to eq("Update A or CNAME so traffic reaches this site")
+      expect(result.summary).to eq("Records found, but they point somewhere else. Update the A or CNAME record to the value shown.")
       expect(a_record).to include(
         ok: false,
         status: "error",
@@ -171,7 +171,16 @@ RSpec.describe DnsLookup do
 
       expect(result.records.map { |r| r[:type] }).to eq(["CNAME"])
       expect(result.ok).to eq(false)
-      expect(result.summary).to eq("Update CNAME so traffic reaches this site")
+      expect(result.summary).to eq("Records found, but they point somewhere else. Update the CNAME record to the value shown.")
+    end
+
+    it "explains Cloudflare proxying when only Cloudflare IPs come back" do
+      stub_resolver(a: ["104.21.11.77", "172.67.148.138"], cname: [], domain: domain)
+
+      result = described_class.new(domain).call
+
+      expect(result.ok).to eq(false)
+      expect(result.summary).to eq(described_class::CLOUDFLARE_PROXY_SUMMARY)
     end
 
     it "succeeds on CNAME alone when A is not configured" do

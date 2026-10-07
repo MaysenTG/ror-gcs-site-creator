@@ -99,14 +99,10 @@ Rails.application.configure do
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
   
-  # Multi-tenant custom domains arrive with arbitrary Host headers (via nginx).
   config.hosts.clear
   config.hosts << "maysengreenwood.com"
   config.hosts << /.*\.maysengreenwood\.com/
   config.hosts << ENV["APP_HOST"] if ENV["APP_HOST"].present?
   config.hosts << /.*\.fly\.dev/
-  # Allow any host for published custom domains / proxy lookup.
-  config.host_authorization = { exclude: ->(req) { req.path.start_with?("/admin/proxy/site/lookup") || req.path == "/up" } }
-  # Customer sites may hit the app directly with their own Host.
-  config.hosts << /.*/
+  config.host_authorization = { exclude: ->(req) { req.path == "/up" } }
 end

@@ -106,6 +106,7 @@ export default class extends Controller {
     var myModalEl = document.getElementById("createFileModal");
     //var modal = bootstrap.Modal.getInstance(myModalEl);
 
+    window.FiletreePrefetch?.clear();
     // Post to the create file endpoint
     fetch(`/admin/sites/${site_name}/files/new`, {
       method: "POST",
@@ -177,6 +178,7 @@ export default class extends Controller {
     var myModalEl = document.getElementById("deleteFileModal");
     //var modal = bootstrap.Modal.getInstance(myModalEl);
 
+    window.FiletreePrefetch?.clear();
     // Post to the create file endpoint
     fetch(`/admin/sites/${site_name}/files/delete`, {
       method: "DELETE",
@@ -238,6 +240,7 @@ export default class extends Controller {
     var myModalEl = document.getElementById("renameFileModal");
     //var modal = bootstrap.Modal.getInstance(myModalEl);
 
+    window.FiletreePrefetch?.clear();
     // Post to the create file endpoint
     fetch(`/admin/sites/${site_name}/files/rename`, {
       method: "PATCH",

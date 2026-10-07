@@ -497,25 +497,33 @@
       setTimeout(() => observer.disconnect(), 4000);
     }
 
+    // Must run before the editor stream renders: afterEditorPaint watches for the new #file_content.
+    function onEditorStreamIncoming() {
+      afterEditorPaint(async (elm) => {
+        await mountCodeMirror(elm);
+        syncOpenFileSelection(elm.dataset.filename);
+        const saveBtn = document.querySelector("#save-file-btn");
+        if (saveBtn) {
+          saveBtn.classList.remove("is-loading", "disabled");
+          saveBtn.disabled = true;
+          saveBtn.querySelector("span")?.classList.add("d-none");
+          saveBtn.querySelector(".save-btn-text-loading")?.classList.add("d-none");
+          saveBtn.querySelector(".save-btn-text")?.classList.remove("d-none");
+        }
+      });
+    }
+
+    function onPrefetchedEditorLoading(e) {
+      const href = e.detail?.href;
+      if (href && document.getElementById("editor")) showEditorLoadingSkeleton(href);
+    }
+
     function onBeforeFetchResponse(e) {
       const response = e.detail?.fetchResponse?.response;
       if (!response) return;
       const url = response.url || "";
 
-      if (url.includes("/files/editor")) {
-        afterEditorPaint(async (elm) => {
-          await mountCodeMirror(elm);
-          syncOpenFileSelection(elm.dataset.filename);
-          const saveBtn = document.querySelector("#save-file-btn");
-          if (saveBtn) {
-            saveBtn.classList.remove("is-loading", "disabled");
-            saveBtn.disabled = true;
-            saveBtn.querySelector("span")?.classList.add("d-none");
-            saveBtn.querySelector(".save-btn-text-loading")?.classList.add("d-none");
-            saveBtn.querySelector(".save-btn-text")?.classList.remove("d-none");
-          }
-        });
-      }
+      if (url.includes("/files/editor")) onEditorStreamIncoming();
 
       if (url.includes("/files/update")) {
         if (response.headers.get("site-over-limit")) {
@@ -667,6 +675,8 @@
       document.removeEventListener("turbo:before-fetch-request", prev.request);
       document.removeEventListener("keydown", prev.keydown);
       document.removeEventListener("turbo:load", prev.load);
+      if (prev.editorStream) document.removeEventListener("filetree:editor-stream", prev.editorStream);
+      if (prev.editorLoading) document.removeEventListener("filetree:editor-loading", prev.editorLoading);
     }
 
     window.__gcSiteEditor = {
@@ -674,10 +684,14 @@
       request: onBeforeFetchRequest,
       keydown: onKeydown,
       load: onTurboLoad,
+      editorStream: onEditorStreamIncoming,
+      editorLoading: onPrefetchedEditorLoading,
     };
 
     document.addEventListener("turbo:before-fetch-response", onBeforeFetchResponse);
     document.addEventListener("turbo:before-fetch-request", onBeforeFetchRequest);
+    document.addEventListener("filetree:editor-stream", onEditorStreamIncoming);
+    document.addEventListener("filetree:editor-loading", onPrefetchedEditorLoading);
     document.addEventListener("keydown", onKeydown);
     document.addEventListener("turbo:load", onTurboLoad);
     onTurboLoad();

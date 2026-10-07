@@ -37,6 +37,7 @@ export default class extends Controller {
     var myModalEl = document.getElementById("createFolderModal");
     //var modal = bootstrap.Modal.getInstance(myModalEl);
 
+    window.FiletreePrefetch?.clear();
     // Post to the delete folder endpoint
     fetch(`/admin/sites/${site_name}/folders/new`, {
       method: "POST",

@@ -1,6 +1,21 @@
 class Domain < ApplicationRecord
+  # One or more labels (letters, numbers, inner hyphens) plus a TLD, e.g. my-shop.example.com
+  HOSTNAME_FORMAT = /\A(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}\z/
+
   belongs_to :site
-  
-  # Validate the domain so it's unique and the correct format (e.g. example.com)
-  validates :domain, presence: true, uniqueness: true, format: { with: /\A([a-zA-Z0-9]+\.)?[a-zA-Z0-9]+\.[a-zA-Z0-9]+\z/, message: "must be a valid domain (e.g. example.com or subdomain.example.com)" }
+
+  before_validation :normalize_domain
+
+  validates :domain,
+            presence: true,
+            uniqueness: { case_sensitive: false },
+            format: { with: HOSTNAME_FORMAT, message: "must be a domain like example.com or www.example.com" }
+
+  private
+
+  def normalize_domain
+    return if domain.blank?
+
+    self.domain = domain.strip.downcase.sub(%r{\Ahttps?://}, "").split(%r{[/?#]}).first.to_s
+  end
 end

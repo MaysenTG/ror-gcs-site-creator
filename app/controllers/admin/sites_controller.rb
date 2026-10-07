@@ -1,8 +1,6 @@
 class Admin::SitesController < ApplicationController
-  layout "custom_domain", only: [:get_custom_domain]
-
   before_action :restrict_num_sites, only: [:new, :create, :clone]
-  before_action :authenticate_account!, except: [:get_custom_domain]
+  before_action :authenticate_account!
 
   before_action :set_storage_client, only: [:all_sites, :show, :delete, :create, :clone]
   before_action :get_site_name, only: [:show, :dashboard, :delete, :create, :clone, :update_settings]
@@ -55,6 +53,7 @@ class Admin::SitesController < ApplicationController
     bucket = @storage.bucket(@site.storage_prefix)
     raise ActiveRecord::RecordNotFound if bucket.nil?
 
+    # Tree from SiteFile catalog (names/sizes); content loads separately when a file is opened.
     @site_files_and_folders = SiteListing.fetch_cached(@site, bucket)
     @folders_with_files = @site_files_and_folders.select { |entry| entry["type"] == "folder" || entry[:type] == "folder" }
 
@@ -204,27 +203,6 @@ class Admin::SitesController < ApplicationController
     respond_to do |format|
       format.json { render json: { ok: false, error: "Site not found" }, status: :not_found }
       format.html { redirect_to "/admin/sites", alert: "Site not found." }
-    end
-  end
-
-  def get_custom_domain
-    domain = params[:name] || request.host
-    domain = domain.to_s.sub(%r{\Ahttps?://}, "").split("/").first
-
-    @domain = Domain.includes(:site).find_by(domain: domain)
-    @site = @domain&.site
-
-    if @domain.nil? || @site.nil?
-      return render plain: "Site or domain not found"
-    end
-
-    @url = SiteStorage.site_preview_url(@site)
-    response.headers["X-Proxy-Domain"] = @domain.domain
-
-    if params[:debug] == "true"
-      render plain: @domain.domain
-    else
-      respond_to { |format| format.html }
     end
   end
 

@@ -3,6 +3,7 @@ class Site < ApplicationRecord
 
   belongs_to :account
   has_many :domains, dependent: :destroy
+  has_many :site_files, dependent: :destroy
   has_many :site_page_views, dependent: :destroy
   has_many :site_dashboards, dependent: :destroy
   has_many :site_file_versions, dependent: :destroy

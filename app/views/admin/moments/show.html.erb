@@ -8,13 +8,13 @@
         · <%= pluralize(@moment.file_count, "file") %>
       </p>
     </div>
-    <%= button_to "Restore moment", restore_admin_moment_path(@site.name, @moment), method: :post, class: "btn btn-primary", form: { data: { turbo_confirm: "Restore this moment over live text files?" } } %>
+    <%= button_to "Restore moment", restore_admin_moment_path(@site.name, @moment), method: :post, class: "btn btn-primary", form: { data: { turbo_confirm: "Restore this moment? Your current text files will be replaced with the saved versions." } } %>
   </div>
 
   <div class="surface-panel">
     <h2 class="h5 mb-3">Changes since this moment</h2>
     <% if @diff.blank? %>
-      <p class="mb-0 text-muted">Live text files match this moment.</p>
+      <p class="mb-0 text-muted">Nothing has changed since this moment was saved.</p>
     <% else %>
       <ul class="moments-diff">
         <% @diff.each do |row| %>

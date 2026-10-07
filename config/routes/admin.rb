@@ -48,6 +48,4 @@ namespace :admin do
     get "analytics/paths" => "analytics#paths", as: :analytics_paths
     post "analytics/events" => "analytics#events", as: :analytics_events
   end
-
-  get "/proxy/site/lookup" => "sites#get_custom_domain"
 end
