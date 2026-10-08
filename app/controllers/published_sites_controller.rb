@@ -164,8 +164,14 @@ class PublishedSitesController < ApplicationController
     nil
   end
 
+  # True when the site is served at :site.localhost or :site.maysengreenwood.com (not code…/s/:site).
+  def serving_via_site_subdomain?(site)
+    request.subdomains.first.to_s.downcase == site.name.to_s.downcase &&
+      %w[localhost lvh.me maysengreenwood.com].include?(request.domain.to_s)
+  end
+
   def gate_unlock_path(site)
-    if request.subdomains.present? && %w[localhost lvh.me maysengreenwood.com].include?(request.domain.to_s)
+    if serving_via_site_subdomain?(site)
       "/gate"
     else
       "/s/#{site.name}/gate"
@@ -173,7 +179,7 @@ class PublishedSitesController < ApplicationController
   end
 
   def request_site_root(site)
-    if request.subdomains.present? && %w[localhost lvh.me maysengreenwood.com].include?(request.domain.to_s)
+    if serving_via_site_subdomain?(site)
       "/"
     else
       "/s/#{site.name}/"
@@ -246,18 +252,18 @@ class PublishedSitesController < ApplicationController
   end
 
   def published_origin(site)
-    if request.subdomains.present? && %w[localhost lvh.me maysengreenwood.com].include?(request.domain.to_s)
+    if serving_via_site_subdomain?(site)
       "#{request.protocol}#{request.host_with_port}"
     else
       "#{request.base_url}/s/#{site.name}"
     end
   end
 
-  def html_base_href(site_name)
-    if request.subdomains.present? && %w[localhost lvh.me maysengreenwood.com].include?(request.domain.to_s)
+  def html_base_href(site)
+    if serving_via_site_subdomain?(site)
       "/"
     else
-      "/s/#{site_name}/"
+      "/s/#{site.name}/"
     end
   end
 
@@ -266,8 +272,8 @@ class PublishedSitesController < ApplicationController
   end
 
   # Make relative asset URLs resolve under the site preview path, not the Rails app root.
-  def rewrite_html_for_preview(body, site_name)
-    base = html_base_href(site_name)
+  def rewrite_html_for_preview(body, site)
+    base = html_base_href(site)
     html = body.to_s.dup
     html = html.sub(/<base\s[^>]*>/i, "")
 
@@ -275,6 +281,17 @@ class PublishedSitesController < ApplicationController
       html.sub!(/<head[^>]*>/i) { |tag| "#{tag}<base href=\"#{base}\">" }
     else
       html = "<base href=\"#{base}\">#{html}"
+    end
+
+    unless serving_via_site_subdomain?(site)
+      # Root-relative URLs ignore <base> and hit the app host (e.g. /style.css on code…/s/foo).
+      prefix = base.end_with?("/") ? base.chomp("/") : base
+      html = html.gsub(/(href|src)=(["'])\/(?!\/)([^"']*)\2/i) do
+        attr = Regexp.last_match(1)
+        quote = Regexp.last_match(2)
+        path = Regexp.last_match(3)
+        "#{attr}=#{quote}#{prefix}/#{path}#{quote}"
+      end
     end
 
     # Rewrite relative href/src so assets work even if <base> is ignored.
@@ -346,7 +363,7 @@ class PublishedSitesController < ApplicationController
     body = body.force_encoding("UTF-8") if body.respond_to?(:force_encoding) && body.encoding == Encoding::ASCII_8BIT
 
     if html_response?(object, key, content_type)
-      body = rewrite_html_for_preview(body, site.name)
+      body = rewrite_html_for_preview(body, site)
       body = inject_seo_tags(body, site, key)
       body = maybe_inject_owner_bar(body, site)
       content_type = "text/html; charset=utf-8"
