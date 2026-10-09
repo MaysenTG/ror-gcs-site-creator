@@ -30,4 +30,22 @@ RSpec.describe SiteFile, type: :model do
 
     expect(site.site_files.where("path = ? OR path LIKE ?", "a", "a/%")).to be_empty
   end
+
+  describe ".sync_from_storage!" do
+    it "rebuilds catalog rows from the bucket and drops stale paths" do
+      described_class.upsert_file!(site, path: "stale.html", byte_size: 1)
+      files = [
+        storage_file(name: "index.html", content: "<p>x</p>", content_type: "text/html"),
+        storage_file(name: "docs/readme.md", content: "# hi", content_type: "text/markdown")
+      ]
+      bucket = stub_site_bucket(files: files)
+      storage = stub_site_storage(bucket: bucket)
+
+      described_class.sync_from_storage!(site, storage: storage)
+
+      expect(site.site_files.files.pluck(:path)).to contain_exactly("index.html", "docs/readme.md")
+      expect(site.site_files.folders.pluck(:path)).to include("docs")
+      expect(site.site_files.find_by(path: "stale.html")).to be_nil
+    end
+  end
 end

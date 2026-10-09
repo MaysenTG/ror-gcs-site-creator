@@ -285,11 +285,15 @@ class PublishedSitesController < ApplicationController
 
     unless serving_via_site_subdomain?(site)
       # Root-relative URLs ignore <base> and hit the app host (e.g. /style.css on code…/s/foo).
+      # Skip URLs that already include the preview prefix (including the injected <base href>).
       prefix = base.end_with?("/") ? base.chomp("/") : base
+      prefix_path = prefix.delete_prefix("/")
       html = html.gsub(/(href|src)=(["'])\/(?!\/)([^"']*)\2/i) do
         attr = Regexp.last_match(1)
         quote = Regexp.last_match(2)
         path = Regexp.last_match(3)
+        next Regexp.last_match(0) if path == prefix_path || path.start_with?("#{prefix_path}/")
+
         "#{attr}=#{quote}#{prefix}/#{path}#{quote}"
       end
     end
