@@ -18,6 +18,13 @@ jobs:
       DATABASE_URL: sqlite3:storage/ci.sqlite3
       RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
       SECRET_KEY_BASE: test-secret-key-base-for-ci-only
+      # Dummy R2 values so SiteStorage.instance can construct in request specs.
+      # Specs that hit storage stub SiteStorage; these are not real credentials.
+      R2_ACCESS_KEY_ID: test-access-key-id
+      R2_SECRET_ACCESS_KEY: test-secret-access-key
+      R2_ACCOUNT_ID: test-account-id
+      R2_ENDPOINT: https://example.invalid/r2
+      R2_BUCKET: ror-site-creator-test
 
     steps:
       - uses: actions/checkout@v4

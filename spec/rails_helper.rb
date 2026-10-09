@@ -1,6 +1,17 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'spec_helper'
 ENV['RAILS_ENV'] ||= 'test'
+
+# SiteStorage#initialize ENV.fetches R2 credentials. Many request paths call
+# SiteStorage.instance (including before_actions) even when the example stubs
+# later or never hits the network — provide safe test defaults so CI does not
+# raise KeyError. Specs that exercise storage should still stub SiteStorage.
+ENV["R2_ACCESS_KEY_ID"] ||= "test-access-key-id"
+ENV["R2_SECRET_ACCESS_KEY"] ||= "test-secret-access-key"
+ENV["R2_ACCOUNT_ID"] ||= "test-account-id"
+ENV["R2_ENDPOINT"] ||= "https://example.invalid/r2"
+ENV["R2_BUCKET"] ||= "ror-site-creator-test"
+
 require_relative '../config/environment'
 # Prevent database truncation if the environment is production
 abort("The Rails environment is running in production mode!") if Rails.env.production?
@@ -60,4 +71,8 @@ RSpec.configure do |config|
   config.filter_rails_from_backtrace!
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
+
+  config.after do
+    SiteStorage.reset_instance! if defined?(SiteStorage)
+  end
 end
