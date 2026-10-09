@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: RSpec
+    runs-on: ubuntu-latest
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: sqlite3:storage/ci.sqlite3
+      RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+      SECRET_KEY_BASE: test-secret-key-base-for-ci-only
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2.3"
+          bundler-cache: true
+
+      - name: Prepare test database
+        run: |
+          mkdir -p storage tmp
+          bin/rails db:prepare
+
+      - name: Run RSpec
+        id: rspec
+        run: |
+          set +e
+          bundle exec rspec \
+            --format progress \
+            --format json \
+            --out tmp/rspec.json
+          status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Test summary
+        if: always()
+        run: |
+          chmod +x bin/ci_rspec_summary
+          bin/ci_rspec_summary tmp/rspec.json
+          exit "${{ steps.rspec.outputs.exit_code || 1 }}"
+
+      - name: Upload RSpec JSON
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rspec-results
+          path: tmp/rspec.json
+          if-no-files-found: ignore
+
+  deploy:
+    name: Deploy to Fly
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency: deploy-group
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
